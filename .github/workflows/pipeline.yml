@@ -21,7 +21,10 @@ jobs:
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
             -destination "platform=macOS,arch=arm64,variant=Designed for iPhone" \
-            -resultBundlePath TestResults
+            -resultBundlePath TestResults \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Build Release
         run: |
@@ -29,4 +32,7 @@ jobs:
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
             -configuration Release \
-            -destination "generic/platform=iOS Simulator"
+            -destination "generic/platform=iOS Simulator" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO

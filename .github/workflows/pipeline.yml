@@ -20,7 +20,7 @@ jobs:
           xcodebuild test \
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
-            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.2" \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
             -resultBundlePath TestResults
 
       - name: Build Release

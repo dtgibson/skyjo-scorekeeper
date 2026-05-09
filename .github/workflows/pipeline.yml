@@ -15,18 +15,12 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
-      - name: List available simulators
-        run: xcrun simctl list runtimes
-
-      - name: Download iOS platform
-        run: xcodebuild -downloadPlatform iOS
-
       - name: Build and Test
         run: |
           xcodebuild test \
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
-            -destination "platform=iOS Simulator,name=iPhone 16,OS=18.2" \
+            -destination "platform=macOS,arch=arm64,variant=Designed for iPhone" \
             -resultBundlePath TestResults
 
       - name: Build Release

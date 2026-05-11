@@ -22,6 +22,7 @@
 		AAA00000000000000000006C /* ScoringView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA00000000000000000004C /* ScoringView.swift */; };
 		AAA00000000000000000006D /* WinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA00000000000000000004D /* WinView.swift */; };
 		AAA00000000000000000006E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAA00000000000000000004E /* Assets.xcassets */; };
+		AAA00000000000000000006F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000052 /* PrivacyInfo.xcprivacy */; };
 		AAA000000000000000000070 /* GameSetupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000050 /* GameSetupTests.swift */; };
 		AAA000000000000000000071 /* GameSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000051 /* GameSessionTests.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +57,7 @@
 		AAA00000000000000000004E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AAA000000000000000000050 /* GameSetupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSetupTests.swift; sourceTree = "<group>"; };
 		AAA000000000000000000051 /* GameSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionTests.swift; sourceTree = "<group>"; };
+		AAA000000000000000000052 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +104,7 @@
 				AAA000000000000000000031 /* Models */,
 				AAA000000000000000000032 /* Views */,
 				AAA00000000000000000004E /* Assets.xcassets */,
+				AAA000000000000000000052 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SkyjoScorekeeper;
 			sourceTree = "<group>";
@@ -222,6 +225,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAA00000000000000000006E /* Assets.xcassets in Resources */,
+				AAA00000000000000000006F /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

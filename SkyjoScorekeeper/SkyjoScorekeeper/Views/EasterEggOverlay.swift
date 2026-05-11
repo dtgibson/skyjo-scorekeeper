@@ -31,7 +31,7 @@ struct EasterEggOverlay: View {
                     .clipShape(RoundedRectangle(cornerRadius: 13))
             }
             .padding(28)
-            .background(.white.opacity(0.97))
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 22))
             .padding(24)
             .shadow(color: .black.opacity(0.25), radius: 32, y: 24)

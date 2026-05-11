@@ -5,12 +5,13 @@ struct GameSetupView: View {
     @State private var showEasterEgg = false
     @State private var highlightErrors = false
 
-    // Accepts pre-populated players from the play-again flow (FR-11).
-    // Defaults to two empty players on fresh launch.
-    init(initialPlayers: [Player]? = nil) {
+    private let onStart: ([Player]) -> Void
+
+    init(initialPlayers: [Player]? = nil, onStart: @escaping ([Player]) -> Void = { _ in }) {
         _gameState = StateObject(
             wrappedValue: GameState(players: initialPlayers ?? [Player(), Player()])
         )
+        self.onStart = onStart
     }
 
     var body: some View {
@@ -166,8 +167,9 @@ struct GameSetupView: View {
             return
         }
 
-        // Navigate to the game screen — implemented in a future feature.
-        _ = gameState.committedPlayers()
+        if let players = gameState.committedPlayers() {
+            onStart(players)
+        }
     }
 
     // MARK: - Helpers

@@ -93,7 +93,7 @@ struct GameSetupView: View {
                     }
                 }
             }
-            .background(.white)
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
 
@@ -123,7 +123,7 @@ struct GameSetupView: View {
             }
             .padding(.horizontal, 14)
             .frame(height: 54)
-            .background(.white)
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
         }

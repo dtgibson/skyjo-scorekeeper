@@ -7,6 +7,7 @@ struct ScoreEntrySheet: View {
     @State private var rawInputs: [UUID: String] = [:]
     @State private var skyjoPlayerID: UUID? = nil
     @State private var skyjoAnswered = false
+    @FocusState private var focusedPlayer: UUID?
 
     private var entries: [UUID: Int] {
         Dictionary(uniqueKeysWithValues: session.players.compactMap { player in
@@ -45,6 +46,15 @@ struct ScoreEntrySheet: View {
                 .padding(.bottom, 8)
         }
         .background(Color(.systemGroupedBackground))
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Next") { advanceFocus() }
+                    .disabled(focusedPlayer == session.players.last?.id)
+                Button("Done") { focusedPlayer = nil }
+            }
+        }
+        .onAppear { focusedPlayer = session.players.first?.id }
     }
 
     // MARK: - Handle
@@ -73,14 +83,15 @@ struct ScoreEntrySheet: View {
                         player: player,
                         colorIndex: index,
                         rawInput: inputBinding(for: player.id),
-                        doublingPreview: doublingPreview(for: player.id)
+                        doublingPreview: doublingPreview(for: player.id),
+                        focusedPlayer: $focusedPlayer
                     )
                     if index < session.players.count - 1 {
                         Divider().padding(.leading, 64)
                     }
                 }
             }
-            .background(.white)
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
         }
@@ -106,6 +117,7 @@ struct ScoreEntrySheet: View {
                             onTap: {
                                 skyjoPlayerID = player.id
                                 skyjoAnswered = true
+                                focusedPlayer = nil
                             }
                         )
                     }
@@ -116,12 +128,13 @@ struct ScoreEntrySheet: View {
                         onTap: {
                             skyjoPlayerID = nil
                             skyjoAnswered = true
+                            focusedPlayer = nil
                         }
                     )
                 }
             }
             .padding(12)
-            .background(.white)
+            .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
         }
@@ -160,6 +173,14 @@ struct ScoreEntrySheet: View {
         else { return nil }
         return "×2 → \(raw * 2)"
     }
+
+    private func advanceFocus() {
+        guard let current = focusedPlayer,
+              let idx = session.players.firstIndex(where: { $0.id == current }),
+              idx + 1 < session.players.count
+        else { return }
+        focusedPlayer = session.players[idx + 1].id
+    }
 }
 
 // MARK: - Score input row
@@ -169,6 +190,10 @@ private struct ScoreInputRow: View {
     let colorIndex: Int
     @Binding var rawInput: String
     let doublingPreview: String?
+    var focusedPlayer: FocusState<UUID?>.Binding
+
+    @State private var digits: String = ""
+    @State private var isNegative: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -192,15 +217,34 @@ private struct ScoreInputRow: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.85)))
             }
 
-            TextField("0", text: $rawInput)
-                .keyboardType(.numbersAndPunctuation)
+            Button {
+                isNegative.toggle()
+                syncToBinding()
+            } label: {
+                Image(systemName: isNegative ? "minus.circle.fill" : "minus.circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(isNegative ? Color(.systemRed) : Color(.tertiaryLabel))
+            }
+            .buttonStyle(.plain)
+
+            TextField("0", text: $digits)
+                .keyboardType(.numberPad)
                 .multilineTextAlignment(.trailing)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                .frame(width: 60)
+                .frame(width: 52)
+                .focused(focusedPlayer, equals: player.id)
+                .onChange(of: digits) { _, _ in syncToBinding() }
         }
         .padding(.horizontal, 16)
-        .frame(height: 62)
+        .frame(height: 64)
+        .contentShape(Rectangle())
+        .onTapGesture { focusedPlayer.wrappedValue = player.id }
         .animation(.easeInOut(duration: 0.15), value: doublingPreview)
+    }
+
+    private func syncToBinding() {
+        guard !digits.isEmpty else { rawInput = ""; return }
+        rawInput = isNegative ? "-\(digits)" : digits
     }
 }
 

@@ -103,7 +103,7 @@
 				AAA000000000000000000032 /* Views */,
 				AAA00000000000000000004E /* Assets.xcassets */,
 			);
-			name = SkyjoScorekeeper;
+			path = SkyjoScorekeeper;
 			sourceTree = "<group>";
 		};
 		AAA000000000000000000031 /* Models */ = {
@@ -138,7 +138,7 @@
 				AAA000000000000000000050 /* GameSetupTests.swift */,
 				AAA000000000000000000051 /* GameSessionTests.swift */,
 			);
-			path = "../SkyjoScorekeeperTests";
+			path = SkyjoScorekeeperTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

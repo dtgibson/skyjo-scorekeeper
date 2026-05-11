@@ -68,12 +68,12 @@ final class GameSessionTests: XCTestCase {
         XCTAssertEqual(alice.total, 3)
     }
 
-    func testSkyjoPlayerNotDoubledWhenTiedForLowest() {
-        // Alice and Bob both score 5. Alice calls Skyjo — tied for minimum, no doubling.
+    func testSkyjoPlayerDoubledWhenTiedForLowest() {
+        // Alice and Bob both score 5. Alice calls Skyjo — tied, not strictly lowest, so doubled.
         let session = makeSession(names: ["Alice", "Bob"])
         commit(session, scores: [5, 5], skyjoIndex: 0)
         let alice = session.standings.first { $0.player.name == "Alice" }!
-        XCTAssertEqual(alice.total, 5)
+        XCTAssertEqual(alice.total, 10)
     }
 
     func testNoDoublingWhenSkyjoPlayerIsNil() {

@@ -39,10 +39,14 @@ final class GameSession: ObservableObject {
     }
 
     func commitRound(entries: [UUID: Int], skyjoPlayerID: UUID?) {
-        let minRaw = entries.values.min() ?? 0
+        let otherMin: Int? = skyjoPlayerID.flatMap { id in
+            entries.filter { $0.key != id }.values.min()
+        }
         let scores: [RoundScore] = players.map { player in
             let raw = entries[player.id] ?? 0
-            let doubled = skyjoPlayerID == player.id && raw > minRaw && raw > 0
+            let doubled = skyjoPlayerID == player.id
+                && raw > 0
+                && raw >= (otherMin ?? Int.min)
             return RoundScore(playerID: player.id, raw: raw, applied: doubled ? raw * 2 : raw)
         }
         rounds.append(Round(number: currentRoundNumber, scores: scores, skyjoPlayerID: skyjoPlayerID))

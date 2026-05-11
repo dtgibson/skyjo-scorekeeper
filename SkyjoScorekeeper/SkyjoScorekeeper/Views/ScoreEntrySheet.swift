@@ -22,9 +22,9 @@ struct ScoreEntrySheet: View {
 
     private var canConfirm: Bool { allFilled && skyjoAnswered }
 
-    private var minRawScore: Int? {
+    private func minOtherScore(excluding playerID: UUID) -> Int? {
         guard allFilled else { return nil }
-        return entries.values.min()
+        return entries.filter { $0.key != playerID }.values.min()
     }
 
     var body: some View {
@@ -168,8 +168,8 @@ struct ScoreEntrySheet: View {
         guard
             skyjoPlayerID == playerID,
             let raw = entries[playerID],
-            let min = minRawScore,
-            raw > min,
+            let minOther = minOtherScore(excluding: playerID),
+            raw >= minOther,
             raw > 0
         else { return nil }
         return "×2 → \(raw * 2)"

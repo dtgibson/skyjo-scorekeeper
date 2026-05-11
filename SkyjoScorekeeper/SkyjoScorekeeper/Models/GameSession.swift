@@ -42,7 +42,7 @@ final class GameSession: ObservableObject {
         let minRaw = entries.values.min() ?? 0
         let scores: [RoundScore] = players.map { player in
             let raw = entries[player.id] ?? 0
-            let doubled = skyjoPlayerID == player.id && raw > minRaw
+            let doubled = skyjoPlayerID == player.id && raw > minRaw && raw > 0
             return RoundScore(playerID: player.id, raw: raw, applied: doubled ? raw * 2 : raw)
         }
         rounds.append(Round(number: currentRoundNumber, scores: scores, skyjoPlayerID: skyjoPlayerID))

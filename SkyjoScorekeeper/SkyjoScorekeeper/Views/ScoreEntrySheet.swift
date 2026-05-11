@@ -101,7 +101,7 @@ struct ScoreEntrySheet: View {
 
     private var skyjoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("DID ANYONE SKYJO?")
+            Text("WHO ENDED THE ROUND?")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
@@ -122,7 +122,7 @@ struct ScoreEntrySheet: View {
                         )
                     }
                     SkyjoChip(
-                        label: "Nobody",
+                        label: "Skip",
                         isNobody: true,
                         isSelected: skyjoAnswered && skyjoPlayerID == nil,
                         onTap: {
@@ -169,7 +169,8 @@ struct ScoreEntrySheet: View {
             skyjoPlayerID == playerID,
             let raw = entries[playerID],
             let min = minRawScore,
-            raw > min
+            raw > min,
+            raw > 0
         else { return nil }
         return "×2 → \(raw * 2)"
     }

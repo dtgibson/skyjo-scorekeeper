@@ -91,6 +91,22 @@ final class GameSessionTests: XCTestCase {
         XCTAssertEqual(bob.total, 5)
     }
 
+    func testSkyjoPlayerNotDoubledWhenScoreIsNegative() {
+        // Alice ends the round with -3 (not lowest — Bob has -5). Negative score, no doubling.
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [-3, -5], skyjoIndex: 0)
+        let alice = session.standings.first { $0.player.name == "Alice" }!
+        XCTAssertEqual(alice.total, -3)
+    }
+
+    func testSkyjoPlayerNotDoubledWhenScoreIsZero() {
+        // Alice ends the round with 0 (Bob has -2, so Alice is not lowest). Zero is not positive.
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [0, -2], skyjoIndex: 0)
+        let alice = session.standings.first { $0.player.name == "Alice" }!
+        XCTAssertEqual(alice.total, 0)
+    }
+
     // MARK: - Standings order
 
     func testStandingsSortedAscending() {

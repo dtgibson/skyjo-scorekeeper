@@ -28,6 +28,3 @@ This app does not collect data from anyone, including children under 13.
 
 If this policy ever changes, the updated version will be posted here with a revised effective date.
 
-## Contact
-
-Questions about this policy can be directed to: dave@dtgibson.com

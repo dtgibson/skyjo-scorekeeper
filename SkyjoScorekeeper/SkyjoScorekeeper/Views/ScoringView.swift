@@ -6,6 +6,7 @@ struct ScoringView: View {
 
     @State private var showEntrySheet = false
     @State private var showWinView = false
+    @State private var showEndGameAlert = false
 
     init(players: [Player], onNewGame: @escaping ([Player]?) -> Void) {
         _session = StateObject(wrappedValue: GameSession(players: players))
@@ -43,13 +44,29 @@ struct ScoringView: View {
         .fullScreenCover(isPresented: $showWinView) {
             WinView(session: session, onNewGame: onNewGame)
         }
+        .alert("End Game?", isPresented: $showEndGameAlert) {
+            Button("End Game", role: .destructive) { onNewGame(nil) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your current scores will be lost.")
+        }
     }
 
     // MARK: - Nav bar
 
     private var navBar: some View {
         HStack {
-            Color.clear.frame(width: 70)
+            Button {
+                showEndGameAlert = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "xmark")
+                    Text("End Game")
+                }
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(Theme.brand)
+            }
+            .frame(width: 70, alignment: .leading)
             Text("Round \(session.currentRoundNumber)")
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .frame(maxWidth: .infinity)

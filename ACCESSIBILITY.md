@@ -44,4 +44,4 @@ All interactive controls are reachable via Switch Control. The app does not rely
 
 ## Feedback
 
-If you encounter any accessibility barrier in Score for Skyjo, please reach out at [dave@dtgibson.com](mailto:dave@dtgibson.com). Accessibility issues are treated as bugs and addressed as a priority.
+If you encounter any accessibility barrier in Score for Skyjo, please reach out at [developer@dtgibson.com](mailto:developer@dtgibson.com). Accessibility issues are treated as bugs and addressed as a priority.

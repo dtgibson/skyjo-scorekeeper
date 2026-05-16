@@ -17,11 +17,10 @@ jobs:
 
       - name: Build and Test
         run: |
-          UDID=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '[0-9A-Fa-f-]{36}')
           xcodebuild test \
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
-            -destination "id=$UDID" \
+            -destination "platform=iOS Simulator,OS=latest,name=iPhone 16" \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

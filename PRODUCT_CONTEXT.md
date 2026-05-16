@@ -98,6 +98,36 @@ Adapts all four screens to display natively on iPad by constraining content to a
 
 ---
 
+### Accessibility (Completed 2026-05-16)
+
+Full accessibility support across all four screens — VoiceOver, Dynamic Type, Reduce Motion, and Increase Contrast.
+
+**What it does:**
+- **VoiceOver**: All interactive elements have labels, hints, and traits. Decorative elements (avatars, emoji, drag handle) are hidden from the accessibility tree. Compound rows collapse into a single accessible element with a combined label.
+- **Dynamic Type**: All text uses semantic text styles. Two custom-sized titles use `@ScaledMetric(relativeTo:)`: the "Skyjo Scorekeeper" logo (40pt, relative to `.largeTitle`) and the win-screen winner headline (28pt, relative to `.title`).
+- **Reduce Motion**: Every animation is wrapped with `reduceMotion ? nil : .easeInOut(…)` via `@Environment(\.accessibilityReduceMotion)`. All transitions and micro-animations are eliminated when the system setting is on.
+- **Increase Contrast**: A high-contrast player color palette was added to `Theme` — all eight colors meet WCAG AA (4.5:1) against white. `Theme.playerColor(at:highContrast:)` and `Theme.playerTextColor(at:highContrast:)` accept a `highContrast` parameter. Brand color has a dedicated HC variant (`Theme.brandHighContrast`). Views read `@Environment(\.colorSchemeContrast)` and switch palettes when `colorSchemeContrast == .increased`.
+- **Non-color leader indicator**: A `crown.fill` SF Symbol (green, accessibilityHidden) supplements the green dot so the leader is identifiable without relying on color alone.
+- **Dynamic Type clipping fix**: All rows with fixed `frame(height:)` changed to `frame(minHeight:)`.
+
+**Files changed:**
+- `SkyjoScorekeeper/Theme.swift` — HC palette + `brandHighContrast`; `playerColor(at:highContrast:)` / `playerTextColor(at:highContrast:)` updated signatures
+- `SkyjoScorekeeper/Views/GameSetupView.swift` — ScaledMetric title, semantic fonts, reduce motion, HC brand, section header traits
+- `SkyjoScorekeeper/Views/PlayerRowView.swift` — VoiceOver label on text field, remove button label, avatar hidden, reduce motion, `minHeight`
+- `SkyjoScorekeeper/Views/ScoringView.swift` — header trait, Undo hint, combined row label, crown indicator, `minHeight`, HC colors
+- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — drag handle hidden, header traits, score field label, negative toggle label+value, doubling preview label, SkyjoChip label+selected trait, all `minHeight`
+- `SkyjoScorekeeper/Views/WinView.swift` — ScaledMetric headline, trophy hidden, header trait, combined rank label, HC winner background, `minHeight`
+- `SkyjoScorekeeper/Views/EasterEggOverlay.swift` — flower emoji hidden, semantic fonts, HC brand button
+
+**Pipeline artifacts:**
+- `pipeline/accessibility/strategic-brief.md`
+- `pipeline/accessibility/prd.md`
+- `pipeline/accessibility/schema.md`
+- `pipeline/accessibility/design-spec.md`
+- `pipeline/accessibility/design.html`
+
+---
+
 ## Key Decisions
 
 ### Player avatar colors use position, not initials
@@ -107,13 +137,13 @@ Two players with names starting with the same letter get different colors becaus
 Set explicitly in Xcode for both the app target and the test target. The project was originally created on a machine running macOS 26.x which auto-set deployment targets to the host OS version — this caused CI failures until corrected.
 
 ### CI uses default Xcode on macos-15, not a pinned version
-Pinning to Xcode 16.2 caused CI failures because the available simulator runtimes on the runner (iOS 18.5+) were installed for newer Xcode. The workflow uses `runs-on: macos-15` with no `xcode-select` override; as of 2026-05-09 this resolves to Xcode 16.4.
+Pinning to any specific Xcode version is fragile. Xcode 16.2 was originally pinned; it was removed during the accessibility session when `LastUpgradeCheck = 2650` (from the user's local Xcode 26.5) caused actool to fail with Xcode 16.2. The workflow uses `runs-on: macos-15` with no `xcode-select` override. Never add a pinned version back without updating it to match the user's local Xcode.
 
-### CI simulator is resolved by UDID at runtime
-Instead of pinning an OS version (e.g. `OS=18.5`), the workflow uses `xcrun simctl list` to find the first available iPhone 16 and passes its UDID to xcodebuild. This stays correct as the runner image updates over time.
+### CI test destination uses a named simulator, not UDID
+The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 16"`. An earlier UDID-lookup approach (`xcrun simctl list | grep iPhone`) was unreliable — macos-15 runners don't pre-list simulators as "available" without a boot step. The named destination with `OS=latest` resolves correctly with whatever iOS version is installed on the runner.
 
 ### "Designed for iPhone" Mac destination is not viable in CI
-Attempted as a workaround when iOS simulators weren't found. macOS requires a valid developer certificate to install iOS apps via this pathway — ad-hoc signing is rejected. iOS Simulator destination with code signing disabled (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`) is the correct approach.
+Attempted as a workaround during the accessibility session. It fails with actool when the iphonesimulator SDK version bundled with Xcode doesn't match the available simulator runtimes on the runner. iOS Simulator destination with code signing disabled (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`) is the correct approach.
 
 ### No data persistence
 All game data is fully in-memory. Nothing is persisted between app launches. Intentional per the PRD — out of scope for both features built so far.
@@ -135,3 +165,12 @@ The Xcode target was updated to include iPad alongside iPhone. The app was previ
 
 ### Project file (xcodeproj) is generated, not hand-maintained
 The `.xcodeproj` package was regenerated by hand after the original was accidentally deleted. The source of truth for which files exist is the iCloud directory; the project file references them by path. Both the git repo and the iCloud working directory have the same flat layout: all source files (`*.swift`, `Assets.xcassets`, `PrivacyInfo.xcprivacy`) sit directly alongside the `.xcodeproj` in `SkyjoScorekeeper/`. The test files (`GameSessionTests.swift`, `GameSetupTests.swift`) live in `SkyjoScorekeeperTests/` at the repo root, one level above the `.xcodeproj` — matching the pbxproj group path `../SkyjoScorekeeperTests`.
+
+### Standard palette orange/teal/pink-purple don't meet WCAG AA at normal contrast
+The Okabe-Ito standard colors are chosen for color-blind safety and visual appeal at normal contrast, not contrast ratio. At normal contrast, several player colors (orange, teal, pink-purple) don't reach 4.5:1 against white. The decision was to leave these as-is — darkening them would compromise the Okabe-Ito color-blind safety design — and rely on the high-contrast palette for users who need WCAG AA compliance.
+
+### Accessibility: use `@Environment` values directly in ButtonStyle
+`PrimaryButtonStyle` reads `@Environment(\.colorSchemeContrast)` and `@Environment(\.accessibilityReduceMotion)` inside `makeBody` so that HC brand color and reduced-motion press animation are handled at the button level. This avoids threading contrast/motion state through every call site.
+
+### Accessibility: Font.system text-style overload parameter order
+The three-argument text-style overload is `Font.system(_ style:, design:, weight:)` — `design:` comes BEFORE `weight:`. The fixed-size overload `Font.system(size:weight:design:)` has the opposite order. Mixing these up produces a compiler error that mentions `CGFloat.footnote` which is confusing. Always write `.system(.textStyle, design: .rounded, weight: .bold)` (design first).

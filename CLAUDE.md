@@ -24,13 +24,21 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - The app supports both iPhone and iPad — new views must apply this pattern
 
 ### Styling
-- Brand color: `Theme.brand` (indigo #3730A3)
-- Player avatar colors: `Theme.playerColor(at: index)` and `Theme.playerTextColor(at: index)` — always use position index, never derive from name
+- Brand color: `Theme.brand` (indigo #3730A3); HC variant: `Theme.brandHighContrast`
+- Player avatar colors: `Theme.playerColor(at: index, highContrast: Bool)` and `Theme.playerTextColor(at: index, highContrast: Bool)` — always use position index, never derive from name; pass `colorSchemeContrast == .increased` for the HC parameter
 - Typography: SF Rounded throughout (`Font.system(..., design: .rounded)`)
 - Corner radii: 14pt for cards/rows, 16pt for primary button
+- Font.system text-style overload parameter order: `design:` before `weight:` — `.system(.body, design: .rounded, weight: .bold)`. The fixed-size overload has weight before design.
+
+### Accessibility
+- All decorative elements (avatars, emoji, drag handles) must be `.accessibilityHidden(true)`
+- Compound rows must use `.accessibilityElement(children: .ignore)` with a descriptive `.accessibilityLabel`
+- All animations must be wrapped: `reduceMotion ? nil : .easeInOut(...)` — read `@Environment(\.accessibilityReduceMotion)`
+- All views that use brand or player colors must read `@Environment(\.colorSchemeContrast)` and pass HC variants when `colorSchemeContrast == .increased`
+- All fixed-height rows must use `frame(minHeight:)` not `frame(height:)` to support Dynamic Type
 
 ### CI/CD
-- Runner: `macos-15`, no Xcode version pinned (uses default, currently 16.4)
-- Test destination: resolved at runtime via `xcrun simctl list` UDID lookup
+- Runner: `macos-15`, no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode
+- Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 16` — named simulator, not UDID lookup
 - Code signing: disabled for simulator tests (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`)
 - Workflow file: `.github/workflows/pipeline.yml`

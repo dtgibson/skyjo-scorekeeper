@@ -39,11 +39,15 @@ struct ScoreEntrySheet: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
                 .padding(.bottom, 24)
+                .frame(maxWidth: Theme.contentMaxWidth)
+                .frame(maxWidth: .infinity)
             }
 
             confirmButton
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
+                .frame(maxWidth: Theme.contentMaxWidth)
+                .frame(maxWidth: .infinity)
         }
         .background(Color(.systemGroupedBackground))
         .toolbar {

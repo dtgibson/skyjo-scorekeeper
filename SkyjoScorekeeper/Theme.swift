@@ -2,6 +2,7 @@ import SwiftUI
 
 enum Theme {
     static let brand = Color(red: 0.216, green: 0.188, blue: 0.639)
+    static let contentMaxWidth: CGFloat = 600
 
     // Okabe-Ito color-blind-safe palette. Each player position gets a unique color.
     private static let playerPalette: [(Color, Color)] = [

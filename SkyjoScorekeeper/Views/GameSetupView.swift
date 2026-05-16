@@ -26,11 +26,15 @@ struct GameSetupView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 28)
                         .padding(.bottom, 12)
+                        .frame(maxWidth: Theme.contentMaxWidth)
+                        .frame(maxWidth: .infinity)
                 }
 
                 startSection
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
         }
         .overlay {

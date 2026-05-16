@@ -24,10 +24,14 @@ struct ScoringView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
                         .padding(.bottom, 12)
+                        .frame(maxWidth: Theme.contentMaxWidth)
+                        .frame(maxWidth: .infinity)
                 }
                 enterButton
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
         }
         .sheet(isPresented: $showEntrySheet) {
@@ -85,6 +89,8 @@ struct ScoringView: View {
         }
         .frame(height: 52)
         .padding(.horizontal, 20)
+        .frame(maxWidth: Theme.contentMaxWidth)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Standings

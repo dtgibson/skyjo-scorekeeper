@@ -16,11 +16,15 @@ struct WinView: View {
                     rankingsCard
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
+                        .frame(maxWidth: Theme.contentMaxWidth)
+                        .frame(maxWidth: .infinity)
                 }
 
                 actionButtons
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
         }
     }
@@ -45,9 +49,10 @@ struct WinView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
+        .frame(maxWidth: Theme.contentMaxWidth)
+        .frame(maxWidth: .infinity)
         .background(
             LinearGradient(
                 colors: [Theme.brand.opacity(0.07), Color(.systemGroupedBackground)],
@@ -184,6 +189,6 @@ private struct FinalRankRow: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 62)
-        .background(isWinner ? Theme.brand.opacity(0.06) : Color.clear)
+        .background(isWinner ? Theme.brand.opacity(0.18) : Color.clear)
     }
 }

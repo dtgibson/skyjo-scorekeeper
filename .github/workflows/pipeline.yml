@@ -17,17 +17,7 @@ jobs:
 
       - name: Build and Test
         run: |
-          UDID=$(xcrun simctl list devices available -j | \
-            python3 -c "
-          import sys, json
-          d = json.load(sys.stdin)
-          for rt, devices in d.get('devices', {}).items():
-            if 'iPhone' in rt:
-              for dev in devices:
-                if dev.get('isAvailable'):
-                  print(dev['udid'])
-                  raise SystemExit
-          ")
+          UDID=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '[0-9A-Fa-f-]{36}')
           xcodebuild test \
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \

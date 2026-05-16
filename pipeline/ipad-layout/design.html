@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iPad Layout — Skyjo Scorekeeper</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1c1c1e;
+    font-family: -apple-system, 'SF Pro Rounded', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+    gap: 32px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    text-align: center;
+    color: #fff;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: #fff;
+  }
+  .page-header p {
+    font-size: 14px;
+    color: #8e8e93;
+    margin-top: 6px;
+  }
+
+  /* ── Screen tabs ── */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: #2c2c2e;
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab {
+    padding: 7px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8e8e93;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: #3730A3;
+    color: #fff;
+  }
+
+  /* ── iPad frame ── */
+  .ipad-outer {
+    background: #2a2a2e;
+    border-radius: 36px;
+    padding: 18px;
+    box-shadow: 0 0 0 1px #444, 0 40px 100px rgba(0,0,0,0.6);
+    width: 834px;
+    max-width: 100%;
+  }
+  .ipad-screen {
+    background: #f2f2f7;
+    border-radius: 22px;
+    overflow: hidden;
+    height: 600px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Status bar ── */
+  .status-bar {
+    height: 24px;
+    background: #f2f2f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .status-bar .time {
+    font-size: 12px;
+    font-weight: 600;
+    color: #000;
+  }
+  .status-bar .icons {
+    font-size: 12px;
+    color: #000;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ── Content area ── */
+  .screen-content {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  /* ── Width constraint visualiser ── */
+  .constraint-rail {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    border-left: 1px dashed rgba(55,48,163,0.2);
+    border-right: 1px dashed rgba(55,48,163,0.2);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Screen panels ── */
+  .screen-panel { display: none; height: 100%; flex-direction: column; }
+  .screen-panel.active { display: flex; }
+
+  /* ────────────────────────────────
+     SCREEN 1 — Game Setup
+  ──────────────────────────────── */
+  .setup-nav {
+    background: #f2f2f7;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+  .setup-nav h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .setup-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 20px 16px 12px;
+  }
+  .setup-inner {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .setup-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6e6e73;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 0 4px;
+  }
+
+  .player-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    height: 52px;
+  }
+  .player-row + .player-row { border-top: 1px solid #f0f0f0; }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .player-input {
+    flex: 1;
+    font-size: 17px;
+    font-family: inherit;
+    color: #000;
+    border: none;
+    background: transparent;
+    outline: none;
+  }
+  .player-input::placeholder { color: #c7c7cc; }
+  .remove-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #ff3b30;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .remove-btn svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 2.5; }
+
+  .add-btn-row {
+    display: flex;
+    justify-content: center;
+  }
+  .add-btn {
+    background: #fff;
+    border: none;
+    border-radius: 14px;
+    width: 100%;
+    height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #3730A3;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .add-btn svg { width: 16px; height: 16px; stroke: #3730A3; stroke-width: 2; }
+
+  .setup-footer {
+    display: flex;
+    justify-content: center;
+    padding: 0 16px 16px;
+    flex-shrink: 0;
+  }
+  .start-btn {
+    width: 100%;
+    max-width: 600px;
+    height: 56px;
+    background: #3730A3;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .start-btn svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2; }
+
+  /* ────────────────────────────────
+     SCREEN 2 — Scoring View
+  ──────────────────────────────── */
+  .scoring-nav {
+    background: #f2f2f7;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    justify-content: center;
+  }
+  .scoring-nav-inner {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 14px; font-weight: 500; color: #3730A3;
+    border: none; background: transparent; cursor: pointer; font-family: inherit;
+  }
+  .nav-btn svg { width: 14px; height: 14px; stroke: #3730A3; stroke-width: 2; }
+  .nav-btn.muted { color: #c7c7cc; }
+  .nav-btn.muted svg { stroke: #c7c7cc; }
+  .round-title {
+    font-size: 17px; font-weight: 600; color: #000;
+  }
+
+  .scoring-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 16px 16px 12px;
+  }
+  .scoring-inner {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .section-label {
+    font-size: 13px; font-weight: 500;
+    color: #6e6e73; letter-spacing: 0.4px;
+    text-transform: uppercase; padding: 0 4px;
+  }
+  .standings-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .standing-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; height: 62px;
+  }
+  .standing-row.leader { background: rgba(52,199,89,0.07); }
+  .standing-row + .standing-row { border-top: 1px solid #f0f0f0; }
+  .standing-row .name {
+    flex: 1; font-size: 17px; color: #000;
+  }
+  .leader-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #34c759; flex-shrink: 0;
+  }
+  .empty-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .standing-score {
+    font-size: 22px; font-weight: 700; color: #000; min-width: 44px; text-align: right;
+  }
+  .standing-score.danger { color: #ff3b30; }
+
+  .scoring-footer {
+    display: flex;
+    justify-content: center;
+    padding: 0 16px 16px;
+    flex-shrink: 0;
+  }
+  .enter-btn {
+    width: 100%;
+    max-width: 600px;
+    height: 58px;
+    background: #3730A3;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 17px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .enter-btn svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2; }
+
+  /* ────────────────────────────────
+     SCREEN 3 — Score Entry Sheet
+  ──────────────────────────────── */
+  .sheet-backdrop {
+    flex: 1;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 600px;
+    background: #f2f2f7;
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 540px;
+    overflow: hidden;
+  }
+  .sheet-header {
+    padding: 16px 20px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sheet-title { font-size: 17px; font-weight: 600; color: #000; }
+  .sheet-cancel { font-size: 17px; color: #3730A3; cursor: pointer; border: none; background: transparent; font-family: inherit; }
+
+  .sheet-scroll { flex: 1; overflow-y: auto; padding: 0 0 8px; }
+  .sheet-section-label {
+    font-size: 13px; font-weight: 500;
+    color: #6e6e73; letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 8px 20px 4px;
+  }
+  .entry-card {
+    background: #fff;
+    border-radius: 14px;
+    margin: 0 16px 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .entry-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; height: 56px;
+  }
+  .entry-row + .entry-row { border-top: 1px solid #f0f0f0; }
+  .entry-name { flex: 1; font-size: 17px; color: #000; }
+  .double-badge {
+    font-size: 13px; font-weight: 600; color: #ff3b30;
+    background: rgba(255,59,48,0.1); border-radius: 6px;
+    padding: 2px 6px;
+  }
+  .score-input {
+    width: 60px; height: 36px;
+    background: #f2f2f7; border-radius: 8px;
+    border: none; text-align: center;
+    font-size: 17px; font-weight: 500; font-family: inherit;
+    color: #000;
+  }
+  .skyjo-chip-row {
+    display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0;
+  }
+  .skyjo-chip {
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 14px; font-weight: 500;
+    border: none; cursor: pointer; font-family: inherit;
+    background: #e5e5ea; color: #3c3c43;
+    transition: all 0.12s;
+  }
+  .skyjo-chip.selected { background: #3730A3; color: #fff; }
+  .skyjo-chip.skip { background: #e5e5ea; color: #8e8e93; }
+
+  .sheet-footer {
+    padding: 8px 16px 20px; flex-shrink: 0;
+  }
+  .confirm-btn {
+    width: 100%; height: 56px;
+    background: #3730A3; color: #fff;
+    border: none; border-radius: 16px;
+    font-size: 17px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* ────────────────────────────────
+     SCREEN 4 — Win Screen
+  ──────────────────────────────── */
+  .win-scroll {
+    flex: 1; overflow-y: auto;
+    display: flex; justify-content: center;
+    padding: 24px 16px 12px;
+  }
+  .win-inner {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .win-hero {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .win-trophy { font-size: 52px; margin-bottom: 8px; }
+  .win-name { font-size: 28px; font-weight: 700; color: #000; }
+  .win-sub { font-size: 15px; color: #6e6e73; margin-top: 4px; }
+
+  .final-card {
+    background: #fff;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .final-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; height: 58px;
+  }
+  .final-row + .final-row { border-top: 1px solid #f0f0f0; }
+  .medal { font-size: 20px; width: 24px; text-align: center; flex-shrink: 0; }
+  .final-name { flex: 1; font-size: 17px; color: #000; }
+  .final-score { font-size: 22px; font-weight: 700; color: #000; }
+  .final-score.danger { color: #ff3b30; }
+
+  .win-footer {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 0 0 16px;
+    align-items: center;
+  }
+  .win-btn-primary {
+    width: 100%; max-width: 600px; height: 56px;
+    background: #3730A3; color: #fff;
+    border: none; border-radius: 16px;
+    font-size: 17px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+  }
+  .win-btn-secondary {
+    width: 100%; max-width: 600px; height: 56px;
+    background: #fff; color: #3730A3;
+    border: none; border-radius: 16px;
+    font-size: 17px; font-weight: 500; font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* ── Annotation ── */
+  .annotation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #8e8e93;
+    font-size: 13px;
+    max-width: 834px;
+    width: 100%;
+  }
+  .annotation-line {
+    height: 1px;
+    background: rgba(55,48,163,0.25);
+    flex: 1;
+  }
+  .annotation-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(55,48,163,0.4);
+    flex-shrink: 0;
+  }
+
+  /* Avatars */
+  .av1 { background: #5B50D6; color: #fff; }
+  .av2 { background: #FF6B6B; color: #fff; }
+  .av3 { background: #4ECDC4; color: #1a1a1a; }
+  .av4 { background: #FFE66D; color: #1a1a1a; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Skyjo Scorekeeper — iPad Layout</h1>
+  <p>All screens width-constrained to 600pt, centered on the full iPad display</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('setup', this)">Game Setup</button>
+  <button class="tab" onclick="show('scoring', this)">Scoring</button>
+  <button class="tab" onclick="show('entry', this)">Score Entry</button>
+  <button class="tab" onclick="show('win', this)">Win Screen</button>
+</div>
+
+<div class="annotation">
+  <div class="annotation-dot"></div>
+  <div class="annotation-line"></div>
+  <span>← iPad screen (798pt wide) →</span>
+  <div class="annotation-line"></div>
+  <div class="annotation-dot"></div>
+</div>
+
+<div class="ipad-outer">
+  <div class="ipad-screen">
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="icons">
+        <span>●●●●</span>
+        <span>WiFi</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: Game Setup -->
+    <div class="screen-panel active" id="panel-setup">
+      <div class="constraint-rail"></div>
+      <div class="setup-nav">
+        <h2>Skyjo Scorekeeper</h2>
+      </div>
+      <div class="setup-scroll">
+        <div class="setup-inner">
+          <div class="setup-label">Players</div>
+          <div class="player-card">
+            <div class="player-row">
+              <div class="avatar av1">A</div>
+              <input class="player-input" value="Alice" />
+            </div>
+            <div class="player-row">
+              <div class="avatar av2">B</div>
+              <input class="player-input" value="Bob" />
+            </div>
+            <div class="player-row">
+              <div class="avatar av3">C</div>
+              <input class="player-input" value="Carol" />
+            </div>
+            <div class="player-row">
+              <div class="avatar av4">D</div>
+              <input class="player-input" value="Dave" />
+              <button class="remove-btn">
+                <svg viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="add-btn-row">
+            <button class="add-btn">
+              <svg viewBox="0 0 20 20" fill="none" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>
+              Add Player
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="setup-footer">
+        <button class="start-btn">
+          <svg viewBox="0 0 20 20" fill="none" stroke-linecap="round"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+          Start Game
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Scoring View -->
+    <div class="screen-panel" id="panel-scoring">
+      <div class="constraint-rail"></div>
+      <div class="scoring-nav">
+        <div class="scoring-nav-inner">
+          <button class="nav-btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke-linecap="round"><path d="M2 8h12M5 4l-4 4 4 4"/></svg>
+            End Game
+          </button>
+          <span class="round-title">Round 4</span>
+          <button class="nav-btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke-linecap="round"><path d="M3 8a5 5 0 0 1 5-5 5 5 0 0 1 3.5 1.5L14 7M13 4v3h-3"/></svg>
+            Undo
+          </button>
+        </div>
+      </div>
+      <div class="scoring-scroll">
+        <div class="scoring-inner">
+          <div class="section-label">Standings</div>
+          <div class="standings-card">
+            <div class="standing-row leader">
+              <div class="avatar av3">C</div>
+              <span class="name">Carol</span>
+              <div class="leader-dot"></div>
+              <span class="standing-score">14</span>
+            </div>
+            <div class="standing-row">
+              <div class="avatar av1">A</div>
+              <span class="name">Alice</span>
+              <div class="empty-dot"></div>
+              <span class="standing-score">31</span>
+            </div>
+            <div class="standing-row">
+              <div class="avatar av4">D</div>
+              <span class="name">Dave</span>
+              <div class="empty-dot"></div>
+              <span class="standing-score">47</span>
+            </div>
+            <div class="standing-row">
+              <div class="avatar av2">B</div>
+              <span class="name">Bob</span>
+              <div class="empty-dot"></div>
+              <span class="standing-score">58</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="scoring-footer">
+        <button class="enter-btn">
+          <svg viewBox="0 0 20 20" fill="none" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>
+          Enter Round 4 Scores
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Score Entry Sheet -->
+    <div class="screen-panel" id="panel-entry">
+      <!-- Dimmed background showing scoring view behind -->
+      <div style="background:#f2f2f7; flex:1; display:flex; align-items:flex-end; justify-content:center;">
+        <div class="sheet">
+          <div class="sheet-header">
+            <span class="sheet-title">Round 4</span>
+            <button class="sheet-cancel">Cancel</button>
+          </div>
+          <div class="sheet-scroll">
+            <div class="sheet-section-label">Scores</div>
+            <div class="entry-card">
+              <div class="entry-row">
+                <div class="avatar av3">C</div>
+                <span class="entry-name">Carol</span>
+                <input class="score-input" value="3" />
+              </div>
+              <div class="entry-row">
+                <div class="avatar av1">A</div>
+                <span class="entry-name">Alice</span>
+                <span class="double-badge">×2 → 14</span>
+                <input class="score-input" value="7" />
+              </div>
+              <div class="entry-row">
+                <div class="avatar av4">D</div>
+                <span class="entry-name">Dave</span>
+                <input class="score-input" value="11" />
+              </div>
+              <div class="entry-row">
+                <div class="avatar av2">B</div>
+                <span class="entry-name">Bob</span>
+                <input class="score-input" value="-2" />
+              </div>
+            </div>
+            <div class="sheet-section-label">Who Ended the Round?</div>
+            <div class="entry-card">
+              <div class="entry-row">
+                <div class="skyjo-chip-row">
+                  <button class="skyjo-chip">Carol</button>
+                  <button class="skyjo-chip selected">Alice</button>
+                  <button class="skyjo-chip">Dave</button>
+                  <button class="skyjo-chip">Bob</button>
+                  <button class="skyjo-chip skip">Skip</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-footer">
+            <button class="confirm-btn">Confirm Round</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Win Screen -->
+    <div class="screen-panel" id="panel-win">
+      <div class="constraint-rail"></div>
+      <div class="win-scroll">
+        <div class="win-inner">
+          <div class="win-hero">
+            <div class="win-trophy">🏆</div>
+            <div class="win-name">Carol wins!</div>
+            <div class="win-sub">Final score: 62 — lowest at the table</div>
+          </div>
+          <div class="section-label">Final Standings</div>
+          <div class="final-card">
+            <div class="final-row">
+              <span class="medal">🥇</span>
+              <div class="avatar av3">C</div>
+              <span class="final-name">Carol</span>
+              <span class="final-score">62</span>
+            </div>
+            <div class="final-row">
+              <span class="medal">🥈</span>
+              <div class="avatar av1">A</div>
+              <span class="final-name">Alice</span>
+              <span class="final-score">87</span>
+            </div>
+            <div class="final-row">
+              <span class="medal">🥉</span>
+              <div class="avatar av4">D</div>
+              <span class="final-name">Dave</span>
+              <span class="final-score">94</span>
+            </div>
+            <div class="final-row">
+              <span class="medal"></span>
+              <div class="avatar av2">B</div>
+              <span class="final-name">Bob</span>
+              <span class="final-score danger">103</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="win-footer" style="padding: 0 16px 16px;">
+        <button class="win-btn-primary">New Game — Same Players</button>
+        <button class="win-btn-secondary">Start Fresh</button>
+      </div>
+    </div>
+
+  </div><!-- /ipad-screen -->
+</div><!-- /ipad-outer -->
+
+<div class="annotation">
+  <div class="annotation-dot"></div>
+  <div class="annotation-line"></div>
+  <span>Dashed lines show the 600pt content boundary</span>
+  <div class="annotation-line"></div>
+  <div class="annotation-dot"></div>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.screen-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

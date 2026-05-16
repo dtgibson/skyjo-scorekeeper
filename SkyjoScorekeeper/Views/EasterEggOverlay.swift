@@ -3,6 +3,8 @@ import SwiftUI
 struct EasterEggOverlay: View {
     let onDismiss: () -> Void
 
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
     var body: some View {
         ZStack {
             Rectangle()
@@ -14,20 +16,21 @@ struct EasterEggOverlay: View {
                 Text("🌸")
                     .font(.system(size: 52))
                     .padding(.bottom, 16)
+                    .accessibilityHidden(true)
 
                 Text("Happy Mother's Day,\nShawn!")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .tracking(-0.5)
                     .padding(.bottom, 28)
 
                 Button("Close", action: onDismiss)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.headline, design: .rounded))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
-                    .background(Theme.brand)
+                    .background(colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand)
                     .clipShape(RoundedRectangle(cornerRadius: 13))
             }
             .padding(28)

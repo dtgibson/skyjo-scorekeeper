@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility — Design Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", system-ui, sans-serif; background: #1a1a2e; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: #fff; }
+
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; color: #fff; }
+  .subtitle { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 32px; }
+
+  /* Controls panel */
+  .controls { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .toggle-group { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.15s; border: 1px solid rgba(255,255,255,0.1); }
+  .toggle-group:hover { background: rgba(255,255,255,0.12); }
+  .toggle-group.active { background: rgba(99,102,241,0.25); border-color: rgba(99,102,241,0.5); }
+  .toggle-icon { font-size: 18px; }
+  .toggle-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); }
+  .toggle-switch { width: 36px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 10px; position: relative; transition: background 0.15s; margin-left: 4px; }
+  .toggle-group.active .toggle-switch { background: #6366f1; }
+  .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 8px; transition: transform 0.15s; }
+  .toggle-group.active .toggle-switch::after { transform: translateX(16px); }
+
+  /* Screen tabs */
+  .screen-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.08); padding: 4px; border-radius: 12px; margin-bottom: 24px; }
+  .screen-tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.15s; }
+  .screen-tab.active { background: rgba(255,255,255,0.15); color: white; }
+
+  /* Phone frame */
+  .phone-frame { width: 390px; min-height: 700px; background: #f2f2f7; border-radius: 48px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1); position: relative; }
+  .phone-notch { background: #000; height: 44px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .notch-pill { width: 120px; height: 34px; background: #000; border-radius: 20px; }
+
+  /* Screen content */
+  .screen { display: none; flex-direction: column; min-height: 656px; background: #f2f2f7; }
+  .screen.active { display: flex; }
+
+  /* Shared styles */
+  .brand { color: #3730A3; }
+  .brand-hc { color: #2c258a; }
+  .section-label { font-size: 12px; font-weight: 600; color: #8e8e93; letter-spacing: 0.5px; padding: 0 6px; margin-bottom: 8px; }
+  .card { background: white; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .divider { height: 1px; background: rgba(0,0,0,0.06); margin-left: 64px; }
+
+  /* Accessibility label overlay */
+  .a11y-label { display: none; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,120,255,0.12); border: 2px solid rgba(0,120,255,0.5); border-radius: 8px; pointer-events: none; z-index: 10; }
+  .a11y-tooltip { position: absolute; bottom: calc(100% + 6px); left: 0; background: rgba(0,80,200,0.95); color: white; font-size: 11px; font-weight: 500; padding: 5px 8px; border-radius: 6px; white-space: nowrap; line-height: 1.3; min-width: 160px; max-width: 280px; white-space: normal; z-index: 20; }
+  .a11y-tooltip::after { content: ''; position: absolute; top: 100%; left: 12px; border: 5px solid transparent; border-top-color: rgba(0,80,200,0.95); }
+  .voiceover-on .a11y-label { display: block; }
+
+  /* ==================== GAME SETUP SCREEN ==================== */
+  .setup-header { padding: 20px 24px 16px; text-align: center; }
+  .setup-title { font-size: 34px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+  .setup-subtitle { font-size: 15px; color: #8e8e93; margin-top: 6px; }
+  .setup-content { padding: 0 16px; flex: 1; }
+  .player-row { display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 54px; position: relative; }
+  .player-row .a11y-label { border-radius: 0; left: -2px; right: -2px; }
+  .avatar { width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+  .player-input { flex: 1; border: none; outline: none; font-size: 17px; font-family: inherit; color: #1c1c1e; background: transparent; }
+  .remove-btn { width: 22px; height: 22px; border-radius: 11px; background: #ff3b30; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 700; cursor: pointer; position: relative; flex-shrink: 0; }
+  .add-player-btn { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 54px; background: white; border-radius: 14px; margin-top: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); cursor: pointer; }
+  .add-circle { width: 30px; height: 30px; border-radius: 15px; background: #34c759; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 700; }
+  .add-text { font-size: 17px; }
+  .setup-bottom { padding: 16px; }
+  .start-btn { background: #3730A3; color: white; border-radius: 16px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; cursor: pointer; position: relative; }
+  .start-btn.hc { background: #2c258a; }
+  .status-note { text-align: center; font-size: 13px; color: #34c759; margin-top: 10px; }
+
+  /* ==================== SCORING SCREEN ==================== */
+  .nav-bar { display: flex; align-items: center; height: 52px; padding: 0 20px; }
+  .nav-end-game { font-size: 14px; font-weight: 500; width: 80px; display: flex; align-items: center; gap: 4px; position: relative; }
+  .nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; position: relative; }
+  .nav-undo { font-size: 14px; font-weight: 500; width: 80px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 4px; position: relative; }
+  .scoring-content { padding: 0 16px; flex: 1; }
+  .standing-row { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 62px; position: relative; }
+  .standing-row .a11y-label { left: -2px; right: -2px; border-radius: 0; }
+  .leader-dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; }
+  .leader-crown { font-size: 13px; flex-shrink: 0; margin-left: -4px; }
+  .score-num { font-size: 22px; font-weight: 700; min-width: 32px; text-align: right; }
+  .leader-bg { background: rgba(52,199,89,0.07); }
+  .enter-btn-wrap { padding: 0 16px 8px; }
+  .enter-btn { background: #3730A3; color: white; border-radius: 16px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; position: relative; }
+  .enter-btn.hc { background: #2c258a; }
+
+  /* ==================== SCORE ENTRY SCREEN ==================== */
+  .handle { width: 36px; height: 5px; background: #c7c7cc; border-radius: 3px; margin: 12px auto 8px; }
+  .entry-section { padding: 0 16px 20px; flex: 1; }
+  .score-input-row { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 64px; position: relative; }
+  .score-input-row .a11y-label { left: -2px; right: -2px; border-radius: 0; }
+  .neg-toggle { font-size: 22px; color: #c7c7cc; flex-shrink: 0; position: relative; }
+  .neg-toggle.active { color: #ff3b30; }
+  .score-field { width: 52px; text-align: right; font-size: 22px; font-weight: 700; font-family: inherit; border: none; background: transparent; outline: none; color: #1c1c1e; }
+  .doubling-preview { font-size: 12px; font-weight: 600; color: #ff9500; margin-left: -8px; }
+  .skyjo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .skyjo-chip { height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 500; background: #f2f2f7; cursor: pointer; position: relative; }
+  .skyjo-chip.selected { background: rgba(55,48,163,0.1); border: 1.5px solid #3730A3; }
+  .skyjo-chip .a11y-label { border-radius: 10px; }
+  .chip-avatar { width: 22px; height: 22px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; }
+  .confirm-btn { background: #3730A3; color: white; border-radius: 16px; height: 58px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; margin: 0 16px 8px; position: relative; }
+  .confirm-btn.hc { background: #2c258a; }
+  .confirm-btn.disabled { background: rgba(55,48,163,0.28); }
+
+  /* ==================== WIN SCREEN ==================== */
+  .win-hero { padding: 40px 24px 20px; text-align: center; background: linear-gradient(to bottom, rgba(55,48,163,0.07), #f2f2f7); }
+  .win-emoji { font-size: 56px; display: block; margin-bottom: 12px; position: relative; }
+  .win-headline { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 6px; }
+  .win-subtitle { font-size: 15px; color: #8e8e93; }
+  .win-content { padding: 0 16px; flex: 1; }
+  .final-row { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 62px; position: relative; }
+  .final-row .a11y-label { left: -2px; right: -2px; border-radius: 0; }
+  .winner-bg { background: rgba(55,48,163,0.12); }
+  .medal { font-size: 18px; }
+  .win-actions { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px; }
+  .new-game-btn { background: #3730A3; color: white; border-radius: 16px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 600; position: relative; }
+  .new-game-btn.hc { background: #2c258a; }
+  .start-fresh-btn { height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; position: relative; }
+
+  /* ==================== HIGH CONTRAST PALETTE ==================== */
+  /* Standard player colors */
+  .p0 { background: #3730A3; }
+  .p1 { background: #E69F00; }
+  .p2 { background: #009E73; }
+  .p3 { background: #D55E00; }
+  .p4 { background: #0072B2; }
+  .p5 { background: #CC79A7; }
+  /* High contrast variants */
+  .p0-hc { background: #2c258a; }
+  .p1-hc { background: #a07200; } /* darkened for 4.5:1 with white */
+  .p2-hc { background: #007a59; } /* darkened slightly */
+  .p3-hc { background: #a84800; } /* darkened for contrast */
+  .p4-hc { background: #005a8c; }
+  .p5-hc { background: #a0537e; } /* darkened for 4.5:1 */
+
+  /* New feature callout */
+  .new-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,149,0,0.15); border: 1px solid rgba(255,149,0,0.4); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #ff9500; margin-left: 8px; vertical-align: middle; }
+
+  /* Legend */
+  .legend { margin-top: 24px; background: rgba(255,255,255,0.06); border-radius: 14px; padding: 16px 20px; width: 390px; }
+  .legend-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .legend-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .legend-text { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+
+  /* Scrollable screen */
+  .screen-scroll { overflow-y: auto; flex: 1; }
+</style>
+</head>
+<body>
+
+<h1>Accessibility — Design Mockup</h1>
+<p class="subtitle">Toggle accessibility settings below to see how the app responds</p>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="toggle-group" id="toggle-voiceover" onclick="toggleSetting('voiceover')">
+    <span class="toggle-icon">👁</span>
+    <span class="toggle-label">VoiceOver Labels</span>
+    <div class="toggle-switch"></div>
+  </div>
+  <div class="toggle-group" id="toggle-contrast" onclick="toggleSetting('contrast')">
+    <span class="toggle-icon">◑</span>
+    <span class="toggle-label">Increase Contrast</span>
+    <div class="toggle-switch"></div>
+  </div>
+  <div class="toggle-group" id="toggle-text" onclick="toggleSetting('text')">
+    <span class="toggle-icon">A</span>
+    <span class="toggle-label">Large Text (AX3)</span>
+    <div class="toggle-switch"></div>
+  </div>
+</div>
+
+<!-- Screen tabs -->
+<div class="screen-tabs">
+  <div class="screen-tab active" onclick="showScreen('setup')">Game Setup</div>
+  <div class="screen-tab" onclick="showScreen('scoring')">Scoring</div>
+  <div class="screen-tab" onclick="showScreen('entry')">Score Entry</div>
+  <div class="screen-tab" onclick="showScreen('win')">Win</div>
+</div>
+
+<!-- Phone frame -->
+<div class="phone-frame" id="phone">
+  <div class="phone-notch"><div class="notch-pill"></div></div>
+
+  <!-- ==================== GAME SETUP ==================== -->
+  <div class="screen active" id="screen-setup">
+    <div class="setup-header">
+      <div class="setup-title brand setup-title-el">Skyjo Scorekeeper</div>
+      <div class="setup-subtitle">Who's playing today?</div>
+    </div>
+    <div class="setup-content">
+      <div class="section-label setup-section-label">PLAYERS</div>
+      <div class="card">
+        <!-- Player 1 -->
+        <div class="player-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Player 1 name, text field<br><span style="opacity:0.7;font-size:10px">Hint: Enter a player name</span></div>
+          </div>
+          <div class="avatar p0 avatar-0">S</div>
+          <input class="player-input player-input-el" value="Shawn" readonly>
+        </div>
+        <div class="divider"></div>
+        <!-- Player 2 -->
+        <div class="player-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Player 2 name, text field<br><span style="opacity:0.7;font-size:10px">Hint: Enter a player name</span></div>
+          </div>
+          <div class="avatar p1 avatar-1">P</div>
+          <input class="player-input player-input-el" value="Phoebe" readonly>
+          <div class="remove-btn" style="position:relative">
+            <div class="a11y-label" style="border-radius:11px">
+              <div class="a11y-tooltip" style="left:auto;right:0">Remove Phoebe, button</div>
+            </div>
+            ×
+          </div>
+        </div>
+        <div class="divider"></div>
+        <!-- Player 3 -->
+        <div class="player-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Player 3 name, text field</div>
+          </div>
+          <div class="avatar p2 avatar-2">E</div>
+          <input class="player-input player-input-el" value="Elena" readonly>
+          <div class="remove-btn" style="position:relative">
+            <div class="a11y-label" style="border-radius:11px">
+              <div class="a11y-tooltip" style="left:auto;right:0">Remove Elena, button</div>
+            </div>
+            ×
+          </div>
+        </div>
+      </div>
+      <div class="add-player-btn" style="margin-top:8px">
+        <div class="add-circle">+</div>
+        <span class="add-text">Add Player</span>
+      </div>
+    </div>
+    <div class="setup-bottom">
+      <div class="start-btn start-btn-el">
+        <span>▶</span> Start Game
+      </div>
+      <div class="status-note status-note-el">3 players ready</div>
+    </div>
+  </div>
+
+  <!-- ==================== SCORING ==================== -->
+  <div class="screen" id="screen-scoring">
+    <div class="nav-bar">
+      <div class="nav-end-game brand brand-el" style="position:relative">
+        <div class="a11y-label" style="border-radius:8px">
+          <div class="a11y-tooltip">End Game, button<br><span style="opacity:0.7;font-size:10px">Ends current game and returns to setup</span></div>
+        </div>
+        ✕ End Game
+      </div>
+      <div class="nav-title" style="position:relative">
+        <div class="a11y-label" style="border-radius:8px">
+          <div class="a11y-tooltip">Round 4</div>
+        </div>
+        Round 4
+      </div>
+      <div class="nav-undo brand brand-el" style="position:relative">
+        <div class="a11y-label" style="border-radius:8px">
+          <div class="a11y-tooltip">Undo, button<br><span style="opacity:0.7;font-size:10px">Removes the most recent round's scores</span></div>
+        </div>
+        ↩ Undo
+      </div>
+    </div>
+    <div class="scoring-content">
+      <div class="section-label standings-label">STANDINGS</div>
+      <div class="card">
+        <!-- Shawn — leader -->
+        <div class="standing-row leader-bg" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Shawn, 14 points, currently leading</div>
+          </div>
+          <div class="avatar p0 avatar-0" style="width:36px;height:36px;border-radius:18px;font-size:14px">S</div>
+          <span class="player-name-el" style="flex:1;font-size:17px">Shawn</span>
+          <div class="leader-crown">♛</div>
+          <div class="leader-dot" style="background:#34c759"></div>
+          <span class="score-num score-el">14</span>
+        </div>
+        <div class="divider" style="margin-left:0"></div>
+        <!-- Phoebe -->
+        <div class="standing-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Phoebe, 29 points</div>
+          </div>
+          <div class="avatar p1 avatar-1" style="width:36px;height:36px;border-radius:18px;font-size:14px">P</div>
+          <span class="player-name-el" style="flex:1;font-size:17px">Phoebe</span>
+          <div class="leader-dot" style="background:transparent"></div>
+          <span class="score-num score-el">29</span>
+        </div>
+        <div class="divider" style="margin-left:0"></div>
+        <!-- Elena -->
+        <div class="standing-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Elena, 41 points</div>
+          </div>
+          <div class="avatar p2 avatar-2" style="width:36px;height:36px;border-radius:18px;font-size:14px">E</div>
+          <span class="player-name-el" style="flex:1;font-size:17px">Elena</span>
+          <div class="leader-dot" style="background:transparent"></div>
+          <span class="score-num score-el">41</span>
+        </div>
+      </div>
+    </div>
+    <div class="enter-btn-wrap">
+      <div class="enter-btn enter-btn-el" style="position:relative">
+        <div class="a11y-label" style="border-radius:16px">
+          <div class="a11y-tooltip">Enter Round 4 Scores, button</div>
+        </div>
+        ↑ Enter Round 4 Scores
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCORE ENTRY ==================== -->
+  <div class="screen" id="screen-entry">
+    <div class="handle"></div>
+    <div class="screen-scroll">
+      <div class="entry-section">
+        <div class="section-label entry-label" style="margin-top:8px">ROUND 4 SCORES</div>
+        <div class="card">
+          <!-- Shawn -->
+          <div class="score-input-row" style="position:relative">
+            <div class="a11y-label">
+              <div class="a11y-tooltip">Score for Shawn, text field</div>
+            </div>
+            <div class="avatar p0 avatar-0" style="width:36px;height:36px;border-radius:18px;font-size:14px">S</div>
+            <span style="flex:1;font-size:17px">Shawn</span>
+            <div class="neg-toggle" style="position:relative">
+              <div class="a11y-label" style="border-radius:6px;width:32px;height:32px">
+                <div class="a11y-tooltip" style="left:auto;right:0">Negative score, off</div>
+              </div>
+              ⊖
+            </div>
+            <input class="score-field score-field-el" value="7" readonly>
+          </div>
+          <div class="divider"></div>
+          <!-- Phoebe — with doubling preview -->
+          <div class="score-input-row" style="position:relative">
+            <div class="a11y-label">
+              <div class="a11y-tooltip">Score for Phoebe, text field. Called Skyjo with score 5 — will be doubled to 10.</div>
+            </div>
+            <div class="avatar p1 avatar-1" style="width:36px;height:36px;border-radius:18px;font-size:14px">P</div>
+            <span style="font-size:17px">Phoebe</span>
+            <span class="doubling-preview">×2 → 10</span>
+            <div style="flex:1"></div>
+            <div class="neg-toggle" style="position:relative">
+              <div class="a11y-label" style="border-radius:6px;width:32px;height:32px">
+                <div class="a11y-tooltip" style="left:auto;right:0">Negative score, off</div>
+              </div>
+              ⊖
+            </div>
+            <input class="score-field score-field-el" value="5" readonly>
+          </div>
+          <div class="divider"></div>
+          <!-- Elena -->
+          <div class="score-input-row" style="position:relative">
+            <div class="a11y-label">
+              <div class="a11y-tooltip">Score for Elena, text field</div>
+            </div>
+            <div class="avatar p2 avatar-2" style="width:36px;height:36px;border-radius:18px;font-size:14px">E</div>
+            <span style="flex:1;font-size:17px">Elena</span>
+            <div class="neg-toggle active" style="position:relative">
+              <div class="a11y-label" style="border-radius:6px;width:32px;height:32px">
+                <div class="a11y-tooltip" style="left:auto;right:0">Negative score, on</div>
+              </div>
+              ⊖
+            </div>
+            <input class="score-field score-field-el" value="-3" readonly>
+          </div>
+        </div>
+
+        <div class="section-label skyjo-label" style="margin-top:16px">WHO ENDED THE ROUND?</div>
+        <div class="card" style="padding:12px">
+          <div class="skyjo-grid">
+            <div class="skyjo-chip" style="position:relative">
+              <div class="a11y-label" style="border-radius:10px">
+                <div class="a11y-tooltip">Shawn called Skyjo, button. Not selected.</div>
+              </div>
+              <div class="chip-avatar p0 avatar-0">S</div>
+              <span style="font-size:14px;font-weight:500">Shawn</span>
+            </div>
+            <div class="skyjo-chip selected" style="position:relative">
+              <div class="a11y-label" style="border-radius:10px">
+                <div class="a11y-tooltip">Phoebe called Skyjo, button. Selected.</div>
+              </div>
+              <div class="chip-avatar p1 avatar-1">P</div>
+              <span class="brand brand-el" style="font-size:14px;font-weight:500">Phoebe</span>
+            </div>
+            <div class="skyjo-chip" style="position:relative">
+              <div class="a11y-label" style="border-radius:10px">
+                <div class="a11y-tooltip">Elena called Skyjo, button. Not selected.</div>
+              </div>
+              <div class="chip-avatar p2 avatar-2">E</div>
+              <span style="font-size:14px;font-weight:500">Elena</span>
+            </div>
+            <div class="skyjo-chip" style="grid-column:1/-1;position:relative">
+              <div class="a11y-label" style="border-radius:10px">
+                <div class="a11y-tooltip">Nobody called Skyjo, button. Not selected.</div>
+              </div>
+              <span style="font-size:14px;font-weight:500;color:#8e8e93">Skip</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-btn confirm-btn-el" style="position:relative">
+      <div class="a11y-label" style="border-radius:16px">
+        <div class="a11y-tooltip">Confirm Round 4, button</div>
+      </div>
+      Confirm Round 4
+    </div>
+  </div>
+
+  <!-- ==================== WIN ==================== -->
+  <div class="screen" id="screen-win">
+    <div class="win-hero">
+      <span class="win-emoji" style="position:relative">
+        🏆
+        <div class="a11y-label" style="border-radius:50%;width:64px;height:64px;border-radius:50%">
+          <div class="a11y-tooltip">Winner</div>
+        </div>
+      </span>
+      <div class="win-headline brand brand-el" style="position:relative">
+        Shawn Wins!
+        <div class="a11y-label" style="border-radius:8px;display:none"></div>
+      </div>
+      <div class="win-subtitle">6 rounds played</div>
+    </div>
+    <div class="win-content">
+      <div class="section-label final-label" style="margin-top:12px">FINAL STANDINGS</div>
+      <div class="card">
+        <!-- Shawn — winner -->
+        <div class="final-row winner-bg" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">First place: Shawn, 80 points, winner</div>
+          </div>
+          <div class="avatar p0 avatar-0" style="width:36px;height:36px;border-radius:18px;font-size:14px">S</div>
+          <span style="flex:1;font-size:17px">Shawn</span>
+          <span class="medal">🥇</span>
+          <span class="score-num score-el">80</span>
+        </div>
+        <div class="divider" style="margin-left:0"></div>
+        <div class="final-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Second place: Phoebe, 90 points</div>
+          </div>
+          <div class="avatar p1 avatar-1" style="width:36px;height:36px;border-radius:18px;font-size:14px">P</div>
+          <span style="flex:1;font-size:17px">Phoebe</span>
+          <span class="medal">🥈</span>
+          <span class="score-num score-el">90</span>
+        </div>
+        <div class="divider" style="margin-left:0"></div>
+        <div class="final-row" style="position:relative">
+          <div class="a11y-label">
+            <div class="a11y-tooltip">Third place: Elena, 96 points</div>
+          </div>
+          <div class="avatar p2 avatar-2" style="width:36px;height:36px;border-radius:18px;font-size:14px">E</div>
+          <span style="flex:1;font-size:17px">Elena</span>
+          <span class="medal">🥉</span>
+          <span class="score-num score-el">96</span>
+        </div>
+      </div>
+    </div>
+    <div class="win-actions" style="margin-top:12px">
+      <div class="new-game-btn new-game-btn-el" style="position:relative">
+        <div class="a11y-label" style="border-radius:16px">
+          <div class="a11y-tooltip">New Game, Same Players, button</div>
+        </div>
+        ↺ New Game — Same Players
+      </div>
+      <div class="start-fresh-btn brand brand-el" style="position:relative">
+        <div class="a11y-label" style="border-radius:8px">
+          <div class="a11y-tooltip">Start Fresh, button</div>
+        </div>
+        Start Fresh
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone frame -->
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-title">What you're seeing</div>
+  <div class="legend-item">
+    <span class="legend-icon">♛</span>
+    <span class="legend-text"><strong>Crown icon (new)</strong> — Non-color leader indicator in the Scoring View. Identifiable by color-blind sighted users without needing VoiceOver (FR-34).</span>
+  </div>
+  <div class="legend-item">
+    <span class="legend-icon">👁</span>
+    <span class="legend-text"><strong>VoiceOver Labels</strong> — Blue overlays show what VoiceOver announces for each element. Rows are grouped into single meaningful units rather than individual fragments.</span>
+  </div>
+  <div class="legend-item">
+    <span class="legend-icon">◑</span>
+    <span class="legend-text"><strong>Increase Contrast</strong> — Orange and pink-purple avatar colors are darkened to meet WCAG AA (4.5:1) contrast with white text. The brand indigo deepens slightly.</span>
+  </div>
+  <div class="legend-item">
+    <span class="legend-icon">A</span>
+    <span class="legend-text"><strong>Large Text (AX3)</strong> — All text scales with Dynamic Type. Row heights expand to fit — nothing clips or truncates.</span>
+  </div>
+</div>
+
+<script>
+  const state = { voiceover: false, contrast: false, text: false };
+
+  function toggleSetting(key) {
+    state[key] = !state[key];
+    document.getElementById('toggle-' + key).classList.toggle('active', state[key]);
+    applySettings();
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function applySettings() {
+    const phone = document.getElementById('phone');
+
+    // VoiceOver
+    phone.classList.toggle('voiceover-on', state.voiceover);
+
+    // High Contrast
+    const hcPairs = [
+      ['p0','p0-hc'], ['p1','p1-hc'], ['p2','p2-hc'],
+      ['p3','p3-hc'], ['p4','p4-hc'], ['p5','p5-hc']
+    ];
+    document.querySelectorAll('.avatar').forEach(el => {
+      hcPairs.forEach(([std, hc]) => {
+        if (state.contrast) {
+          if (el.classList.contains(std)) el.classList.add(hc);
+        } else {
+          el.classList.remove(hc);
+        }
+      });
+    });
+    document.querySelectorAll('.chip-avatar').forEach(el => {
+      hcPairs.forEach(([std, hc]) => {
+        if (state.contrast) {
+          if (el.classList.contains(std)) el.classList.add(hc);
+        } else {
+          el.classList.remove(hc);
+        }
+      });
+    });
+    // Brand color elements
+    const brandEls = document.querySelectorAll('.brand-el, .start-btn, .enter-btn, .confirm-btn:not(.disabled), .new-game-btn');
+    brandEls.forEach(el => {
+      if (state.contrast) el.classList.add('hc');
+      else el.classList.remove('hc');
+    });
+
+    // Large Text
+    const textScale = state.text ? 1.28 : 1;
+    document.querySelectorAll('.player-input-el, .player-name-el, .score-el, .score-field-el').forEach(el => {
+      el.style.fontSize = (17 * textScale) + 'px';
+    });
+    document.querySelectorAll('.score-num').forEach(el => {
+      el.style.fontSize = (22 * textScale) + 'px';
+    });
+    document.querySelectorAll('.setup-title-el').forEach(el => {
+      el.style.fontSize = (34 * textScale) + 'px';
+    });
+    // Expand row heights
+    document.querySelectorAll('.player-row, .standing-row, .score-input-row, .final-row').forEach(el => {
+      el.style.height = state.text ? '80px' : '';
+    });
+    document.querySelectorAll('.section-label').forEach(el => {
+      el.style.fontSize = state.text ? '14px' : '';
+    });
+    document.querySelectorAll('.status-note-el').forEach(el => {
+      el.style.fontSize = state.text ? '15px' : '13px';
+    });
+  }
+</script>
+</body>
+</html>

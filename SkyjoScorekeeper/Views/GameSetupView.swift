@@ -5,6 +5,11 @@ struct GameSetupView: View {
     @State private var showEasterEgg = false
     @State private var highlightErrors = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize: CGFloat = 40
+
     private let onStart: ([Player]) -> Void
 
     init(initialPlayers: [Player]? = nil, onStart: @escaping ([Player]) -> Void = { _ in }) {
@@ -43,7 +48,7 @@ struct GameSetupView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showEasterEgg)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: showEasterEgg)
         .onChange(of: gameState.players) { _, _ in
             highlightErrors = false
         }
@@ -54,15 +59,15 @@ struct GameSetupView: View {
     private var headerSection: some View {
         VStack(spacing: 7) {
             Text("Skyjo Scorekeeper")
-                .font(.system(size: 40, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.brand)
+                .font(.system(size: titleFontSize, weight: .heavy, design: .rounded))
+                .foregroundStyle(colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand)
                 .tracking(-1.5)
                 .onLongPressGesture(minimumDuration: 3) {
                     showEasterEgg = true
                 }
 
             Text("Who's playing today?")
-                .font(.system(size: 15, design: .rounded))
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
         }
         .padding(.top, 20)
@@ -74,10 +79,11 @@ struct GameSetupView: View {
     private var playerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("PLAYERS")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.6)
                 .padding(.horizontal, 6)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 ForEach(gameState.players) { player in
@@ -121,12 +127,12 @@ struct GameSetupView: View {
                             .foregroundStyle(.white)
                     }
                 Text("Add Player")
-                    .font(.system(size: 17, design: .rounded))
+                    .font(.system(.body, design: .rounded))
                     .foregroundStyle(.primary)
                 Spacer()
             }
             .padding(.horizontal, 14)
-            .frame(height: 54)
+            .frame(minHeight: 54)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
@@ -140,17 +146,17 @@ struct GameSetupView: View {
         VStack(spacing: 11) {
             Button(action: attemptStart) {
                 Label("Start Game", systemImage: "play.fill")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.headline, design: .rounded))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 58)
+                    .frame(minHeight: 58)
             }
             .buttonStyle(PrimaryButtonStyle(isEnabled: gameState.canStart))
             .disabled(!gameState.canStart)
 
             Text(statusNote)
-                .font(.system(size: 13, design: .rounded))
+                .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(gameState.canStart ? Color(.systemGreen) : Color(.tertiaryLabel))
-                .animation(.easeInOut(duration: 0.15), value: gameState.canStart)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: gameState.canStart)
         }
     }
 
@@ -205,14 +211,18 @@ struct GameSetupView: View {
 struct PrimaryButtonStyle: ButtonStyle {
     let isEnabled: Bool
 
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        let brand = colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
+        return configuration.label
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Theme.brand.opacity(isEnabled ? 1.0 : 0.28))
+                    .fill(brand.opacity(isEnabled ? 1.0 : 0.28))
             )
             .foregroundStyle(.white)
             .scaleEffect(configuration.isPressed && isEnabled ? 0.985 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }

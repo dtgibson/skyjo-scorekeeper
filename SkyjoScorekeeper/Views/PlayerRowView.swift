@@ -10,28 +10,34 @@ struct PlayerRowView: View {
     let canRemove: Bool
     let onRemove: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var highContrast: Bool { colorSchemeContrast == .increased }
+
+    private var displayName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? placeholder : trimmed
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(isFilled
-                      ? Theme.playerColor(at: colorIndex)
-                      : Theme.playerColor(at: colorIndex).opacity(0.15))
+                .fill(avatarFill)
                 .frame(width: 30, height: 30)
                 .overlay {
                     Text(avatarLabel)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(
-                            isFilled
-                                ? Theme.playerTextColor(at: colorIndex)
-                                : Theme.playerColor(at: colorIndex)
-                        )
+                        .foregroundStyle(avatarTextColor)
                 }
-                .animation(.easeInOut(duration: 0.15), value: isFilled)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: isFilled)
+                .accessibilityHidden(true)
 
             TextField(placeholder, text: $name)
-                .font(.system(size: 17, design: .rounded))
+                .font(.system(.body, design: .rounded))
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.words)
+                .accessibilityLabel(showError ? "\(placeholder) name, required" : "\(placeholder) name")
 
             if canRemove {
                 Button(action: onRemove) {
@@ -46,13 +52,27 @@ struct PlayerRowView: View {
                         }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Remove \(displayName)")
             } else {
-                Color.clear.frame(width: 24, height: 24)
+                Color.clear
+                    .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: 54)
+        .frame(minHeight: 54)
         .background(showError ? Color(.systemRed).opacity(0.05) : Color.clear)
-        .animation(.easeInOut(duration: 0.15), value: showError)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: showError)
+    }
+
+    private var avatarFill: Color {
+        let base = Theme.playerColor(at: colorIndex, highContrast: highContrast)
+        return isFilled ? base : base.opacity(0.15)
+    }
+
+    private var avatarTextColor: Color {
+        isFilled
+            ? Theme.playerTextColor(at: colorIndex, highContrast: highContrast)
+            : Theme.playerColor(at: colorIndex, highContrast: highContrast)
     }
 }

@@ -69,6 +69,7 @@ struct ScoreEntrySheet: View {
             .frame(width: 36, height: 5)
             .padding(.top, 12)
             .padding(.bottom, 8)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Scores
@@ -76,10 +77,11 @@ struct ScoreEntrySheet: View {
     private var scoresSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ROUND \(session.currentRoundNumber) SCORES")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
                 .padding(.horizontal, 6)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
@@ -106,10 +108,11 @@ struct ScoreEntrySheet: View {
     private var skyjoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("WHO ENDED THE ROUND?")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
                 .padding(.horizontal, 6)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 8) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
@@ -151,9 +154,9 @@ struct ScoreEntrySheet: View {
             onCommit(entries, skyjoPlayerID)
         } label: {
             Text("Confirm Round \(session.currentRoundNumber)")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
-                .frame(height: 58)
+                .frame(minHeight: 58)
         }
         .buttonStyle(PrimaryButtonStyle(isEnabled: canConfirm))
         .disabled(!canConfirm)
@@ -200,26 +203,34 @@ private struct ScoreInputRow: View {
     @State private var digits: String = ""
     @State private var isNegative: Bool = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var highContrast: Bool { colorSchemeContrast == .increased }
+
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Theme.playerColor(at: colorIndex))
+                .fill(Theme.playerColor(at: colorIndex, highContrast: highContrast))
                 .frame(width: 36, height: 36)
                 .overlay {
                     Text(String(player.trimmedName.prefix(1)).uppercased())
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.playerTextColor(at: colorIndex))
+                        .foregroundStyle(Theme.playerTextColor(at: colorIndex, highContrast: highContrast))
                 }
+                .accessibilityHidden(true)
 
             Text(player.trimmedName)
-                .font(.system(size: 17, design: .rounded))
+                .font(.system(.body, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityHidden(true)
 
             if let preview = doublingPreview {
                 Text(preview)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded, weight: .medium))
                     .foregroundStyle(Color(.systemOrange))
                     .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                    .accessibilityLabel(doublingAccessibilityLabel(preview))
             }
 
             Button {
@@ -231,25 +242,35 @@ private struct ScoreInputRow: View {
                     .foregroundStyle(isNegative ? Color(.systemRed) : Color(.tertiaryLabel))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Negative score")
+            .accessibilityValue(isNegative ? "on" : "off")
 
             TextField("0", text: $digits)
                 .keyboardType(.numberPad)
                 .multilineTextAlignment(.trailing)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .frame(width: 52)
                 .focused(focusedPlayer, equals: player.id)
                 .onChange(of: digits) { _, _ in syncToBinding() }
+                .accessibilityLabel("Score for \(player.trimmedName)")
         }
         .padding(.horizontal, 16)
-        .frame(height: 64)
+        .frame(minHeight: 64)
         .contentShape(Rectangle())
         .onTapGesture { focusedPlayer.wrappedValue = player.id }
-        .animation(.easeInOut(duration: 0.15), value: doublingPreview)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: doublingPreview)
     }
 
     private func syncToBinding() {
         guard !digits.isEmpty else { rawInput = ""; return }
         rawInput = isNegative ? "-\(digits)" : digits
+    }
+
+    private func doublingAccessibilityLabel(_ preview: String) -> String {
+        if let doubled = preview.components(separatedBy: "→").last?.trimmingCharacters(in: .whitespaces) {
+            return "Score doubles to \(doubled)"
+        }
+        return preview
     }
 }
 
@@ -263,9 +284,18 @@ private struct SkyjoChip: View {
     let isSelected: Bool
     let onTap: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var highContrast: Bool { colorSchemeContrast == .increased }
+
     private var displayLabel: String {
         if let player { return player.trimmedName }
         return label ?? ""
+    }
+
+    private var chipAccessibilityLabel: String {
+        isNobody ? "Nobody called Skyjo" : "\(displayLabel) called Skyjo"
     }
 
     var body: some View {
@@ -273,37 +303,48 @@ private struct SkyjoChip: View {
             HStack(spacing: 6) {
                 if !isNobody, let player {
                     Circle()
-                        .fill(isSelected ? Theme.playerColor(at: colorIndex) : Color(.tertiarySystemFill))
+                        .fill(isSelected ? Theme.playerColor(at: colorIndex, highContrast: highContrast) : Color(.tertiarySystemFill))
                         .frame(width: 22, height: 22)
                         .overlay {
                             Text(String(player.trimmedName.prefix(1)).uppercased())
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(isSelected ? Theme.playerTextColor(at: colorIndex) : Color(.secondaryLabel))
+                                .foregroundStyle(
+                                    isSelected
+                                        ? Theme.playerTextColor(at: colorIndex, highContrast: highContrast)
+                                        : Color(.secondaryLabel)
+                                )
                         }
+                        .accessibilityHidden(true)
                 }
                 Text(displayLabel)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(isSelected ? (isNobody ? Theme.brand : Theme.playerColor(at: colorIndex)) : Color(.label))
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(isSelected ? (isNobody ? activeBrand : Theme.playerColor(at: colorIndex, highContrast: highContrast)) : Color(.label))
                     .lineLimit(1)
             }
             .padding(.horizontal, 12)
-            .frame(height: 44)
+            .frame(minHeight: 44)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(isSelected
-                          ? (isNobody ? Theme.brand.opacity(0.1) : Theme.playerColor(at: colorIndex).opacity(0.1))
+                          ? (isNobody ? activeBrand.opacity(0.1) : Theme.playerColor(at: colorIndex, highContrast: highContrast).opacity(0.1))
                           : Color(.secondarySystemFill))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .strokeBorder(
-                        isSelected ? (isNobody ? Theme.brand : Theme.playerColor(at: colorIndex)) : Color.clear,
+                        isSelected ? (isNobody ? activeBrand : Theme.playerColor(at: colorIndex, highContrast: highContrast)) : Color.clear,
                         lineWidth: 1.5
                     )
             )
         }
         .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.12), value: isSelected)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.12), value: isSelected)
+        .accessibilityLabel(chipAccessibilityLabel)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var activeBrand: Color {
+        highContrast ? Theme.brandHighContrast : Theme.brand
     }
 }

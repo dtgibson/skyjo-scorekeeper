@@ -8,6 +8,12 @@ struct ScoringView: View {
     @State private var showWinView = false
     @State private var showEndGameAlert = false
 
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var activeBrand: Color {
+        colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
+    }
+
     init(players: [Player], onNewGame: @escaping ([Player]?) -> Void) {
         _session = StateObject(wrappedValue: GameSession(players: players))
         self.onNewGame = onNewGame
@@ -67,13 +73,15 @@ struct ScoringView: View {
                     Image(systemName: "xmark")
                     Text("End Game")
                 }
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(Theme.brand)
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .foregroundStyle(activeBrand)
             }
-            .frame(width: 70, alignment: .leading)
+            .frame(width: 80, alignment: .leading)
+
             Text("Round \(session.currentRoundNumber)")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
+
             Button {
                 session.undoLastRound()
             } label: {
@@ -81,13 +89,14 @@ struct ScoringView: View {
                     Image(systemName: "arrow.uturn.backward")
                     Text("Undo")
                 }
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(session.rounds.isEmpty ? Color(.tertiaryLabel) : Theme.brand)
+                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .foregroundStyle(session.rounds.isEmpty ? Color(.tertiaryLabel) : activeBrand)
             }
             .disabled(session.rounds.isEmpty)
-            .frame(width: 70, alignment: .trailing)
+            .accessibilityHint("Removes the most recent round's scores")
+            .frame(width: 80, alignment: .trailing)
         }
-        .frame(height: 52)
+        .frame(minHeight: 52)
         .padding(.horizontal, 20)
         .frame(maxWidth: Theme.contentMaxWidth)
         .frame(maxWidth: .infinity)
@@ -98,10 +107,11 @@ struct ScoringView: View {
     private var standingsCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("STANDINGS")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
                 .padding(.horizontal, 6)
+                .accessibilityAddTraits(.isHeader)
 
             let standings = session.standings
             VStack(spacing: 0) {
@@ -127,9 +137,9 @@ struct ScoringView: View {
     private var enterButton: some View {
         Button { showEntrySheet = true } label: {
             Label("Enter Round \(session.currentRoundNumber) Scores", systemImage: "chevron.up")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
-                .frame(height: 58)
+                .frame(minHeight: 58)
         }
         .buttonStyle(PrimaryButtonStyle(isEnabled: true))
     }
@@ -146,38 +156,64 @@ private struct StandingRowView: View {
     let colorIndex: Int
     let showLeaderIndicator: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var highContrast: Bool { colorSchemeContrast == .increased }
+
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Theme.playerColor(at: colorIndex))
+                .fill(Theme.playerColor(at: colorIndex, highContrast: highContrast))
                 .frame(width: 36, height: 36)
                 .overlay {
                     Text(String(standing.player.trimmedName.prefix(1)).uppercased())
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.playerTextColor(at: colorIndex))
+                        .foregroundStyle(Theme.playerTextColor(at: colorIndex, highContrast: highContrast))
                 }
 
             Text(standing.player.trimmedName)
-                .font(.system(size: 17, design: .rounded))
+                .font(.system(.body, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if showLeaderIndicator {
-                Circle()
-                    .fill(standing.isLeader ? Color(.systemGreen) : Color.clear)
-                    .frame(width: 8, height: 8)
+                if standing.isLeader {
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(Color(.systemGreen))
+                            .frame(width: 8, height: 8)
+                        Image(systemName: "crown.fill")
+                            .font(.system(.caption2))
+                            .foregroundStyle(Color(.systemGreen))
+                    }
+                    .accessibilityHidden(true)
+                } else {
+                    Color.clear
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
+                }
             }
 
             Text("\(standing.total)")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(standing.total >= 100 ? Color(.systemRed) : Color.primary)
         }
         .padding(.horizontal, 16)
-        .frame(height: 62)
+        .frame(minHeight: 62)
         .background(
             showLeaderIndicator && standing.isLeader
                 ? Color(.systemGreen).opacity(0.07)
                 : Color.clear
         )
-        .animation(.easeInOut(duration: 0.15), value: standing.isLeader)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: standing.isLeader)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(rowAccessibilityLabel)
+    }
+
+    private var rowAccessibilityLabel: String {
+        let name = standing.player.trimmedName
+        let points = "\(standing.total) points"
+        let leader = standing.isLeader && showLeaderIndicator ? ", currently leading" : ""
+        return "\(name), \(points)\(leader)"
     }
 }

@@ -1,0 +1,17 @@
+{
+  "activeFeature": "accessibility",
+  "sessionNumber": 2,
+  "sessionType": "feature",
+  "currentStage": 8,
+  "lastCompletedStage": 7,
+  "lastCheckpointStatus": "in-progress",
+  "confirmedArtifacts": [
+    "pipeline/accessibility/strategic-brief.md",
+    "pipeline/accessibility/prd.md",
+    "pipeline/accessibility/schema.md",
+    "pipeline/accessibility/design-spec.md",
+    "pipeline/accessibility/design.html"
+  ],
+  "createdAt": "2026-05-16T00:00:00Z",
+  "updatedAt": "2026-05-16T00:00:00Z"
+}

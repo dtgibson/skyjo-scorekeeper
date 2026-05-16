@@ -1,0 +1,27 @@
+{
+  "name": "skyjo-scorekeeper",
+  "type": "mobile_app",
+  "entryPath": "new",
+  "repoURL": "https://github.com/dtgibson/skyjo-scorekeeper",
+  "repoProvider": "github",
+  "frontend": "swiftui",
+  "backend": "none",
+  "emailProvider": null,
+  "smsProvider": null,
+  "deploymentTarget": null,
+  "setupComplete": true,
+  "createdAt": "2026-05-09T00:00:00Z",
+  "updatedAt": "2026-05-09T12:00:00Z",
+  "stack": {
+    "componentLibrary": null,
+    "designTokens": "Theme.swift",
+    "brandSystem": "brand.md",
+    "testRunner": null,
+    "cicd": "github-actions",
+    "environments": {
+      "dev": "main",
+      "staging": null,
+      "prod": null
+    }
+  }
+}

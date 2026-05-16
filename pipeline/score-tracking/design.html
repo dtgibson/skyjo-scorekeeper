@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Score Tracking — Skyjo Scorekeeper</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #111827;
+  font-family: -apple-system, system-ui, sans-serif;
+  display: flex;
+  flex-direction: row;
+  gap: 36px;
+  justify-content: center;
+  padding: 48px 40px;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.screen-label {
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.phone {
+  width: 375px;
+  min-height: 812px;
+  background: #F2F2F7;
+  border-radius: 48px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.1),
+    0 40px 100px rgba(0,0,0,0.7);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Status bar */
+.status {
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Nav bar */
+.navbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.navbar-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.nav-action {
+  font-size: 15px;
+  color: #3730A3;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-placeholder {
+  width: 60px;
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  padding: 4px 20px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B6B6B;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-left: 6px;
+}
+
+/* Card */
+.card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  margin-bottom: 12px;
+}
+
+/* Player row */
+.player-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 62px;
+  gap: 12px;
+}
+
+.player-row + .player-row {
+  border-top: 1px solid #F2F2F7;
+}
+
+.player-row.leader {
+  background: rgba(52, 199, 89, 0.07);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.player-name {
+  flex: 1;
+  font-size: 17px;
+}
+
+.player-total {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.leader-dot {
+  width: 8px;
+  height: 8px;
+  background: #34C759;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Primary button */
+.btn-primary {
+  background: #3730A3;
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  border-radius: 16px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.btn-primary.disabled {
+  opacity: 0.3;
+}
+
+.btn-secondary {
+  font-size: 15px;
+  font-weight: 500;
+  color: #3730A3;
+  text-align: center;
+  padding: 12px;
+  flex-shrink: 0;
+}
+
+/* Bottom safe area spacer */
+.safe-bottom {
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* ── SCREEN 2: SHEET ── */
+
+.game-bg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  opacity: 0.35;
+  filter: blur(1px);
+}
+
+.sheet-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #F2F2F7;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 48px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 5px;
+  background: #D1D1D6;
+  border-radius: 3px;
+  margin: 0 auto 20px;
+}
+
+.sheet-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  height: 56px;
+  gap: 12px;
+  background: white;
+}
+
+.score-row + .score-row {
+  border-top: 1px solid #F2F2F7;
+}
+
+.avatar-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.score-input-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.pm-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #E5E5EA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #3730A3;
+}
+
+.score-val {
+  font-size: 22px;
+  font-weight: 700;
+  min-width: 44px;
+  text-align: right;
+}
+
+.score-val.negative { color: #30B0C7; }
+.score-val.empty { color: #C7C7CC; font-weight: 400; }
+
+.doubling-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.doubling-result {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3730A3;
+  letter-spacing: 0.2px;
+}
+
+.skyjo-section { margin-top: 16px; }
+
+.skyjo-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B6B6B;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #E5E5EA;
+  background: white;
+  font-size: 15px;
+  font-weight: 500;
+  color: #000;
+}
+
+.chip.selected {
+  border-color: #3730A3;
+  background: rgba(55, 48, 163, 0.08);
+  color: #3730A3;
+}
+
+.chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── SCREEN 3: WIN ── */
+
+.win-hero {
+  background: linear-gradient(155deg, #3730A3 0%, #5B52D4 100%);
+  padding: 0 24px 32px;
+  text-align: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.win-status {
+  height: 50px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 4px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+}
+
+.trophy-emoji {
+  font-size: 60px;
+  display: block;
+  margin: 8px 0 12px;
+}
+
+.win-name {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.win-sub {
+  font-size: 15px;
+  opacity: 0.75;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 62px;
+  gap: 12px;
+}
+
+.ranking-row + .ranking-row {
+  border-top: 1px solid #F2F2F7;
+}
+
+.ranking-row.winner-row {
+  background: rgba(52, 199, 89, 0.07);
+}
+
+.rank-num {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rank-name-col {
+  flex: 1;
+}
+
+.rank-name {
+  font-size: 17px;
+}
+
+.rank-detail {
+  font-size: 12px;
+  color: #8E8E93;
+  margin-top: 1px;
+}
+
+.rank-total {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.rank-total.over {
+  color: #FF3B30;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══ SCREEN 1: ACTIVE GAME ═══ -->
+<div class="column">
+  <div class="screen-label">Active Game</div>
+  <div class="phone">
+    <div class="status">
+      <span>9:41</span>
+      <span>🔋</span>
+    </div>
+    <div class="navbar">
+      <div class="nav-placeholder"></div>
+      <div class="navbar-title">Round 5</div>
+      <div class="nav-action">↩ Undo</div>
+    </div>
+    <div class="content">
+      <div class="section-header" style="margin-top:8px;">STANDINGS</div>
+      <div class="card">
+        <div class="player-row leader">
+          <div class="avatar" style="background:rgb(55,48,163)">A</div>
+          <div class="player-name" style="font-weight:600;">Alice</div>
+          <div class="leader-dot"></div>
+          <div class="player-total">23</div>
+        </div>
+        <div class="player-row">
+          <div class="avatar" style="background:rgb(0,158,115)">C</div>
+          <div class="player-name">Carol</div>
+          <div style="width:8px"></div>
+          <div class="player-total">38</div>
+        </div>
+        <div class="player-row">
+          <div class="avatar" style="background:rgb(230,159,0)">B</div>
+          <div class="player-name">Bob</div>
+          <div style="width:8px"></div>
+          <div class="player-total">45</div>
+        </div>
+        <div class="player-row">
+          <div class="avatar" style="background:rgb(213,94,0)">D</div>
+          <div class="player-name">Dave</div>
+          <div style="width:8px"></div>
+          <div class="player-total">67</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 20px;">
+      <div class="btn-primary">Enter Round 5 Scores</div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: SCORE ENTRY SHEET ═══ -->
+<div class="column">
+  <div class="screen-label">Score Entry Sheet</div>
+  <div class="phone" style="position:relative;">
+    <!-- dimmed game screen behind -->
+    <div class="game-bg">
+      <div class="status"><span>9:41</span><span>🔋</span></div>
+      <div class="navbar">
+        <div class="nav-placeholder"></div>
+        <div class="navbar-title">Round 5</div>
+        <div class="nav-action">↩ Undo</div>
+      </div>
+      <div class="content">
+        <div class="section-header" style="margin-top:8px;">STANDINGS</div>
+        <div class="card">
+          <div class="player-row leader"><div class="avatar" style="background:rgb(55,48,163)">A</div><div class="player-name" style="font-weight:600;">Alice</div><div class="leader-dot"></div><div class="player-total">23</div></div>
+          <div class="player-row"><div class="avatar" style="background:rgb(0,158,115)">C</div><div class="player-name">Carol</div><div style="width:8px"></div><div class="player-total">38</div></div>
+          <div class="player-row"><div class="avatar" style="background:rgb(230,159,0)">B</div><div class="player-name">Bob</div><div style="width:8px"></div><div class="player-total">45</div></div>
+          <div class="player-row"><div class="avatar" style="background:rgb(213,94,0)">D</div><div class="player-name">Dave</div><div style="width:8px"></div><div class="player-total">67</div></div>
+        </div>
+      </div>
+      <div style="padding:0 20px;"><div class="btn-primary">Enter Round 5 Scores</div></div>
+    </div>
+
+    <!-- Sheet -->
+    <div class="sheet-overlay">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Round 5 Scores</div>
+
+      <div class="card">
+        <div class="score-row" style="background:rgba(55,48,163,0.04);">
+          <div class="avatar-sm" style="background:rgb(55,48,163)">A</div>
+          <span style="font-size:17px;flex:1;">Alice</span>
+          <div class="score-input-area">
+            <div class="pm-btn">±</div>
+            <div class="doubling-preview">
+              <div class="score-val" style="line-height:1;">8</div>
+              <div class="doubling-result">×2 → 16</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="avatar-sm" style="background:rgb(0,158,115)">C</div>
+          <span style="font-size:17px;flex:1;">Carol</span>
+          <div class="score-input-area">
+            <div class="pm-btn">±</div>
+            <div class="score-val negative">−2</div>
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="avatar-sm" style="background:rgb(230,159,0)">B</div>
+          <span style="font-size:17px;flex:1;">Bob</span>
+          <div class="score-input-area">
+            <div class="pm-btn">±</div>
+            <div class="score-val empty">—</div>
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="avatar-sm" style="background:rgb(213,94,0)">D</div>
+          <span style="font-size:17px;flex:1;">Dave</span>
+          <div class="score-input-area">
+            <div class="pm-btn">±</div>
+            <div class="score-val">3</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skyjo-section">
+        <div class="skyjo-label">Who Skyjo'd this round?</div>
+        <div class="chips">
+          <div class="chip selected"><div class="chip-dot" style="background:rgb(55,48,163)"></div>Alice</div>
+          <div class="chip"><div class="chip-dot" style="background:rgb(0,158,115)"></div>Carol</div>
+          <div class="chip"><div class="chip-dot" style="background:rgb(230,159,0)"></div>Bob</div>
+          <div class="chip"><div class="chip-dot" style="background:rgb(213,94,0)"></div>Dave</div>
+          <div class="chip">No one</div>
+        </div>
+      </div>
+
+      <div class="btn-primary disabled" style="margin-top:20px;margin-bottom:0;">Confirm Round 5</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 3: WIN SCREEN ═══ -->
+<div class="column">
+  <div class="screen-label">Win Screen</div>
+  <div class="phone">
+    <div class="win-hero">
+      <div class="win-status">
+        <span>9:41</span>
+        <span>🔋</span>
+      </div>
+      <span class="trophy-emoji">🏆</span>
+      <div class="win-name">Alice wins!</div>
+      <div class="win-sub">Game over · 8 rounds</div>
+    </div>
+
+    <div class="content" style="padding-top:16px;">
+      <div class="section-header">FINAL STANDINGS</div>
+      <div class="card">
+        <div class="ranking-row winner-row">
+          <div class="rank-num">🥇</div>
+          <div class="avatar" style="background:rgb(55,48,163)">A</div>
+          <div class="rank-name-col">
+            <div class="rank-name" style="font-weight:700;">Alice</div>
+            <div class="rank-detail">+4 final round</div>
+          </div>
+          <div class="rank-total">87</div>
+        </div>
+        <div class="ranking-row">
+          <div class="rank-num">🥈</div>
+          <div class="avatar" style="background:rgb(0,158,115)">C</div>
+          <div class="rank-name-col">
+            <div class="rank-name">Carol</div>
+            <div class="rank-detail">+12 final round</div>
+          </div>
+          <div class="rank-total">94</div>
+        </div>
+        <div class="ranking-row">
+          <div class="rank-num">🥉</div>
+          <div class="avatar" style="background:rgb(230,159,0)">B</div>
+          <div class="rank-name-col">
+            <div class="rank-name">Bob</div>
+            <div class="rank-detail">+8 final round</div>
+          </div>
+          <div class="rank-total over">103</div>
+        </div>
+        <div class="ranking-row">
+          <div class="rank-num" style="font-size:15px;color:#8E8E93;font-weight:600;">4</div>
+          <div class="avatar" style="background:rgb(213,94,0)">D</div>
+          <div class="rank-name-col">
+            <div class="rank-name">Dave</div>
+            <div class="rank-detail">+24 final round (doubled)</div>
+          </div>
+          <div class="rank-total over">131</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 20px;">
+      <div class="btn-primary">New Game with Same Players</div>
+      <div class="btn-secondary">Start Fresh</div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+</body>
+</html>

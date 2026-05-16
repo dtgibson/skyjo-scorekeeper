@@ -4,6 +4,14 @@ struct WinView: View {
     let session: GameSession
     let onNewGame: ([Player]?) -> Void
 
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    @ScaledMetric(relativeTo: .title) private var headlineFontSize: CGFloat = 28
+
+    private var activeBrand: Color {
+        colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
+    }
+
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground).ignoresSafeArea()
@@ -37,15 +45,16 @@ struct WinView: View {
 
             Text(winnerEmoji)
                 .font(.system(size: 64))
+                .accessibilityHidden(true)
 
             Text(winnerHeadline)
-                .font(.system(size: 28, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.brand)
+                .font(.system(size: headlineFontSize, weight: .heavy, design: .rounded))
+                .foregroundStyle(activeBrand)
                 .multilineTextAlignment(.center)
                 .tracking(-0.5)
 
             Text(winnerSubtitle)
-                .font(.system(size: 15, design: .rounded))
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -55,7 +64,7 @@ struct WinView: View {
         .frame(maxWidth: .infinity)
         .background(
             LinearGradient(
-                colors: [Theme.brand.opacity(0.07), Color(.systemGroupedBackground)],
+                colors: [activeBrand.opacity(0.07), Color(.systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -67,10 +76,11 @@ struct WinView: View {
     private var rankingsCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("FINAL STANDINGS")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .tracking(0.5)
                 .padding(.horizontal, 6)
+                .accessibilityAddTraits(.isHeader)
 
             let standings = session.standings
             VStack(spacing: 0) {
@@ -100,9 +110,9 @@ struct WinView: View {
                 onNewGame(session.players)
             } label: {
                 Label("New Game — Same Players", systemImage: "arrow.clockwise")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.headline, design: .rounded))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 58)
+                    .frame(minHeight: 58)
             }
             .buttonStyle(PrimaryButtonStyle(isEnabled: true))
 
@@ -110,10 +120,10 @@ struct WinView: View {
                 onNewGame(nil)
             } label: {
                 Text("Start Fresh")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(Theme.brand)
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(activeBrand)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(minHeight: 44)
             }
             .buttonStyle(.plain)
         }
@@ -154,6 +164,10 @@ private struct FinalRankRow: View {
     let colorIndex: Int
     let isWinner: Bool
 
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    private var highContrast: Bool { colorSchemeContrast == .increased }
+
     private var medalEmoji: String? {
         switch rank {
         case 1: return "🥇"
@@ -163,19 +177,31 @@ private struct FinalRankRow: View {
         }
     }
 
+    private var rankAccessibilityLabel: String {
+        let placement: String
+        switch rank {
+        case 1: placement = "First place"
+        case 2: placement = "Second place"
+        case 3: placement = "Third place"
+        default: placement = "Place \(rank)"
+        }
+        let winnerSuffix = isWinner ? ", winner" : ""
+        return "\(placement): \(standing.player.trimmedName), \(standing.total) points\(winnerSuffix)"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Theme.playerColor(at: colorIndex))
+                .fill(Theme.playerColor(at: colorIndex, highContrast: highContrast))
                 .frame(width: 36, height: 36)
                 .overlay {
                     Text(String(standing.player.trimmedName.prefix(1)).uppercased())
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.playerTextColor(at: colorIndex))
+                        .foregroundStyle(Theme.playerTextColor(at: colorIndex, highContrast: highContrast))
                 }
 
             Text(standing.player.trimmedName)
-                .font(.system(size: 17, design: .rounded))
+                .font(.system(.body, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if let medal = medalEmoji {
@@ -184,11 +210,13 @@ private struct FinalRankRow: View {
             }
 
             Text("\(standing.total)")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(standing.total >= 100 ? Color(.systemRed) : Color.primary)
         }
         .padding(.horizontal, 16)
-        .frame(height: 62)
-        .background(isWinner ? Theme.brand.opacity(0.18) : Color.clear)
+        .frame(minHeight: 62)
+        .background(isWinner ? (highContrast ? Theme.brandHighContrast : Theme.brand).opacity(0.18) : Color.clear)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(rankAccessibilityLabel)
     }
 }

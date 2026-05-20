@@ -107,7 +107,7 @@ Full accessibility support across all four screens — VoiceOver, Dynamic Type, 
 - **Dynamic Type**: All text uses semantic text styles. Two custom-sized titles use `@ScaledMetric(relativeTo:)`: the "Skyjo Scorekeeper" logo (40pt, relative to `.largeTitle`) and the win-screen winner headline (28pt, relative to `.title`).
 - **Reduce Motion**: Every animation is wrapped with `reduceMotion ? nil : .easeInOut(…)` via `@Environment(\.accessibilityReduceMotion)`. All transitions and micro-animations are eliminated when the system setting is on.
 - **Increase Contrast**: A high-contrast player color palette was added to `Theme` — all eight colors meet WCAG AA (4.5:1) against white. `Theme.playerColor(at:highContrast:)` and `Theme.playerTextColor(at:highContrast:)` accept a `highContrast` parameter. Brand color has a dedicated HC variant (`Theme.brandHighContrast`). Views read `@Environment(\.colorSchemeContrast)` and switch palettes when `colorSchemeContrast == .increased`.
-- **Non-color leader indicator**: A `crown.fill` SF Symbol (green, accessibilityHidden) supplements the green dot so the leader is identifiable without relying on color alone.
+- **Non-color leader indicator**: A `crown.fill` SF Symbol (green, accessibilityHidden) next to the leader's row. The green dot that previously accompanied it was removed (redundant). The crown alone is sufficient as both the color and shape signal.
 - **Dynamic Type clipping fix**: All rows with fixed `frame(height:)` changed to `frame(minHeight:)`.
 
 **Files changed:**
@@ -115,7 +115,7 @@ Full accessibility support across all four screens — VoiceOver, Dynamic Type, 
 - `SkyjoScorekeeper/Views/GameSetupView.swift` — ScaledMetric title, semantic fonts, reduce motion, HC brand, section header traits
 - `SkyjoScorekeeper/Views/PlayerRowView.swift` — VoiceOver label on text field, remove button label, avatar hidden, reduce motion, `minHeight`
 - `SkyjoScorekeeper/Views/ScoringView.swift` — header trait, Undo hint, combined row label, crown indicator, `minHeight`, HC colors
-- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — drag handle hidden, header traits, score field label, negative toggle label+value, doubling preview label, SkyjoChip label+selected trait, all `minHeight`
+- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — drag handle hidden, header traits, score field label, negative toggle in keyboard toolbar (not per-row), doubling preview label, SkyjoChip label+selected trait, all `minHeight`
 - `SkyjoScorekeeper/Views/WinView.swift` — ScaledMetric headline, trophy hidden, header trait, combined rank label, HC winner background, `minHeight`
 - `SkyjoScorekeeper/Views/EasterEggOverlay.swift` — flower emoji hidden, semantic fonts, HC brand button
 
@@ -171,6 +171,9 @@ The Okabe-Ito standard colors are chosen for color-blind safety and visual appea
 
 ### Accessibility: use `@Environment` values directly in ButtonStyle
 `PrimaryButtonStyle` reads `@Environment(\.colorSchemeContrast)` and `@Environment(\.accessibilityReduceMotion)` inside `makeBody` so that HC brand color and reduced-motion press animation are handled at the button level. This avoids threading contrast/motion state through every call site.
+
+### Negative score toggle lives in the keyboard toolbar, not the input row
+The minus/negative toggle for score entry is a single button in the keyboard toolbar (the bar above the numpad), not a per-row button. It applies to the currently focused player. A `−` symbol appears inline next to the score digits when active, communicating negative state by shape rather than color alone. Score text also turns red as a secondary cue. `isNegative` state is owned by `ScoreEntrySheet` as `[UUID: Bool]` and passed as a `Binding<Bool>` to each `ScoreInputRow`.
 
 ### Accessibility: Font.system text-style overload parameter order
 The three-argument text-style overload is `Font.system(_ style:, design:, weight:)` — `design:` comes BEFORE `weight:`. The fixed-size overload `Font.system(size:weight:design:)` has the opposite order. Mixing these up produces a compiler error that mentions `CGFloat.footnote` which is confusing. Always write `.system(.textStyle, design: .rounded, weight: .bold)` (design first).

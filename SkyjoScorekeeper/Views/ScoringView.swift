@@ -177,21 +177,11 @@ private struct StandingRowView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if showLeaderIndicator {
-                if standing.isLeader {
-                    HStack(spacing: 3) {
-                        Circle()
-                            .fill(Color(.systemGreen))
-                            .frame(width: 8, height: 8)
-                        Image(systemName: "crown.fill")
-                            .font(.system(.caption2))
-                            .foregroundStyle(Color(.systemGreen))
-                    }
+                Image(systemName: "crown.fill")
+                    .font(.system(.caption2))
+                    .foregroundStyle(Color(.systemGreen))
+                    .opacity(standing.isLeader ? 1 : 0)
                     .accessibilityHidden(true)
-                } else {
-                    Color.clear
-                        .frame(width: 8, height: 8)
-                        .accessibilityHidden(true)
-                }
             }
 
             Text("\(standing.total)")

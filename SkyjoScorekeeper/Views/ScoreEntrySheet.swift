@@ -5,6 +5,7 @@ struct ScoreEntrySheet: View {
     let onCommit: ([UUID: Int], UUID?) -> Void
 
     @State private var rawInputs: [UUID: String] = [:]
+    @State private var negativeInputs: [UUID: Bool] = [:]
     @State private var skyjoPlayerID: UUID? = nil
     @State private var skyjoAnswered = false
     @FocusState private var focusedPlayer: UUID?
@@ -21,6 +22,10 @@ struct ScoreEntrySheet: View {
     }
 
     private var canConfirm: Bool { allFilled && skyjoAnswered }
+
+    private var focusedIsNegative: Bool {
+        focusedPlayer.flatMap { negativeInputs[$0] } ?? false
+    }
 
     private func minOtherScore(excluding playerID: UUID) -> Int? {
         guard allFilled else { return nil }
@@ -52,7 +57,20 @@ struct ScoreEntrySheet: View {
         .background(Color(.systemGroupedBackground))
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
+                Button {
+                    guard let id = focusedPlayer else { return }
+                    negativeInputs[id] = !focusedIsNegative
+                } label: {
+                    Image(systemName: focusedIsNegative ? "minus.circle.fill" : "minus.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(focusedIsNegative ? Color(.systemRed) : Color(.secondaryLabel))
+                }
+                .disabled(focusedPlayer == nil)
+                .accessibilityLabel("Negative score")
+                .accessibilityValue(focusedIsNegative ? "on" : "off")
+
                 Spacer()
+
                 Button("Next") { advanceFocus() }
                     .disabled(focusedPlayer == session.players.last?.id)
                 Button("Done") { focusedPlayer = nil }
@@ -89,6 +107,7 @@ struct ScoreEntrySheet: View {
                         player: player,
                         colorIndex: index,
                         rawInput: inputBinding(for: player.id),
+                        isNegative: negativeBinding(for: player.id),
                         doublingPreview: doublingPreview(for: player.id),
                         focusedPlayer: $focusedPlayer
                     )
@@ -171,6 +190,13 @@ struct ScoreEntrySheet: View {
         )
     }
 
+    private func negativeBinding(for id: UUID) -> Binding<Bool> {
+        Binding(
+            get: { negativeInputs[id] ?? false },
+            set: { negativeInputs[id] = $0 }
+        )
+    }
+
     private func doublingPreview(for playerID: UUID) -> String? {
         guard
             skyjoPlayerID == playerID,
@@ -197,11 +223,11 @@ private struct ScoreInputRow: View {
     let player: Player
     let colorIndex: Int
     @Binding var rawInput: String
+    @Binding var isNegative: Bool
     let doublingPreview: String?
     var focusedPlayer: FocusState<UUID?>.Binding
 
     @State private var digits: String = ""
-    @State private var isNegative: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
@@ -233,26 +259,24 @@ private struct ScoreInputRow: View {
                     .accessibilityLabel(doublingAccessibilityLabel(preview))
             }
 
-            Button {
-                isNegative.toggle()
-                syncToBinding()
-            } label: {
-                Image(systemName: isNegative ? "minus.circle.fill" : "minus.circle")
-                    .font(.system(size: 22))
-                    .foregroundStyle(isNegative ? Color(.systemRed) : Color(.tertiaryLabel))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Negative score")
-            .accessibilityValue(isNegative ? "on" : "off")
+            HStack(spacing: 1) {
+                Text("−")
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundStyle(Color(.systemRed))
+                    .opacity(isNegative ? 1 : 0)
+                    .accessibilityHidden(true)
 
-            TextField("0", text: $digits)
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(.trailing)
-                .font(.system(.title2, design: .rounded, weight: .bold))
-                .frame(width: 52)
-                .focused(focusedPlayer, equals: player.id)
-                .onChange(of: digits) { _, _ in syncToBinding() }
-                .accessibilityLabel("Score for \(player.trimmedName)")
+                TextField("0", text: $digits)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundStyle(isNegative ? Color(.systemRed) : Color.primary)
+                    .frame(width: 52)
+                    .focused(focusedPlayer, equals: player.id)
+                    .onChange(of: digits) { _, _ in syncToBinding() }
+                    .onChange(of: isNegative) { _, _ in syncToBinding() }
+                    .accessibilityLabel("Score for \(player.trimmedName)")
+            }
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 64)

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		A21B9D2B2FC38E3D00530D77 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A21B9D2A2FC38E3D00530D77 /* Localizable.xcstrings */; };
+		A21B9D2F2FC3B5D100530D77 /* GameSessionSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21B9D2E2FC3B5D100530D77 /* GameSessionSnapshot.swift */; };
+		A21B9D312FC3B5DC00530D77 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21B9D302FC3B5DC00530D77 /* SessionStore.swift */; };
+		A21B9D332FC3B5FF00530D77 /* SessionPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A21B9D322FC3B5FF00530D77 /* SessionPersistenceTests.swift */; };
 		AAA000000000000000000060 /* SkyjoScorekeeperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000040 /* SkyjoScorekeeperApp.swift */; };
 		AAA000000000000000000061 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000041 /* Theme.swift */; };
 		AAA000000000000000000062 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000042 /* GameState.swift */; };
@@ -40,6 +43,9 @@
 
 /* Begin PBXFileReference section */
 		A21B9D2A2FC38E3D00530D77 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A21B9D2E2FC3B5D100530D77 /* GameSessionSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionSnapshot.swift; sourceTree = "<group>"; };
+		A21B9D302FC3B5DC00530D77 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		A21B9D322FC3B5FF00530D77 /* SessionPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPersistenceTests.swift; sourceTree = "<group>"; };
 		AAA000000000000000000011 /* SkyjoScorekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyjoScorekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA000000000000000000021 /* SkyjoScorekeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyjoScorekeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA000000000000000000040 /* SkyjoScorekeeperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyjoScorekeeperApp.swift; sourceTree = "<group>"; };
@@ -121,6 +127,8 @@
 				AAA000000000000000000045 /* PlayerStanding.swift */,
 				AAA000000000000000000046 /* Round.swift */,
 				AAA000000000000000000047 /* RoundScore.swift */,
+				A21B9D2E2FC3B5D100530D77 /* GameSessionSnapshot.swift */,
+				A21B9D302FC3B5DC00530D77 /* SessionStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -143,6 +151,7 @@
 			children = (
 				AAA000000000000000000050 /* GameSetupTests.swift */,
 				AAA000000000000000000051 /* GameSessionTests.swift */,
+				A21B9D322FC3B5FF00530D77 /* SessionPersistenceTests.swift */,
 			);
 			path = ../SkyjoScorekeeperTests;
 			sourceTree = "<group>";
@@ -248,11 +257,13 @@
 				AAA000000000000000000065 /* PlayerStanding.swift in Sources */,
 				AAA000000000000000000066 /* Round.swift in Sources */,
 				AAA000000000000000000067 /* RoundScore.swift in Sources */,
+				A21B9D2F2FC3B5D100530D77 /* GameSessionSnapshot.swift in Sources */,
 				AAA000000000000000000068 /* EasterEggOverlay.swift in Sources */,
 				AAA000000000000000000069 /* GameSetupView.swift in Sources */,
 				AAA00000000000000000006A /* PlayerRowView.swift in Sources */,
 				AAA00000000000000000006B /* ScoreEntrySheet.swift in Sources */,
 				AAA00000000000000000006C /* ScoringView.swift in Sources */,
+				A21B9D312FC3B5DC00530D77 /* SessionStore.swift in Sources */,
 				AAA00000000000000000006D /* WinView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -262,6 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAA000000000000000000070 /* GameSetupTests.swift in Sources */,
+				A21B9D332FC3B5FF00530D77 /* SessionPersistenceTests.swift in Sources */,
 				AAA000000000000000000071 /* GameSessionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -404,11 +416,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 8QKC3L2FKP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Score for Skyjo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.card-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -418,7 +431,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtgibson.SkyjoScorekeeper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -435,11 +448,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 8QKC3L2FKP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Score for Skyjo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.card-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -449,7 +463,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtgibson.SkyjoScorekeeper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

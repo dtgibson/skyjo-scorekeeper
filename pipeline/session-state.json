@@ -1,17 +1,17 @@
 {
-  "activeFeature": null,
+  "activeFeature": "session-persistence",
   "sessionNumber": 2,
-  "sessionType": null,
-  "currentStage": null,
-  "lastCompletedStage": 9,
-  "lastCheckpointStatus": "approved",
+  "sessionType": "feature",
+  "currentStage": 8,
+  "lastCompletedStage": 7,
+  "lastCheckpointStatus": "in-progress",
   "confirmedArtifacts": [
-    "pipeline/localization/strategic-brief.md",
-    "pipeline/localization/prd.md",
-    "pipeline/localization/schema.md",
-    "pipeline/localization/design-spec.md",
-    "pipeline/localization/design.html"
+    "pipeline/session-persistence/strategic-brief.md",
+    "pipeline/session-persistence/prd.md",
+    "pipeline/session-persistence/schema.md",
+    "pipeline/session-persistence/design-spec.md",
+    "pipeline/session-persistence/design.html"
   ],
-  "createdAt": "2026-05-16T22:00:00Z",
-  "updatedAt": "2026-05-24T00:50:00Z"
+  "createdAt": "2026-05-24T01:00:00Z",
+  "updatedAt": "2026-05-24T02:50:00Z"
 }

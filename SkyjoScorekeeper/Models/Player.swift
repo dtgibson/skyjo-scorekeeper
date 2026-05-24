@@ -1,6 +1,6 @@
 import Foundation
 
-struct Player: Identifiable, Equatable {
+struct Player: Identifiable, Equatable, Codable {
     var id = UUID()
     var name = ""
 

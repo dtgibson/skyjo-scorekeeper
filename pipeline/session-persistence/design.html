@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Persistence — Design Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'SF Pro Rounded', BlinkMacSystemFont, sans-serif;
+    background: #1C1C1E;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 48px;
+    padding: 48px 32px;
+    min-height: 100vh;
+    flex-wrap: wrap;
+  }
+
+  .label {
+    color: #8E8E93;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* iPhone shell */
+  .phone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone-shell {
+    width: 390px;
+    height: 844px;
+    background: #000;
+    border-radius: 54px;
+    padding: 12px;
+    box-shadow: 0 0 0 1px #3A3A3C, 0 32px 80px rgba(0,0,0,0.7);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Dynamic island */
+  .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 37px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 10;
+  }
+
+  /* App screen */
+  .app {
+    width: 100%;
+    height: 100%;
+    background: #F2F2F7;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Nav bar */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 20px 0;
+    min-height: 104px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #3730A3;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 80px;
+  }
+  .nav-btn.right { justify-content: flex-end; }
+  .nav-btn.disabled { color: #C7C7CC; }
+
+  .nav-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #000;
+    text-align: center;
+  }
+
+  /* Scroll area */
+  .scroll-area {
+    flex: 1;
+    padding: 16px 16px 12px;
+    overflow: hidden;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #8E8E93;
+    letter-spacing: 0.5px;
+    padding: 0 6px;
+    margin-bottom: 8px;
+  }
+
+  /* Card */
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04);
+  }
+
+  /* Player row */
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    min-height: 62px;
+    position: relative;
+  }
+
+  .player-row.leader {
+    background: rgba(52, 199, 89, 0.07);
+  }
+
+  .player-row + .player-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 64px;
+    right: 0;
+    height: 0.5px;
+    background: #E5E5EA;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .player-name {
+    font-size: 17px;
+    color: #000;
+    flex: 1;
+  }
+
+  .crown {
+    font-size: 11px;
+    color: #34C759;
+    opacity: 0;
+    margin-right: 2px;
+  }
+  .leader .crown { opacity: 1; }
+
+  .score {
+    font-size: 22px;
+    font-weight: 700;
+    color: #000;
+  }
+  .score.danger { color: #FF3B30; }
+
+  /* Enter button */
+  .enter-btn-wrap {
+    padding: 0 16px 8px;
+  }
+
+  .enter-btn {
+    width: 100%;
+    background: #3730A3;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    min-height: 58px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    transition: opacity 0.1s;
+  }
+  .enter-btn:hover { opacity: 0.9; }
+
+  /* ---- BEFORE screen ---- */
+  .setup-app {
+    width: 100%;
+    height: 100%;
+    background: #F2F2F7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .setup-header {
+    padding: 72px 24px 0;
+    text-align: center;
+  }
+
+  .setup-title {
+    font-size: 40px;
+    font-weight: 900;
+    color: #3730A3;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+  }
+
+  .setup-subtitle {
+    font-size: 15px;
+    color: #8E8E93;
+    margin-top: 6px;
+  }
+
+  .setup-scroll {
+    flex: 1;
+    width: 100%;
+    padding: 28px 16px 12px;
+  }
+
+  .setup-section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #8E8E93;
+    letter-spacing: 0.5px;
+    padding: 0 6px;
+    margin-bottom: 8px;
+  }
+
+  .player-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    min-height: 54px;
+    position: relative;
+  }
+
+  .player-input-row + .player-input-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 56px;
+    right: 0;
+    height: 0.5px;
+    background: #E5E5EA;
+  }
+
+  .input-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .input-text {
+    font-size: 17px;
+    color: #000;
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .input-text.placeholder { color: #C7C7CC; }
+
+  .setup-bottom {
+    width: 100%;
+    padding: 0 16px 8px;
+  }
+
+  .start-btn {
+    width: 100%;
+    background: rgba(55, 48, 163, 0.28);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    min-height: 58px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    margin-bottom: 4px;
+  }
+
+  .status-note {
+    text-align: center;
+    font-size: 12px;
+    color: #C7C7CC;
+    margin-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* Arrow */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #636366;
+    font-size: 13px;
+    font-weight: 500;
+    padding-top: 180px;
+  }
+
+  .arrow svg {
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
+  }
+
+  /* Callout box */
+  .callout {
+    width: 390px;
+    background: #2C2C2E;
+    border-radius: 16px;
+    padding: 20px;
+    border-left: 3px solid #3730A3;
+    margin-top: 8px;
+  }
+
+  .callout-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #EBEBF5;
+    margin-bottom: 8px;
+    letter-spacing: 0.2px;
+  }
+
+  .callout-body {
+    font-size: 13px;
+    color: #8E8E93;
+    line-height: 1.5;
+  }
+
+  .callout-body strong {
+    color: #EBEBF5;
+    font-weight: 500;
+  }
+
+  /* Invisible badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(55, 48, 163, 0.15);
+    color: #6B63D4;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+  }
+
+  .clear-moment {
+    width: 390px;
+    background: #2C2C2E;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 8px;
+  }
+
+  .clear-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #EBEBF5;
+    margin-bottom: 12px;
+  }
+
+  .clear-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .clear-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3730A3;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .clear-text {
+    font-size: 13px;
+    color: #8E8E93;
+    line-height: 1.4;
+  }
+
+  .clear-text strong { color: #EBEBF5; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- BEFORE -->
+<div class="phone">
+  <div class="label">Before — app opens to setup</div>
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="dynamic-island"></div>
+      <div class="setup-app">
+        <div class="setup-header">
+          <div class="setup-title">Skyjo<br>Scorekeeper</div>
+          <div class="setup-subtitle">Who's playing today?</div>
+        </div>
+        <div class="setup-scroll">
+          <div class="setup-section-label">PLAYERS</div>
+          <div class="card">
+            <div class="player-input-row">
+              <div class="input-avatar" style="background:rgba(55,48,163,0.15);color:#3730A3;">1</div>
+              <input class="input-text placeholder" value="" placeholder="Player 1" readonly>
+            </div>
+            <div class="player-input-row">
+              <div class="input-avatar" style="background:rgba(52,199,89,0.15);color:#34C759;">2</div>
+              <input class="input-text placeholder" value="" placeholder="Player 2" readonly>
+            </div>
+          </div>
+        </div>
+        <div class="setup-bottom">
+          <button class="start-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start Game
+          </button>
+          <div class="status-note">Enter at least 2 names to start</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout">
+    <div class="callout-title">❌ The problem today</div>
+    <div class="callout-body">You're in round 5. Someone gets a call, tabs out, and the OS kills the app. When they reopen it — <strong>the game is gone.</strong> Setup screen. Start over.</div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h14M12 5l7 7-7 7"/>
+  </svg>
+  After this<br>feature
+</div>
+
+<!-- AFTER -->
+<div class="phone">
+  <div class="label">After — app restores mid-game</div>
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="dynamic-island"></div>
+      <div class="app">
+        <div class="nav-bar">
+          <button class="nav-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            End Game
+          </button>
+          <span class="nav-title">Round 5</span>
+          <button class="nav-btn right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            Undo
+          </button>
+        </div>
+
+        <div class="scroll-area">
+          <div class="section-label">STANDINGS</div>
+          <div class="card">
+
+            <div class="player-row leader">
+              <div class="avatar" style="background:#3730A3;">D</div>
+              <span class="player-name">Dave</span>
+              <span class="crown">♛</span>
+              <span class="score">29</span>
+            </div>
+
+            <div class="player-row">
+              <div class="avatar" style="background:#34C759;">A</div>
+              <span class="player-name">Alice</span>
+              <span class="crown">♛</span>
+              <span class="score">45</span>
+            </div>
+
+            <div class="player-row">
+              <div class="avatar" style="background:#FF9500;">B</div>
+              <span class="player-name">Bob</span>
+              <span class="crown">♛</span>
+              <span class="score">38</span>
+            </div>
+
+            <div class="player-row">
+              <div class="avatar" style="background:#FF3B30;">C</div>
+              <span class="player-name">Carol</span>
+              <span class="crown">♛</span>
+              <span class="score">52</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="enter-btn-wrap">
+          <button class="enter-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            Enter Round 5 Scores
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="callout">
+    <div class="badge">✦ INVISIBLE</div>
+    <div class="callout-title">✅ After this feature</div>
+    <div class="callout-body">Same player returns, reopens the app. <strong>Round 5 is waiting.</strong> All four rounds of scores are intact. No message. No banner. It just works — exactly like a physical scorepad.</div>
+  </div>
+</div>
+
+<!-- CLEAR MOMENTS -->
+<div style="display:flex;flex-direction:column;align-items:center;padding-top:0;width:100%;max-width:900px;">
+  <div class="clear-moment" style="max-width:500px;width:100%;margin:0 auto;">
+    <div class="clear-title">When does the saved state clear?</div>
+    <div class="clear-item">
+      <div class="clear-dot"></div>
+      <div class="clear-text"><strong>End Game</strong> — user confirms the alert → state cleared, next launch goes to setup</div>
+    </div>
+    <div class="clear-item">
+      <div class="clear-dot"></div>
+      <div class="clear-text"><strong>Start Fresh</strong> — from the win screen → state cleared</div>
+    </div>
+    <div class="clear-item">
+      <div class="clear-dot"></div>
+      <div class="clear-text"><strong>New Game — Same Players</strong> — from the win screen → state cleared</div>
+    </div>
+    <div class="clear-item">
+      <div class="clear-dot"></div>
+      <div class="clear-text"><strong>Start Game</strong> — tapping Start on the setup screen initializes a new session → state cleared</div>
+    </div>
+    <div class="clear-item" style="margin-bottom:0;">
+      <div class="clear-dot"></div>
+      <div class="clear-text"><strong>Game over naturally</strong> — win screen shows → state preserved until user takes one of the above actions</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

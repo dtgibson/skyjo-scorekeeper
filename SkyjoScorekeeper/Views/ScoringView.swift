@@ -14,8 +14,8 @@ struct ScoringView: View {
         colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
     }
 
-    init(players: [Player], onNewGame: @escaping ([Player]?) -> Void) {
-        _session = StateObject(wrappedValue: GameSession(players: players))
+    init(session: GameSession, onNewGame: @escaping ([Player]?) -> Void) {
+        _session = StateObject(wrappedValue: session)
         self.onNewGame = onNewGame
     }
 

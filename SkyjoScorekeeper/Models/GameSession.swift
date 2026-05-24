@@ -5,8 +5,21 @@ final class GameSession: ObservableObject {
     let players: [Player]
     @Published private(set) var rounds: [Round] = []
 
+    /// Start a fresh game. Clears any previously saved state.
     init(players: [Player]) {
+        SessionStore.clear()
         self.players = players
+    }
+
+    /// Restore a game from a persisted snapshot. Does NOT clear saved state.
+    init(snapshot: GameSessionSnapshot) {
+        self.players = snapshot.players
+        self._rounds = Published(initialValue: snapshot.rounds)
+    }
+
+    /// The current state as a Codable value suitable for persistence.
+    var snapshot: GameSessionSnapshot {
+        GameSessionSnapshot(players: players, rounds: rounds)
     }
 
     var currentRoundNumber: Int { rounds.count + 1 }
@@ -50,10 +63,19 @@ final class GameSession: ObservableObject {
             return RoundScore(playerID: player.id, raw: raw, applied: doubled ? raw * 2 : raw)
         }
         rounds.append(Round(number: currentRoundNumber, scores: scores, skyjoPlayerID: skyjoPlayerID))
+
+        // Clear on game over so a restored session never shows a completed game.
+        // Save otherwise so any interruption can be recovered.
+        if isGameOver {
+            SessionStore.clear()
+        } else {
+            SessionStore.save(snapshot)
+        }
     }
 
     func undoLastRound() {
         guard !rounds.isEmpty else { return }
         rounds.removeLast()
+        SessionStore.save(snapshot)
     }
 }

@@ -37,6 +37,13 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - All views that use brand or player colors must read `@Environment(\.colorSchemeContrast)` and pass HC variants when `colorSchemeContrast == .increased`
 - All fixed-height rows must use `frame(minHeight:)` not `frame(height:)` to support Dynamic Type
 
+### Localization
+- All new user-facing strings and VoiceOver accessibility labels must have entries in `SkyjoScorekeeper/Localizable.xcstrings`
+- `Text("literal")` and SwiftUI modifier string literals (`.accessibilityLabel("literal")`, `Button("label")`, etc.) are `LocalizedStringKey` and auto-localize — no code change needed, just add the key to the catalog
+- Computed `String` properties do NOT auto-localize — use `String(localized: "key")` for any string built in Swift code before being passed to a view modifier
+- Format specifier mapping for `String(localized:)`: `\(intValue)` → `%lld` catalog key; `\(stringValue)` → `%@` catalog key
+- Count-based strings that need plural forms (e.g. "N rounds played") use CLDR `variations.plural` in the catalog — add `one` and `other` forms for English; other locales need all required CLDR categories for their language
+
 ### CI/CD
 - Runner: `macos-15`, no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode
 - Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 16` — named simulator, not UDID lookup

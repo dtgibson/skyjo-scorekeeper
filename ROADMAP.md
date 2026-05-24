@@ -2,14 +2,14 @@
 
 ## Up Next
 
-1. **Accessibility** — Add VoiceOver labels, Dynamic Type support, and sufficient color contrast so the app is usable by people with visual or motor disabilities.
+Nothing queued — ready for the next idea.
 
 ---
 
 ## Shipped
 
-**Features shipped:** 3
+**Features shipped:** 6
 
-**Last shipped:** iPad Layout (2026-05-16) — All four screens now display natively on iPad with content centered in a 600pt column; iPhone layout unchanged.
+**Last shipped:** Localization (2026-05-24) — The app now displays in 35 languages with full VoiceOver support in each; RTL layout for Arabic and Hebrew works automatically.
 
-**Previously:** App Store rejection fixes (2026-05-13) — Added an End Game button and SUPPORT.md to resolve Apple's review rejection.
+**Previously:** Accessibility (2026-05-16) — VoiceOver labels, Dynamic Type, Reduce Motion, and Increase Contrast support across all four screens.

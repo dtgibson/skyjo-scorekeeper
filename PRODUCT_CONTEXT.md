@@ -128,6 +128,35 @@ Full accessibility support across all four screens — VoiceOver, Dynamic Type, 
 
 ---
 
+### Localization (Completed 2026-05-24)
+
+Full internationalization into 35 App Store languages. The app detects the device's system language and displays every visible string and VoiceOver accessibility label in that language automatically.
+
+**What it does:**
+- All 49 user-facing strings (28 visible UI + 19 accessibility labels + 2 status note variants) are localized into 35 locales
+- Supported locales: ar, ca, cs, da, de, el, es, es-419, fi, fr, fr-CA, he, hi, hr, hu, id, it, ja, ko, ms, nb, nl, pl, pt-BR, pt-PT, ro, ru, sk, sv, th, tr, uk, vi, zh-Hans, zh-Hant
+- RTL layout (Arabic, Hebrew) handled automatically by SwiftUI leading/trailing alignment — no explicit overrides
+- Plural rules follow CLDR per locale for count-based strings ("1 round played" / "N rounds played")
+- Easter egg string ("Happy Mother's Day, Shawn!") stays hardcoded English and is excluded from the catalog
+- Player names entered by the user are never translated or altered
+
+**Files:**
+- `SkyjoScorekeeper/Localizable.xcstrings` — single String Catalog file; 49 keys, 36 locale entries per plural string, 35 per simple string
+- `SkyjoScorekeeper/Views/GameSetupView.swift` — `statusNote` and player placeholder use `String(localized:)`
+- `SkyjoScorekeeper/Views/PlayerRowView.swift` — name field and remove button accessibility labels use `String(localized:)`
+- `SkyjoScorekeeper/Views/ScoringView.swift` — standings row accessibility label uses `String(localized:)`
+- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — negative toggle value, "Skip" chip label, Skyjo chip labels, doubling preview label use `String(localized:)`
+- `SkyjoScorekeeper/Views/WinView.swift` — winner headline, subtitle, rank accessibility labels use `String(localized:)`
+
+**Pipeline artifacts:**
+- `pipeline/localization/strategic-brief.md`
+- `pipeline/localization/prd.md`
+- `pipeline/localization/schema.md`
+- `pipeline/localization/design-spec.md`
+- `pipeline/localization/design.html`
+
+---
+
 ## Key Decisions
 
 ### Player avatar colors use position, not initials

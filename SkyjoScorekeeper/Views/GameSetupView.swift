@@ -90,7 +90,7 @@ struct GameSetupView: View {
                     let index = playerIndex(for: player.id)
                     PlayerRowView(
                         name: nameBinding(for: player.id),
-                        placeholder: "Player \(index + 1)",
+                        placeholder: String(localized: "Player \(index + 1)"),
                         avatarLabel: avatarLabel(for: player),
                         colorIndex: index,
                         isFilled: player.isValid,
@@ -163,9 +163,9 @@ struct GameSetupView: View {
     private var statusNote: String {
         if gameState.canStart {
             let count = gameState.players.count
-            return "\(count) player\(count == 1 ? "" : "s") ready"
+            return String(localized: "\(count) players ready")
         }
-        return "Enter at least 2 names to start"
+        return String(localized: "Enter at least 2 names to start")
     }
 
     private func attemptStart() {

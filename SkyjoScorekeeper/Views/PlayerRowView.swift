@@ -37,7 +37,7 @@ struct PlayerRowView: View {
                 .font(.system(.body, design: .rounded))
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.words)
-                .accessibilityLabel(showError ? "\(placeholder) name, required" : "\(placeholder) name")
+                .accessibilityLabel(showError ? String(localized: "\(placeholder) name, required") : String(localized: "\(placeholder) name"))
 
             if canRemove {
                 Button(action: onRemove) {
@@ -52,7 +52,7 @@ struct PlayerRowView: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Remove \(displayName)")
+                .accessibilityLabel(String(localized: "Remove \(displayName)"))
             } else {
                 Color.clear
                     .frame(width: 24, height: 24)

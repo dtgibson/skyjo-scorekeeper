@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Localization Design — Score for Skyjo</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand: #3730A3;
+  --brand-dim: rgba(55,48,163,0.08);
+  --brand-light: #5B50D6;
+  --white: #FFFFFF;
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --label: #1C1C1E;
+  --label2: #636366;
+  --label3: #AEAEB2;
+  --separator: rgba(60,60,67,0.18);
+  --green: #34C759;
+  --red: #FF3B30;
+  --orange: #FF9500;
+  --blue: #007AFF;
+
+  --p0: #0072B2;
+  --p1: #D55E00;
+  --p2: #009E73;
+  --p3: #E69F00;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: #DCDCE0;
+  min-height: 100vh;
+  padding: 36px 20px 60px;
+  color: var(--label);
+}
+
+/* ── Page header ───────────────────────────────────── */
+.page-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--brand);
+  letter-spacing: -0.3px;
+}
+.page-subtitle {
+  font-size: 14px;
+  color: var(--label2);
+  margin-top: 4px;
+}
+
+/* ── Main layout ──────────────────────────────────── */
+.layout {
+  display: flex;
+  gap: 28px;
+  max-width: 1080px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* ── Left: phone column ───────────────────────────── */
+.phone-col {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.lang-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 360px;
+}
+.lang-btn {
+  padding: 7px 13px;
+  border-radius: 18px;
+  border: 1.5px solid var(--separator);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label2);
+  transition: all 0.14s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+.lang-btn:hover { border-color: var(--brand); color: var(--brand); }
+.lang-btn.on { background: var(--brand); border-color: var(--brand); color: white; }
+
+.screen-bar {
+  display: flex;
+  background: rgba(255,255,255,0.7);
+  border-radius: 11px;
+  padding: 3px;
+  gap: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.screen-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label2);
+  transition: all 0.14s;
+}
+.screen-btn.on { background: var(--brand); color: white; }
+
+/* ── iPhone frame ─────────────────────────────────── */
+.phone {
+  width: 330px;
+  height: 714px;
+  background: #1A1A1A;
+  border-radius: 50px;
+  padding: 13px;
+  box-shadow:
+    0 0 0 1.5px #444,
+    inset 0 0 0 1px #333,
+    0 30px 80px rgba(0,0,0,0.55);
+  position: relative;
+}
+
+.phone-island {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 30px;
+  background: #1A1A1A;
+  border-radius: 20px;
+  z-index: 20;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  border-radius: 38px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status bar ───────────────────────────────────── */
+.sbar {
+  height: 54px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 24px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+  z-index: 10;
+}
+.sbar-time { flex: 1; }
+.sbar-icons { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+
+/* ── Nav bar ──────────────────────────────────────── */
+.nbar {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-bottom: 0.5px solid var(--separator);
+  background: var(--bg);
+}
+.nbar-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--label);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+.nbar-lead, .nbar-trail {
+  position: absolute;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--brand);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nbar-lead { left: 14px; max-width: 80px; }
+.nbar-trail { right: 14px; max-width: 60px; }
+
+/* RTL nav bar flips */
+.rtl .nbar-lead { left: auto; right: 14px; }
+.rtl .nbar-trail { right: auto; left: 14px; }
+
+/* ── Screen content ───────────────────────────────── */
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 14px 90px;
+}
+.screen-body.no-pad { padding: 0; overflow-y: auto; }
+
+/* ── Section header ───────────────────────────────── */
+.sect {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--label2);
+  padding: 14px 6px 5px;
+  text-transform: uppercase;
+}
+
+/* ── Card ─────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+/* ── Player row (setup) ───────────────────────────── */
+.prow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  min-height: 54px;
+  border-bottom: 0.5px solid var(--separator);
+}
+.prow:last-child { border-bottom: none; }
+.prow.ghost { opacity: 0.45; }
+
+.av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: white;
+}
+.av.dash {
+  background: transparent !important;
+  border: 2px dashed var(--label3);
+  color: var(--label3);
+  font-size: 16px;
+  font-weight: 300;
+}
+
+.pname { flex: 1; font-size: 16px; color: var(--label); }
+.placeholder { color: var(--label3); font-size: 16px; }
+
+/* ── Setup hero ───────────────────────────────────── */
+.setup-hero {
+  padding: 22px 0 6px;
+  text-align: center;
+}
+.setup-hero-q {
+  font-size: 15px;
+  color: var(--label2);
+}
+
+/* ── Buttons ──────────────────────────────────────── */
+.btn-p {
+  width: 100%;
+  padding: 0 14px;
+  height: 52px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btn-p.disabled { opacity: 0.4; }
+.add-link {
+  font-size: 13px;
+  color: var(--blue);
+  padding: 8px 6px;
+  cursor: pointer;
+}
+
+/* ── Standing row (scoring) ───────────────────────── */
+.srow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  min-height: 58px;
+  border-bottom: 0.5px solid var(--separator);
+}
+.srow:last-child { border-bottom: none; }
+.srow.lead { background: var(--brand-dim); }
+
+.crown { font-size: 11px; color: var(--green); }
+.crown-ghost { font-size: 11px; color: transparent; }
+
+.sname { flex: 1; font-size: 16px; font-weight: 500; }
+.score-col { text-align: right; }
+.score-main { font-size: 20px; font-weight: 700; color: var(--label); }
+.score-delta { font-size: 11px; color: var(--label2); }
+
+/* ── Win screen ───────────────────────────────────── */
+.win-hero {
+  background: var(--brand);
+  padding: 36px 20px 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.trophy { font-size: 44px; margin-bottom: 6px; }
+.win-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win-rounds { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+.rrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 0.5px solid var(--separator);
+  min-height: 52px;
+}
+.rrow:last-child { border-bottom: none; }
+.rrow.winner { background: var(--brand-dim); }
+.medal { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.rname { flex: 1; font-size: 15px; font-weight: 500; }
+.rscore { font-size: 17px; font-weight: 700; color: var(--label); }
+.rscore.over { color: var(--red); }
+
+/* ── Right info column ────────────────────────────── */
+.info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.icard {
+  background: var(--white);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.icard-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--brand);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--brand-dim);
+  color: var(--brand);
+  margin: 2px;
+}
+.badge.rtl-badge { background: rgba(255,149,0,0.1); color: #7A4800; }
+.badge.plural-badge { background: rgba(52,199,89,0.1); color: #1A7A35; }
+
+.note-box {
+  display: flex;
+  gap: 10px;
+  background: rgba(255,149,0,0.06);
+  border: 1px solid rgba(255,149,0,0.2);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+  color: #5A3600;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+.note-box .ni { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+.note-box.info-blue {
+  background: rgba(0,122,255,0.05);
+  border-color: rgba(0,122,255,0.18);
+  color: #00408A;
+}
+.note-box.info-green {
+  background: rgba(52,199,89,0.06);
+  border-color: rgba(52,199,89,0.2);
+  color: #1A5C2A;
+}
+
+/* ── Plural demo ──────────────────────────────────── */
+.plural-demo { display: flex; flex-direction: column; gap: 8px; }
+.prow-demo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #F9F9F9;
+  border-radius: 10px;
+}
+.pn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.pt { flex: 1; }
+.pt-form { font-size: 14px; font-weight: 600; color: var(--label); }
+.pt-cat { font-size: 11px; font-weight: 600; color: var(--brand); margin-top: 2px; }
+
+/* ── Code block ───────────────────────────────────── */
+.code-block {
+  background: #1E1E2E;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: "SF Mono", "Menlo", "Cascadia Code", monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #CDD6F4;
+  overflow-x: auto;
+}
+.ck { color: #F38BA8; }       /* key */
+.cv { color: #A6E3A1; }       /* value string */
+.cp { color: #89B4FA; }       /* property name */
+.cc { color: #6C7086; }       /* comment */
+.cm { color: #CBA6F7; }       /* meta / object key */
+
+/* ── Token summary list ───────────────────────────── */
+.tok-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tok-list li {
+  display: flex;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--label);
+  align-items: flex-start;
+}
+.check { color: var(--green); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Locale grid ──────────────────────────────────── */
+.locale-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+.locale-pill {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  padding: 4px 4px;
+  background: #F2F2F7;
+  border-radius: 6px;
+  color: var(--label2);
+  white-space: nowrap;
+}
+.locale-pill.hi { background: var(--brand-dim); color: var(--brand); font-weight: 700; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 820px) {
+  .layout { flex-direction: column; align-items: center; }
+  .info-col { width: 100%; max-width: 500px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-title">Localization Preview</div>
+  <div class="page-subtitle">Score for Skyjo · 35 locales · 43 string tokens · <code>Localizable.xcstrings</code></div>
+</div>
+
+<div class="layout">
+
+  <!-- ═══ LEFT: PHONE ═══════════════════════════════ -->
+  <div class="phone-col">
+
+    <div class="lang-bar">
+      <button class="lang-btn on" data-lang="en">🇬🇧 English</button>
+      <button class="lang-btn" data-lang="fr">🇫🇷 French</button>
+      <button class="lang-btn" data-lang="de">🇩🇪 German</button>
+      <button class="lang-btn" data-lang="ar">🇸🇦 Arabic</button>
+      <button class="lang-btn" data-lang="ja">🇯🇵 Japanese</button>
+      <button class="lang-btn" data-lang="ru">🇷🇺 Russian</button>
+    </div>
+
+    <div class="screen-bar">
+      <button class="screen-btn on" data-screen="setup">Setup</button>
+      <button class="screen-btn" data-screen="scoring">Standings</button>
+      <button class="screen-btn" data-screen="win">Win</button>
+    </div>
+
+    <div class="phone">
+      <div class="phone-island"></div>
+      <div class="phone-screen" id="phone-screen">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+  </div><!-- /phone-col -->
+
+
+  <!-- ═══ RIGHT: INFO PANELS ════════════════════════ -->
+  <div class="info-col">
+
+    <!-- Language info card -->
+    <div class="icard" id="lang-card"><!-- JS --></div>
+
+    <!-- Russian plural demo (only for ru) -->
+    <div class="icard" id="plural-card" style="display:none">
+      <div class="icard-title">CLDR Plural Rules — Russian</div>
+      <div class="plural-demo">
+        <div class="prow-demo">
+          <div class="pn">1</div>
+          <div class="pt">
+            <div class="pt-form">1 раунд сыгран</div>
+            <div class="pt-cat">CLDR: one — last digit 1, not 11</div>
+          </div>
+        </div>
+        <div class="prow-demo">
+          <div class="pn">2</div>
+          <div class="pt">
+            <div class="pt-form">2 раунда сыграно</div>
+            <div class="pt-cat">CLDR: few — last digit 2–4, not 12–14</div>
+          </div>
+        </div>
+        <div class="prow-demo">
+          <div class="pn">5</div>
+          <div class="pt">
+            <div class="pt-form">5 раундов сыграно</div>
+            <div class="pt-cat">CLDR: many — last digit 5–9, or 0</div>
+          </div>
+        </div>
+        <div class="prow-demo">
+          <div class="pn">21</div>
+          <div class="pt">
+            <div class="pt-form">21 раунд сыгран</div>
+            <div class="pt-cat">CLDR: one — last digit 1 (21, not 11)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- xcstrings sample -->
+    <div class="icard">
+      <div class="icard-title">Localizable.xcstrings — Format Sample</div>
+      <div class="code-block">
+<span class="cc">// "WHO ENDED THE ROUND?" — score entry section header</span>
+<span class="cm">"WHO ENDED THE ROUND?" : {</span>
+  <span class="cp">"comment"</span> : <span class="cv">"Section header above the Skyjo chip grid on the score entry sheet."</span>,
+  <span class="cp">"localizations"</span> : {
+    <span class="cp">"fr"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"QUI A TERMINÉ LA MANCHE ?"</span> }},
+    <span class="cp">"de"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"WER HAT DIE RUNDE BEENDET?"</span> }},
+    <span class="cp">"ar"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"من أنهى الجولة؟"</span> }},
+    <span class="cp">"ja"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"誰がラウンドを終わらせましたか？"</span> }}
+  }
+},
+
+<span class="cc">// "%lld rounds played" — win screen, plural-aware</span>
+<span class="cm">"%lld rounds played" : {</span>
+  <span class="cp">"comment"</span> : <span class="cv">"Subtitle on win screen. Total rounds in the completed game."</span>,
+  <span class="cp">"localizations"</span> : {
+    <span class="cp">"en"</span> : { <span class="cp">"variations"</span> : { <span class="cp">"plural"</span> : {
+        <span class="cp">"one"</span>   : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"1 round played"</span> }},
+        <span class="cp">"other"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"%lld rounds played"</span> }}
+    }}},
+    <span class="cp">"ru"</span> : { <span class="cp">"variations"</span> : { <span class="cp">"plural"</span> : {
+        <span class="cp">"one"</span>   : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"%lld раунд сыгран"</span> }},
+        <span class="cp">"few"</span>   : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"%lld раунда сыграно"</span> }},
+        <span class="cp">"many"</span>  : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"%lld раундов сыграно"</span> }},
+        <span class="cp">"other"</span> : { <span class="cp">"stringUnit"</span> : { <span class="cp">"value"</span> : <span class="cv">"%lld раунда сыграно"</span> }}
+    }}}
+  }
+}
+      </div>
+    </div>
+
+    <!-- Token coverage -->
+    <div class="icard">
+      <div class="icard-title">Coverage Summary</div>
+      <ul class="tok-list">
+        <li><span class="check">✓</span> 43 string tokens — visible UI (27) + VoiceOver accessibility labels (16)</li>
+        <li><span class="check">✓</span> 1 plural-aware string: <code>"%lld rounds played"</code> with per-locale CLDR categories</li>
+        <li><span class="check">✓</span> RTL layout for Arabic + Hebrew — SwiftUI leading/trailing auto-mirrors</li>
+        <li><span class="check">✓</span> "Skyjo" unchanged in all 35 locales (proper noun per translator comments)</li>
+        <li><span class="check">✓</span> Easter egg text always English — excluded from catalog (FR-03)</li>
+        <li><span class="check">✓</span> Single <code>Localizable.xcstrings</code> file — no <code>.strings</code> or <code>.stringsdict</code> sidecars</li>
+        <li><span class="check">✓</span> Translator comments on every token for DeepL context</li>
+      </ul>
+    </div>
+
+    <!-- 35 locales -->
+    <div class="icard">
+      <div class="icard-title">35 Supported Locales</div>
+      <div class="locale-grid">
+        <div class="locale-pill hi">en</div>
+        <div class="locale-pill hi">fr</div>
+        <div class="locale-pill hi">de</div>
+        <div class="locale-pill hi">ar</div>
+        <div class="locale-pill hi">ja</div>
+        <div class="locale-pill hi">ru</div>
+        <div class="locale-pill">ca</div>
+        <div class="locale-pill">cs</div>
+        <div class="locale-pill">da</div>
+        <div class="locale-pill">el</div>
+        <div class="locale-pill">es</div>
+        <div class="locale-pill">es-419</div>
+        <div class="locale-pill">fi</div>
+        <div class="locale-pill">fr-CA</div>
+        <div class="locale-pill">he</div>
+        <div class="locale-pill">hi</div>
+        <div class="locale-pill">hr</div>
+        <div class="locale-pill">hu</div>
+        <div class="locale-pill">id</div>
+        <div class="locale-pill">it</div>
+        <div class="locale-pill">ko</div>
+        <div class="locale-pill">ms</div>
+        <div class="locale-pill">nb</div>
+        <div class="locale-pill">nl</div>
+        <div class="locale-pill">pl</div>
+        <div class="locale-pill">pt-BR</div>
+        <div class="locale-pill">pt-PT</div>
+        <div class="locale-pill">ro</div>
+        <div class="locale-pill">sk</div>
+        <div class="locale-pill">sv</div>
+        <div class="locale-pill">th</div>
+        <div class="locale-pill">tr</div>
+        <div class="locale-pill">uk</div>
+        <div class="locale-pill">vi</div>
+        <div class="locale-pill">zh-Hans</div>
+      </div>
+      <div style="font-size:11px;color:var(--label2);margin-top:8px">Highlighted = previewed above. All 35 locales ship in every install — string resources are not subject to App Thinning. Users can switch languages without redownloading.</div>
+    </div>
+
+  </div><!-- /info-col -->
+
+</div><!-- /layout -->
+
+<script>
+/* ── Language data ───────────────────────────────── */
+const LANGS = {
+  en: {
+    name:"English", flag:"🇬🇧", dir:"ltr",
+    p1:"Alice", p2:"James", p3:"Sam",
+    s:{
+      title:"Skyjo Scorekeeper",
+      q:"Who's playing today?",
+      PLAYERS:"PLAYERS", pl:(n)=>`Player ${n}`,
+      addP:"+ Add Player", start:"Start Game",
+      STANDINGS:"STANDINGS",
+      round:(n)=>`Round ${n}`,
+      endGame:"End Game", undo:"Undo",
+      ROUND_SCORES:(n)=>`ROUND ${n} SCORES`,
+      WHO_ENDED:"WHO ENDED THE ROUND?",
+      skip:"Skip", next:"Next", done:"Done",
+      confirm:(n)=>`Confirm Round ${n}`,
+      FINAL:"FINAL STANDINGS",
+      roundsPlayed:(n)=> n===1?"1 round played":`${n} rounds played`,
+      wins:(x)=>`${x} Wins!`,
+      newGame:"New Game — Same Players",
+      fresh:"Start Fresh",
+    }
+  },
+  fr: {
+    name:"French", flag:"🇫🇷", dir:"ltr",
+    p1:"Marie", p2:"Thomas", p3:"Clara",
+    s:{
+      title:"Skyjo Marque-Points",
+      q:"Qui joue aujourd'hui ?",
+      PLAYERS:"JOUEURS", pl:(n)=>`Joueur ${n}`,
+      addP:"+ Ajouter un joueur", start:"Commencer la partie",
+      STANDINGS:"CLASSEMENT",
+      round:(n)=>`Manche ${n}`,
+      endGame:"Fin de partie", undo:"Annuler",
+      ROUND_SCORES:(n)=>`SCORES MANCHE ${n}`,
+      WHO_ENDED:"QUI A TERMINÉ LA MANCHE ?",
+      skip:"Passer", next:"Suivant", done:"Terminé",
+      confirm:(n)=>`Confirmer la manche ${n}`,
+      FINAL:"CLASSEMENT FINAL",
+      roundsPlayed:(n)=> n<=1?`${n} manche jouée`:`${n} manches jouées`,
+      wins:(x)=>`${x} gagne !`,
+      newGame:"Nouvelle partie — mêmes joueurs",
+      fresh:"Nouveau départ",
+    }
+  },
+  de: {
+    name:"German", flag:"🇩🇪", dir:"ltr",
+    p1:"Lukas", p2:"Emma", p3:"Leon",
+    s:{
+      title:"Skyjo Spielstand",
+      q:"Wer spielt heute?",
+      PLAYERS:"SPIELER", pl:(n)=>`Spieler ${n}`,
+      addP:"+ Spieler hinzufügen", start:"Spiel starten",
+      STANDINGS:"RANGLISTE",
+      round:(n)=>`Runde ${n}`,
+      endGame:"Spiel beenden", undo:"Rückgängig",
+      ROUND_SCORES:(n)=>`RUNDE ${n} PUNKTE`,
+      WHO_ENDED:"WER HAT DIE RUNDE BEENDET?",
+      skip:"Überspringen", next:"Weiter", done:"Fertig",
+      confirm:(n)=>`Runde ${n} bestätigen`,
+      FINAL:"ENDABRECHNUNG",
+      roundsPlayed:(n)=> n===1?"1 Runde gespielt":`${n} Runden gespielt`,
+      wins:(x)=>`${x} gewinnt!`,
+      newGame:"Neue Partie — gleiche Spieler",
+      fresh:"Neu starten",
+    }
+  },
+  ar: {
+    name:"Arabic", flag:"🇸🇦", dir:"rtl",
+    p1:"أحمد", p2:"فاطمة", p3:"يوسف",
+    s:{
+      title:"Skyjo مُسجِّل نقاط",
+      q:"من يلعب اليوم؟",
+      PLAYERS:"اللاعبون", pl:(n)=>`لاعب ${n}`,
+      addP:"+ إضافة لاعب", start:"بدء اللعبة",
+      STANDINGS:"الترتيب",
+      round:(n)=>`الجولة ${n}`,
+      endGame:"إنهاء اللعبة", undo:"تراجع",
+      ROUND_SCORES:(n)=>`نقاط الجولة ${n}`,
+      WHO_ENDED:"من أنهى الجولة؟",
+      skip:"تخطي", next:"التالي", done:"تم",
+      confirm:(n)=>`تأكيد الجولة ${n}`,
+      FINAL:"الترتيب النهائي",
+      roundsPlayed:(n)=>`${n} جولة مُلعبة`,
+      wins:(x)=>`${x} فاز!`,
+      newGame:"لعبة جديدة — نفس اللاعبين",
+      fresh:"بداية جديدة",
+    }
+  },
+  ja: {
+    name:"Japanese", flag:"🇯🇵", dir:"ltr",
+    p1:"さくら", p2:"けんじ", p3:"たろう",
+    s:{
+      title:"Skyjo スコアキーパー",
+      q:"今日の参加者は？",
+      PLAYERS:"プレイヤー", pl:(n)=>`プレイヤー ${n}`,
+      addP:"+ プレイヤーを追加", start:"ゲーム開始",
+      STANDINGS:"順位",
+      round:(n)=>`ラウンド ${n}`,
+      endGame:"ゲーム終了", undo:"元に戻す",
+      ROUND_SCORES:(n)=>`ラウンド ${n} スコア`,
+      WHO_ENDED:"誰がラウンドを終わらせましたか？",
+      skip:"スキップ", next:"次へ", done:"完了",
+      confirm:(n)=>`ラウンド ${n} を確認`,
+      FINAL:"最終順位",
+      roundsPlayed:(n)=>`${n} ラウンド終了`,
+      wins:(x)=>`${x} の勝ち！`,
+      newGame:"新しいゲーム — 同じプレイヤー",
+      fresh:"最初からやり直す",
+    }
+  },
+  ru: {
+    name:"Russian", flag:"🇷🇺", dir:"ltr",
+    p1:"Андрей", p2:"Наташа", p3:"Миша",
+    s:{
+      title:"Skyjo Счётчик",
+      q:"Кто играет сегодня?",
+      PLAYERS:"ИГРОКИ", pl:(n)=>`Игрок ${n}`,
+      addP:"+ Добавить игрока", start:"Начать игру",
+      STANDINGS:"ИТОГИ",
+      round:(n)=>`Раунд ${n}`,
+      endGame:"Завершить игру", undo:"Отменить",
+      ROUND_SCORES:(n)=>`ОЧКИ РАУНДА ${n}`,
+      WHO_ENDED:"КТО ЗАВЕРШИЛ РАУНД?",
+      skip:"Пропустить", next:"Далее", done:"Готово",
+      confirm:(n)=>`Подтвердить раунд ${n}`,
+      FINAL:"ИТОГОВЫЕ РЕЗУЛЬТАТЫ",
+      roundsPlayed:(n)=>{
+        const lt=n%100, l=n%10;
+        if(lt>=11&&lt<=19) return `${n} раундов сыграно`;
+        if(l===1) return `${n} раунд сыгран`;
+        if(l>=2&&l<=4) return `${n} раунда сыграно`;
+        return `${n} раундов сыграно`;
+      },
+      wins:(x)=>`${x} побеждает!`,
+      newGame:"Новая игра — те же игроки",
+      fresh:"Начать заново",
+    }
+  }
+};
+
+const PC = ["var(--p0)","var(--p1)","var(--p2)","var(--p3)"];
+
+let lang = "en";
+let screen = "setup";
+
+/* ── Screen renderers ─────────────────────────────── */
+function renderSetup(L) {
+  const s=L.s, d=L.dir;
+  const players=[{n:L.p1,c:PC[0]},{n:L.p2,c:PC[1]}];
+  return `
+<div style="direction:${d};height:100%;display:flex;flex-direction:column">
+  <div class="sbar">
+    <div class="sbar-time">9:41</div>
+    <div class="sbar-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4" y="2" width="3" height="10" rx="1"/><rect x="8" y="0" width="3" height="12" rx="1"/><rect x="12" y="0" width="4" height="12" rx="2" opacity=".3"/></svg>
+      🔋
+    </div>
+  </div>
+  <div class="nbar">
+    <div class="nbar-title" style="font-size:15px;color:var(--brand);font-weight:700">${s.title}</div>
+  </div>
+  <div class="screen-body">
+    <div class="setup-hero"><div class="setup-hero-q">${s.q}</div></div>
+    <div class="sect">${s.PLAYERS}</div>
+    <div class="card">
+      ${players.map(p=>`
+        <div class="prow">
+          <div class="av" style="background:${p.c}">${p.n.charAt(0)}</div>
+          <div class="pname">${p.n}</div>
+        </div>`).join('')}
+      <div class="prow ghost">
+        <div class="av dash">+</div>
+        <div class="placeholder">${s.pl(3)}</div>
+      </div>
+    </div>
+    <div class="add-link" style="text-align:${d==='rtl'?'right':'left'}">${s.addP}</div>
+    <div class="btn-p">${s.start}</div>
+  </div>
+</div>`;
+}
+
+function renderScoring(L) {
+  const s=L.s, d=L.dir;
+  const rows=[
+    {n:L.p1, c:PC[0], score:14, delta:"+5", lead:true},
+    {n:L.p2, c:PC[1], score:31, delta:"+9", lead:false},
+    {n:L.p3, c:PC[2], score:47, delta:"+12", lead:false},
+  ];
+  return `
+<div style="direction:${d};height:100%;display:flex;flex-direction:column">
+  <div class="sbar">
+    <div class="sbar-time">9:41</div>
+    <div class="sbar-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4" y="2" width="3" height="10" rx="1"/><rect x="8" y="0" width="3" height="12" rx="1"/><rect x="12" y="0" width="4" height="12" rx="2" opacity=".3"/></svg>🔋</div>
+  </div>
+  <div class="nbar">
+    <div class="nbar-lead">${s.endGame}</div>
+    <div class="nbar-title">${s.round(4)}</div>
+    <div class="nbar-trail">${s.undo}</div>
+  </div>
+  <div class="screen-body">
+    <div class="sect">${s.STANDINGS}</div>
+    <div class="card">
+      ${rows.map(r=>`
+        <div class="srow ${r.lead?'lead':''}">
+          <div class="av" style="background:${r.c}">${r.n.charAt(0)}</div>
+          <span class="${r.lead?'crown':'crown-ghost'}">♛</span>
+          <div class="sname">${r.n}</div>
+          <div class="score-col">
+            <div class="score-main">${r.score}</div>
+            <div class="score-delta">${r.delta}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="btn-p">${s.confirm(4)}</div>
+  </div>
+</div>`;
+}
+
+function renderWin(L) {
+  const s=L.s, d=L.dir;
+  const n = lang==='ru' ? 5 : 7;
+  const rows=[
+    {n:L.p1, c:PC[0], score:52, medal:"🥇", win:true},
+    {n:L.p2, c:PC[1], score:78, medal:"🥈", win:false},
+    {n:L.p3, c:PC[2], score:103, medal:"🥉", win:false},
+  ];
+  return `
+<div style="direction:${d};height:100%;display:flex;flex-direction:column;overflow-y:auto">
+  <div class="sbar" style="background:var(--brand)">
+    <div class="sbar-time" style="color:white">9:41</div>
+    <div class="sbar-icons" style="color:white"><svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4" y="2" width="3" height="10" rx="1"/><rect x="8" y="0" width="3" height="12" rx="1"/><rect x="12" y="0" width="4" height="12" rx="2" opacity=".3"/></svg>🔋</div>
+  </div>
+  <div class="win-hero">
+    <div class="trophy">🏆</div>
+    <div class="win-name">${s.wins(L.p1)}</div>
+    <div class="win-rounds">${s.roundsPlayed(n)}</div>
+  </div>
+  <div class="screen-body" style="padding-top:0">
+    <div class="sect">${s.FINAL}</div>
+    <div class="card">
+      ${rows.map(r=>`
+        <div class="rrow ${r.win?'winner':''}">
+          <div class="medal">${r.medal}</div>
+          <div class="rname">${r.n}</div>
+          <div class="rscore ${r.score>=100?'over':''}">${r.score}</div>
+        </div>`).join('')}
+    </div>
+    <div class="btn-p" style="margin-top:14px">${s.newGame}</div>
+    <div style="width:100%;height:44px;background:var(--white);border-radius:14px;margin-top:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--brand);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.07)">${s.fresh}</div>
+  </div>
+</div>`;
+}
+
+/* ── Language info card ───────────────────────────── */
+const INFO = {
+  en: {
+    title:"English — Base Locale",
+    body:"All 43 strings are authored in English. The String Catalog uses English as the source; every other locale is a translation from this base. SwiftUI <code>Text(\"literal\")</code> uses <code>LocalizedStringKey</code> automatically — no code change needed for those strings.",
+    badges:[{t:"Base locale"},{t:"LTR"},{t:"CLDR: one / other"}],
+    note:null
+  },
+  fr: {
+    title:"French (fr)",
+    body:"The highest-value European locale alongside German. French plural rules match English (one/other only), keeping the catalog straightforward. French strings are occasionally longer than English equivalents.",
+    badges:[{t:"fr"},{t:"LTR"},{t:"CLDR: one / other"}],
+    note:{cls:"info-blue",icon:"ℹ️",text:"\"Scorekeeper\" → \"Marque-Points\". \"Skyjo\" stays unchanged throughout — translator comment enforces this."}
+  },
+  de: {
+    title:"German (de)",
+    body:"Skyjo originated in Germany — arguably the highest-value locale. German compound words produce longer strings than English. Dynamic Type handles wrapping automatically via <code>frame(minHeight:)</code>.",
+    badges:[{t:"de"},{t:"LTR"},{t:"CLDR: one / other"}],
+    note:{cls:"",icon:"ℹ️",text:"\"Spieler hinzufügen\" is notably longer than \"Add Player\". Test layout on small screen sizes — SwiftUI should wrap rather than truncate."}
+  },
+  ar: {
+    title:"Arabic (ar) — RTL Layout",
+    body:"One of two RTL locales (with Hebrew). SwiftUI's <code>leading</code>/<code>trailing</code> alignment primitives mirror automatically when the device locale is Arabic. No explicit layout overrides needed.",
+    badges:[{t:"ar"},{t:"RTL ←",cls:"rtl-badge"},{t:"CLDR: zero / one / two / few / many / other"}],
+    note:{cls:"",icon:"↔️",text:"The minus glyph (−) on the score entry screen must appear on the leading (right) side in RTL. Since it's opacity-based layout, it flips with the HStack automatically."}
+  },
+  ja: {
+    title:"Japanese (ja)",
+    body:"Japanese has only one CLDR plural category (other) — the round count string needs just one plural form. Japanese translations tend to be compact; no truncation concerns expected. CJK fonts are always present on iOS.",
+    badges:[{t:"ja"},{t:"LTR"},{t:"CLDR: other only",cls:"plural-badge"}],
+    note:{cls:"info-green",icon:"✓",text:"Simplest plural case in the catalog. Japanese requires only a single \"other\" plural entry for \"%lld rounds played\"."}
+  },
+  ru: {
+    title:"Russian (ru) — Complex Plurals",
+    body:"Russian has three active CLDR plural categories: <strong>one</strong> (last digit 1, except 11), <strong>few</strong> (last digit 2–4, except 12–14), and <strong>many</strong> (everything else). This is exactly the case that made <code>.stringsdict</code> tedious — <code>.xcstrings</code> handles it natively.",
+    badges:[{t:"ru"},{t:"LTR"},{t:"CLDR: one / few / many / other",cls:"plural-badge"}],
+    note:{cls:"",icon:"📝",text:"Scroll down to see the four plural forms in action. The win screen in Russian is showing 5 rounds (\"5 раундов сыграно\" — CLDR: many)."}
+  }
+};
+
+function renderLangCard() {
+  const info = INFO[lang];
+  const L = LANGS[lang];
+  const badgeHTML = info.badges.map(b=>`<span class="badge ${b.cls||''}">${b.t}</span>`).join('');
+  const noteHTML = info.note
+    ? `<div class="note-box ${info.note.cls}"><span class="ni">${info.note.icon}</span><span>${info.note.text}</span></div>`
+    : '';
+  document.getElementById('lang-card').innerHTML = `
+    <div class="icard-title">${info.title}</div>
+    <p style="font-size:14px;line-height:1.6;color:var(--label);margin-bottom:11px">${info.body}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:${info.note?'0':'0'}">${badgeHTML}</div>
+    ${noteHTML}
+  `;
+  document.getElementById('plural-card').style.display = lang==='ru' ? 'block' : 'none';
+}
+
+function renderPhone() {
+  const L = LANGS[lang];
+  let html='';
+  if (screen==='setup') html=renderSetup(L);
+  else if (screen==='scoring') html=renderScoring(L);
+  else html=renderWin(L);
+  document.getElementById('phone-screen').innerHTML = html;
+}
+
+function render() { renderPhone(); renderLangCard(); }
+
+/* ── Event listeners ─────────────────────────────── */
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    lang=btn.dataset.lang;
+    render();
+  });
+});
+
+document.querySelectorAll('.screen-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.screen-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    screen=btn.dataset.screen;
+    renderPhone();
+  });
+});
+
+render();
+</script>
+</body>
+</html>

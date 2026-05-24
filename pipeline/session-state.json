@@ -1,11 +1,17 @@
 {
-  "activeFeature": null,
-  "sessionNumber": null,
-  "sessionType": null,
-  "currentStage": null,
-  "lastCompletedStage": 6,
-  "lastCheckpointStatus": "complete",
-  "confirmedArtifacts": [],
-  "createdAt": "2026-05-16T21:00:00Z",
-  "updatedAt": "2026-05-16T21:30:00Z"
+  "activeFeature": "localization",
+  "sessionNumber": 2,
+  "sessionType": "feature",
+  "currentStage": 8,
+  "lastCompletedStage": 7,
+  "lastCheckpointStatus": "in-progress",
+  "confirmedArtifacts": [
+    "pipeline/localization/strategic-brief.md",
+    "pipeline/localization/prd.md",
+    "pipeline/localization/schema.md",
+    "pipeline/localization/design-spec.md",
+    "pipeline/localization/design.html"
+  ],
+  "createdAt": "2026-05-16T22:00:00Z",
+  "updatedAt": "2026-05-24T00:20:00Z"
 }

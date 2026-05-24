@@ -139,16 +139,16 @@ struct WinView: View {
 
     private var winnerHeadline: String {
         let winners = session.winners
-        if winners.isEmpty { return "Game Over" }
-        if winners.count == 1 { return "\(winners[0].trimmedName) Wins!" }
+        if winners.isEmpty { return String(localized: "Game Over") }
+        if winners.count == 1 { return String(localized: "\(winners[0].trimmedName) Wins!") }
         let names = winners.map(\.trimmedName)
         let joined = names.dropLast().joined(separator: ", ") + " & " + (names.last ?? "")
-        return "\(joined) Tie!"
+        return String(localized: "\(joined) Tie!")
     }
 
     private var winnerSubtitle: String {
         let rounds = session.rounds.count
-        return "\(rounds) round\(rounds == 1 ? "" : "s") played"
+        return String(localized: "\(rounds) rounds played")
     }
 
     private func colorIndex(for player: Player) -> Int {
@@ -180,13 +180,13 @@ private struct FinalRankRow: View {
     private var rankAccessibilityLabel: String {
         let placement: String
         switch rank {
-        case 1: placement = "First place"
-        case 2: placement = "Second place"
-        case 3: placement = "Third place"
-        default: placement = "Place \(rank)"
+        case 1: placement = String(localized: "First place")
+        case 2: placement = String(localized: "Second place")
+        case 3: placement = String(localized: "Third place")
+        default: placement = String(localized: "Place \(rank)")
         }
-        let winnerSuffix = isWinner ? ", winner" : ""
-        return "\(placement): \(standing.player.trimmedName), \(standing.total) points\(winnerSuffix)"
+        let winnerSuffix = isWinner ? String(localized: ", winner") : ""
+        return String(localized: "\(placement): \(standing.player.trimmedName), \(standing.total) points") + winnerSuffix
     }
 
     var body: some View {

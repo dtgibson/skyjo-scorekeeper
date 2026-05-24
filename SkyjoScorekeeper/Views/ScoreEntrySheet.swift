@@ -67,7 +67,7 @@ struct ScoreEntrySheet: View {
                 }
                 .disabled(focusedPlayer == nil)
                 .accessibilityLabel("Negative score")
-                .accessibilityValue(focusedIsNegative ? "on" : "off")
+                .accessibilityValue(focusedIsNegative ? String(localized: "on") : String(localized: "off"))
 
                 Spacer()
 
@@ -148,7 +148,7 @@ struct ScoreEntrySheet: View {
                         )
                     }
                     SkyjoChip(
-                        label: "Skip",
+                        label: String(localized: "Skip"),
                         isNobody: true,
                         isSelected: skyjoAnswered && skyjoPlayerID == nil,
                         onTap: {
@@ -292,7 +292,7 @@ private struct ScoreInputRow: View {
 
     private func doublingAccessibilityLabel(_ preview: String) -> String {
         if let doubled = preview.components(separatedBy: "→").last?.trimmingCharacters(in: .whitespaces) {
-            return "Score doubles to \(doubled)"
+            return String(localized: "Score doubles to \(doubled)")
         }
         return preview
     }
@@ -319,7 +319,7 @@ private struct SkyjoChip: View {
     }
 
     private var chipAccessibilityLabel: String {
-        isNobody ? "Nobody called Skyjo" : "\(displayLabel) called Skyjo"
+        isNobody ? String(localized: "Nobody called Skyjo") : String(localized: "\(displayLabel) called Skyjo")
     }
 
     var body: some View {

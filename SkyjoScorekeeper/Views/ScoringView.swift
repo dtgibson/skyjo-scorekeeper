@@ -201,9 +201,8 @@ private struct StandingRowView: View {
     }
 
     private var rowAccessibilityLabel: String {
-        let name = standing.player.trimmedName
-        let points = "\(standing.total) points"
-        let leader = standing.isLeader && showLeaderIndicator ? ", currently leading" : ""
-        return "\(name), \(points)\(leader)"
+        let base = String(localized: "\(standing.player.trimmedName), \(standing.total) points")
+        let leader = standing.isLeader && showLeaderIndicator ? String(localized: ", currently leading") : ""
+        return base + leader
     }
 }

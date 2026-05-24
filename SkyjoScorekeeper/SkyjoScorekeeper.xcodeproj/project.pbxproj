@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A21B9D2B2FC38E3D00530D77 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A21B9D2A2FC38E3D00530D77 /* Localizable.xcstrings */; };
 		AAA000000000000000000060 /* SkyjoScorekeeperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000040 /* SkyjoScorekeeperApp.swift */; };
 		AAA000000000000000000061 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000041 /* Theme.swift */; };
 		AAA000000000000000000062 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA000000000000000000042 /* GameState.swift */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A21B9D2A2FC38E3D00530D77 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		AAA000000000000000000011 /* SkyjoScorekeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyjoScorekeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA000000000000000000021 /* SkyjoScorekeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyjoScorekeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA000000000000000000040 /* SkyjoScorekeeperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyjoScorekeeperApp.swift; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 				AAA000000000000000000030 /* SkyjoScorekeeper */,
 				AAA000000000000000000033 /* ../SkyjoScorekeeperTests */,
 				AAA000000000000000000003 /* Products */,
+				A21B9D2A2FC38E3D00530D77 /* Localizable.xcstrings */,
 			);
 			sourceTree = "<group>";
 		};
@@ -226,6 +229,7 @@
 			files = (
 				AAA00000000000000000006E /* Assets.xcassets in Resources */,
 				AAA00000000000000000006F /* PrivacyInfo.xcprivacy in Resources */,
+				A21B9D2B2FC38E3D00530D77 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,7 +404,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 8QKC3L2FKP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -414,7 +418,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtgibson.SkyjoScorekeeper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -431,7 +435,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 8QKC3L2FKP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -445,7 +449,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtgibson.SkyjoScorekeeper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

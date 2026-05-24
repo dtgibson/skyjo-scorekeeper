@@ -1,10 +1,10 @@
 {
-  "activeFeature": "localization",
+  "activeFeature": null,
   "sessionNumber": 2,
-  "sessionType": "feature",
-  "currentStage": 9,
-  "lastCompletedStage": 8,
-  "lastCheckpointStatus": "in-progress",
+  "sessionType": null,
+  "currentStage": null,
+  "lastCompletedStage": 9,
+  "lastCheckpointStatus": "approved",
   "confirmedArtifacts": [
     "pipeline/localization/strategic-brief.md",
     "pipeline/localization/prd.md",
@@ -13,5 +13,5 @@
     "pipeline/localization/design.html"
   ],
   "createdAt": "2026-05-16T22:00:00Z",
-  "updatedAt": "2026-05-24T00:40:00Z"
+  "updatedAt": "2026-05-24T00:50:00Z"
 }

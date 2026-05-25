@@ -128,6 +128,38 @@ Full accessibility support across all four screens — VoiceOver, Dynamic Type, 
 
 ---
 
+### Session Persistence (Completed 2026-05-24)
+
+Active games are automatically saved to disk after every round and restored on next launch. The app picks up exactly where you left off — same players, same scores, same round number.
+
+**What it does:**
+- After every `commitRound`, the full game state (players + all rounds) is written atomically to Application Support as `active-game.json`
+- After every `undoLastRound`, the updated state is saved immediately
+- On app launch, if `active-game.json` exists and decodes cleanly, the app goes directly to the scoring view with the restored session — setup screen is skipped
+- When a game ends (any player hits 100), the saved file is deleted before the win screen is shown — completed games are never restored
+- When the user starts a new game (either from setup or via "New Game" on the win screen), the saved file is cleared
+- Corrupt or unreadable save files are silently discarded — the app falls back to the setup screen
+
+**Files:**
+- `SkyjoScorekeeper/Models/GameSessionSnapshot.swift` — lightweight `Codable` value type holding `[Player]` and `[Round]`; separate from `GameSession` to avoid `@Published` wrapper interference with `Codable`
+- `SkyjoScorekeeper/Models/SessionStore.swift` — static struct with `save`, `load`, and `clear`; writes to `ApplicationSupport/active-game.json` with `.atomic` option; all operations fail silently
+- `SkyjoScorekeeper/Models/GameSession.swift` — `init(players:)` clears any saved state (fresh game); `init(snapshot:)` restores without clearing; `commitRound` saves or clears depending on `isGameOver`; `undoLastRound` saves after removing the last round
+- `SkyjoScorekeeper/Models/Player.swift` — `Codable` added
+- `SkyjoScorekeeper/Models/RoundScore.swift` — `Codable` added
+- `SkyjoScorekeeper/Models/Round.swift` — `Codable` added
+- `SkyjoScorekeeper/SkyjoScorekeeperApp.swift` — `init()` checks `SessionStore.load()` and routes to `.game(session:)` on restore; `Route.game` now carries a `GameSession` instead of `[Player]`
+- `SkyjoScorekeeper/Views/ScoringView.swift` — `init(session:onNewGame:)` accepts an injected `GameSession`
+- `SkyjoScorekeeperTests/SessionPersistenceTests.swift` — 12 unit tests covering all save/restore/clear paths (all passing)
+
+**Pipeline artifacts:**
+- `pipeline/session-persistence/strategic-brief.md`
+- `pipeline/session-persistence/prd.md`
+- `pipeline/session-persistence/schema.md`
+- `pipeline/session-persistence/design-spec.md`
+- `pipeline/session-persistence/design.html`
+
+---
+
 ### Localization (Completed 2026-05-24)
 
 Full internationalization into 35 App Store languages. The app detects the device's system language and displays every visible string and VoiceOver accessibility label in that language automatically.
@@ -174,8 +206,8 @@ The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 1
 ### "Designed for iPhone" Mac destination is not viable in CI
 Attempted as a workaround during the accessibility session. It fails with actool when the iphonesimulator SDK version bundled with Xcode doesn't match the available simulator runtimes on the runner. iOS Simulator destination with code signing disabled (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`) is the correct approach.
 
-### No data persistence
-All game data is fully in-memory. Nothing is persisted between app launches. Intentional per the PRD — out of scope for both features built so far.
+### Active game persisted to Application Support
+~~No data persistence~~ — superseded by Session Persistence (2026-05-24). Active game state (players + all rounds) is written to `ApplicationSupport/active-game.json` after every round mutation. The file is cleared when a game ends or a new game starts. Historical scores and match history are not stored — only the current in-progress game.
 
 ### Root navigation uses a Route enum, not NavigationStack
 `SkyjoScorekeeperApp` owns a `@State private var route: Route` with cases `.setup` and `.game`. Switching routes replaces the entire view tree. This avoids NavigationStack complexity for an app with only two top-level screens.

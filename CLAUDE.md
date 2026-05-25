@@ -44,6 +44,13 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - Format specifier mapping for `String(localized:)`: `\(intValue)` → `%lld` catalog key; `\(stringValue)` → `%@` catalog key
 - Count-based strings that need plural forms (e.g. "N rounds played") use CLDR `variations.plural` in the catalog — add `one` and `other` forms for English; other locales need all required CLDR categories for their language
 
+### Session Persistence
+- `SessionStore` is a static struct — never instantiate it; call `SessionStore.save(_:)`, `SessionStore.load()`, `SessionStore.clear()` directly
+- `GameSessionSnapshot` is the serialization boundary — it holds `[Player]` and `[Round]`; all fields are `Codable` via synthesis
+- `GameSession` has two inits: `init(players:)` clears saved state (fresh game), `init(snapshot:)` restores without clearing — never mix them up
+- `init(snapshot:)` initializes `@Published` backing storage directly with `_rounds = Published(initialValue: snapshot.rounds)` — this is intentional; do not change it to `self.rounds = snapshot.rounds`
+- All `SessionStore` operations fail silently — do not add error propagation or alerts
+
 ### CI/CD
 - Runner: `macos-15`, no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode
 - Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 16` — named simulator, not UDID lookup

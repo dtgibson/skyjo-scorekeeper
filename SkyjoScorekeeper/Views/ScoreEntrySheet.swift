@@ -8,12 +8,13 @@ struct ScoreEntrySheet: View {
     @State private var negativeInputs: [UUID: Bool] = [:]
     @State private var skyjoPlayerID: UUID? = nil
     @State private var skyjoAnswered = false
-    @FocusState private var focusedPlayer: UUID?
+    @State private var focusedPlayer: UUID?
 
     private var entries: [UUID: Int] {
         Dictionary(uniqueKeysWithValues: session.players.compactMap { player in
-            guard let text = rawInputs[player.id], let value = Int(text) else { return nil }
-            return (player.id, value)
+            guard let text = rawInputs[player.id], !text.isEmpty, let value = Int(text) else { return nil }
+            let isNeg = negativeInputs[player.id] ?? false
+            return (player.id, isNeg ? -value : value)
         })
     }
 
@@ -22,10 +23,6 @@ struct ScoreEntrySheet: View {
     }
 
     private var canConfirm: Bool { allFilled && skyjoAnswered }
-
-    private var focusedIsNegative: Bool {
-        focusedPlayer.flatMap { negativeInputs[$0] } ?? false
-    }
 
     private func minOtherScore(excluding playerID: UUID) -> Int? {
         guard allFilled else { return nil }
@@ -43,10 +40,16 @@ struct ScoreEntrySheet: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 16)
                 .frame(maxWidth: Theme.contentMaxWidth)
                 .frame(maxWidth: .infinity)
             }
+
+            Divider()
+
+            numpad
+                .frame(maxWidth: Theme.contentMaxWidth)
+                .frame(maxWidth: .infinity)
 
             confirmButton
                 .padding(.horizontal, 16)
@@ -55,27 +58,6 @@ struct ScoreEntrySheet: View {
                 .frame(maxWidth: .infinity)
         }
         .background(Color(.systemGroupedBackground))
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Button {
-                    guard let id = focusedPlayer else { return }
-                    negativeInputs[id] = !focusedIsNegative
-                } label: {
-                    Image(systemName: focusedIsNegative ? "minus.circle.fill" : "minus.circle")
-                        .font(.system(size: 20))
-                        .foregroundStyle(focusedIsNegative ? Color(.systemRed) : Color(.secondaryLabel))
-                }
-                .disabled(focusedPlayer == nil)
-                .accessibilityLabel("Negative score")
-                .accessibilityValue(focusedIsNegative ? String(localized: "on") : String(localized: "off"))
-
-                Spacer()
-
-                Button("Next") { advanceFocus() }
-                    .disabled(focusedPlayer == session.players.last?.id)
-                Button("Done") { focusedPlayer = nil }
-            }
-        }
         .onAppear { focusedPlayer = session.players.first?.id }
     }
 
@@ -106,10 +88,11 @@ struct ScoreEntrySheet: View {
                     ScoreInputRow(
                         player: player,
                         colorIndex: index,
-                        rawInput: inputBinding(for: player.id),
-                        isNegative: negativeBinding(for: player.id),
+                        digits: rawInputs[player.id] ?? "",
+                        isNegative: negativeInputs[player.id] ?? false,
                         doublingPreview: doublingPreview(for: player.id),
-                        focusedPlayer: $focusedPlayer
+                        isFocused: focusedPlayer == player.id,
+                        onTap: { focusedPlayer = player.id }
                     )
                     if index < session.players.count - 1 {
                         Divider().padding(.leading, 64)
@@ -133,36 +116,113 @@ struct ScoreEntrySheet: View {
                 .padding(.horizontal, 6)
                 .accessibilityAddTraits(.isHeader)
 
-            VStack(spacing: 8) {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
-                    ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
-                        SkyjoChip(
-                            player: player,
-                            colorIndex: index,
-                            isSelected: skyjoPlayerID == player.id,
-                            onTap: {
-                                skyjoPlayerID = player.id
-                                skyjoAnswered = true
-                                focusedPlayer = nil
-                            }
-                        )
-                    }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
+                ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
                     SkyjoChip(
-                        label: String(localized: "Skip"),
-                        isNobody: true,
-                        isSelected: skyjoAnswered && skyjoPlayerID == nil,
+                        player: player,
+                        colorIndex: index,
+                        isSelected: skyjoPlayerID == player.id,
                         onTap: {
-                            skyjoPlayerID = nil
+                            skyjoPlayerID = player.id
                             skyjoAnswered = true
-                            focusedPlayer = nil
                         }
                     )
                 }
+                SkyjoChip(
+                    label: String(localized: "Skip"),
+                    isNobody: true,
+                    isSelected: skyjoAnswered && skyjoPlayerID == nil,
+                    onTap: {
+                        skyjoPlayerID = nil
+                        skyjoAnswered = true
+                    }
+                )
             }
             .padding(12)
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+        }
+    }
+
+    // MARK: - Numpad
+
+    private enum NumpadKey: Equatable {
+        case digit(Int), toggle, backspace
+    }
+
+    private var numpad: some View {
+        VStack(spacing: 4) {
+            numpadRow([.digit(7), .digit(8), .digit(9)])
+            numpadRow([.digit(4), .digit(5), .digit(6)])
+            numpadRow([.digit(1), .digit(2), .digit(3)])
+            numpadRow([.toggle, .digit(0), .backspace])
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+
+    private func numpadRow(_ keys: [NumpadKey]) -> some View {
+        HStack(spacing: 4) {
+            ForEach(0..<keys.count, id: \.self) { numpadButton(keys[$0]) }
+        }
+    }
+
+    @ViewBuilder
+    private func numpadButton(_ key: NumpadKey) -> some View {
+        let isNegActive = focusedPlayer.flatMap { negativeInputs[$0] } ?? false
+        let enabled = focusedPlayer != nil
+
+        Button {
+            guard let id = focusedPlayer else { return }
+            switch key {
+            case .digit(let n):
+                let current = rawInputs[id] ?? ""
+                guard current.count < 3 else { return }
+                rawInputs[id] = (current == "0") ? "\(n)" : current + "\(n)"
+            case .toggle:
+                negativeInputs[id] = !(negativeInputs[id] ?? false)
+            case .backspace:
+                rawInputs[id] = String((rawInputs[id] ?? "").dropLast())
+            }
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(key == .toggle && isNegActive
+                          ? Color(.systemRed).opacity(0.12)
+                          : Color(.secondarySystemFill))
+
+                switch key {
+                case .digit(let n):
+                    Text("\(n)")
+                        .font(.system(.title2, design: .rounded, weight: .medium))
+                        .foregroundStyle(Color(.label))
+                case .toggle:
+                    Text("+/\u{2212}")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(isNegActive ? Color(.systemRed) : Color(.label))
+                case .backspace:
+                    Image(systemName: "delete.backward")
+                        .font(.system(.callout, weight: .medium))
+                        .foregroundStyle(Color(.label))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
+        .accessibilityLabel(numpadKeyLabel(key, isNegActive: isNegActive))
+    }
+
+    private func numpadKeyLabel(_ key: NumpadKey, isNegActive: Bool) -> String {
+        switch key {
+        case .digit(let n): return "\(n)"
+        case .toggle: return isNegActive
+            ? String(localized: "Toggle to positive")
+            : String(localized: "Toggle negative")
+        case .backspace: return String(localized: "Delete")
         }
     }
 
@@ -183,20 +243,6 @@ struct ScoreEntrySheet: View {
 
     // MARK: - Helpers
 
-    private func inputBinding(for id: UUID) -> Binding<String> {
-        Binding(
-            get: { rawInputs[id] ?? "" },
-            set: { rawInputs[id] = $0 }
-        )
-    }
-
-    private func negativeBinding(for id: UUID) -> Binding<Bool> {
-        Binding(
-            get: { negativeInputs[id] ?? false },
-            set: { negativeInputs[id] = $0 }
-        )
-    }
-
     private func doublingPreview(for playerID: UUID) -> String? {
         guard
             skyjoPlayerID == playerID,
@@ -207,14 +253,6 @@ struct ScoreEntrySheet: View {
         else { return nil }
         return "×2 → \(raw * 2)"
     }
-
-    private func advanceFocus() {
-        guard let current = focusedPlayer,
-              let idx = session.players.firstIndex(where: { $0.id == current }),
-              idx + 1 < session.players.count
-        else { return }
-        focusedPlayer = session.players[idx + 1].id
-    }
 }
 
 // MARK: - Score input row
@@ -222,17 +260,25 @@ struct ScoreEntrySheet: View {
 private struct ScoreInputRow: View {
     let player: Player
     let colorIndex: Int
-    @Binding var rawInput: String
-    @Binding var isNegative: Bool
+    let digits: String
+    let isNegative: Bool
     let doublingPreview: String?
-    var focusedPlayer: FocusState<UUID?>.Binding
-
-    @State private var digits: String = ""
+    let isFocused: Bool
+    let onTap: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     private var highContrast: Bool { colorSchemeContrast == .increased }
+
+    private var activeBrand: Color {
+        highContrast ? Theme.brandHighContrast : Theme.brand
+    }
+
+    private var scoreColor: Color {
+        guard !digits.isEmpty else { return Color(.tertiaryLabel) }
+        return isNegative ? Color(.systemRed) : Color.primary
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -256,45 +302,57 @@ private struct ScoreInputRow: View {
                     .font(.system(.footnote, design: .rounded, weight: .medium))
                     .foregroundStyle(Color(.systemOrange))
                     .transition(.opacity.combined(with: .scale(scale: 0.85)))
-                    .accessibilityLabel(doublingAccessibilityLabel(preview))
+                    .accessibilityHidden(true)
             }
 
             HStack(spacing: 1) {
-                Text("−")
+                Text("\u{2212}")
                     .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(Color(.systemRed))
                     .opacity(isNegative ? 1 : 0)
                     .accessibilityHidden(true)
 
-                TextField("0", text: $digits)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.trailing)
+                Text(digits.isEmpty ? "0" : digits)
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundStyle(isNegative ? Color(.systemRed) : Color.primary)
-                    .frame(width: 52)
-                    .focused(focusedPlayer, equals: player.id)
-                    .onChange(of: digits) { _, _ in syncToBinding() }
-                    .onChange(of: isNegative) { _, _ in syncToBinding() }
-                    .accessibilityLabel("Score for \(player.trimmedName)")
+                    .foregroundStyle(scoreColor)
+                    .frame(width: 52, alignment: .trailing)
+                    .multilineTextAlignment(.trailing)
+                    .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 64)
         .contentShape(Rectangle())
-        .onTapGesture { focusedPlayer.wrappedValue = player.id }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: doublingPreview)
-    }
-
-    private func syncToBinding() {
-        guard !digits.isEmpty else { rawInput = ""; return }
-        rawInput = isNegative ? "-\(digits)" : digits
-    }
-
-    private func doublingAccessibilityLabel(_ preview: String) -> String {
-        if let doubled = preview.components(separatedBy: "→").last?.trimmingCharacters(in: .whitespaces) {
-            return String(localized: "Score doubles to \(doubled)")
+        .overlay {
+            if isFocused {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(activeBrand, lineWidth: 2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+            }
         }
-        return preview
+        .onTapGesture { onTap() }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: doublingPreview)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.1), value: isFocused)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(rowAccessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Tap to enter score")
+    }
+
+    private var rowAccessibilityLabel: String {
+        var parts: [String] = [player.trimmedName]
+        if digits.isEmpty {
+            parts.append("no score")
+        } else {
+            let sign = isNegative ? "minus " : ""
+            parts.append("\(sign)\(digits) points")
+        }
+        if let preview = doublingPreview,
+           let doubled = preview.components(separatedBy: "→").last?.trimmingCharacters(in: .whitespaces) {
+            parts.append("doubles to \(doubled)")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 

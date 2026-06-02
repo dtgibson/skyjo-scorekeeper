@@ -1,17 +1,16 @@
 {
-  "activeFeature": "session-persistence",
-  "sessionNumber": 2,
-  "sessionType": "feature",
-  "currentStage": 8,
-  "lastCompletedStage": 7,
-  "lastCheckpointStatus": "in-progress",
+  "activeFeature": "numpad-negative-toggle",
+  "sessionNumber": 1,
+  "sessionType": "maintain",
+  "currentStage": 5,
+  "lastCompletedStage": 4,
+  "lastCheckpointStatus": "approved",
+  "awaitingHuman": null,
   "confirmedArtifacts": [
-    "pipeline/session-persistence/strategic-brief.md",
-    "pipeline/session-persistence/prd.md",
-    "pipeline/session-persistence/schema.md",
-    "pipeline/session-persistence/design-spec.md",
-    "pipeline/session-persistence/design.html"
+    "pipeline/numpad-negative-toggle/change-brief.md",
+    "pipeline/numpad-negative-toggle/qa-report.md",
+    "pipeline/numpad-negative-toggle/security-report.md"
   ],
-  "createdAt": "2026-05-24T01:00:00Z",
-  "updatedAt": "2026-05-24T02:50:00Z"
+  "createdAt": "2026-06-02T00:00:00Z",
+  "updatedAt": "2026-06-02T00:35:00Z"
 }

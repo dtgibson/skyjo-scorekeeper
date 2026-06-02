@@ -1,45 +1,61 @@
-# Handoff — Accessibility Feature Complete
+# Handoff — Session Persistence (Complete)
+
+**Feature:** Session Persistence
+**Status:** Complete — both sessions done, deployed, chronicled
+**Date:** 2026-05-24
+
+---
 
 ## What was built
 
-Full accessibility support was added across all four screens of Score for Skyjo. The app now supports VoiceOver navigation, Dynamic Type text scaling, Reduce Motion (all animations suppressible), and Increase Contrast (a WCAG-AA-compliant high-contrast color palette). A non-color leader indicator (crown.fill SF Symbol) was added to the standings view. All fixed-height rows were updated to minHeight to prevent text clipping at large type sizes.
+Active games are now automatically saved to disk and restored on next launch. If a player closes the app mid-game — whether by switching apps, killing it, or just walking away — they come back to exactly where they left off: same players, same scores, same round number.
 
-This was a pure-polish feature — no user-visible behavior changed at default system settings. The crown symbol is the only new visible element.
+The app opens to the scoring view when a saved game is found. It opens to the setup screen otherwise. Completed games (any player hitting 100) are cleared immediately so the app never wakes up in a finished state. Starting a new game always clears any saved state.
 
-## Files produced
+The feature adds no visible UI — the behavior is invisible except in the moment it matters.
 
-**Source changes (Swift):**
-- `SkyjoScorekeeper/Theme.swift`
-- `SkyjoScorekeeper/Views/GameSetupView.swift`
-- `SkyjoScorekeeper/Views/PlayerRowView.swift`
-- `SkyjoScorekeeper/Views/ScoringView.swift`
-- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift`
-- `SkyjoScorekeeper/Views/WinView.swift`
-- `SkyjoScorekeeper/Views/EasterEggOverlay.swift`
+---
 
-**Pipeline artifacts:**
-- `pipeline/accessibility/strategic-brief.md`
-- `pipeline/accessibility/prd.md`
-- `pipeline/accessibility/schema.md`
-- `pipeline/accessibility/design-spec.md`
-- `pipeline/accessibility/design.html`
+## All artifacts and files
 
-**Context updates:**
-- `PRODUCT_CONTEXT.md` — accessibility feature + 3 new decisions
-- `CLAUDE.md` — accessibility conventions + corrected CI documentation
+**Pipeline artifacts (Session 1):**
+- `pipeline/session-persistence/strategic-brief.md`
+- `pipeline/session-persistence/prd.md`
+- `pipeline/session-persistence/schema.md`
+- `pipeline/session-persistence/design-spec.md`
+- `pipeline/session-persistence/design.html`
 
-## CI fix included
+**New source files:**
+- `SkyjoScorekeeper/Models/GameSessionSnapshot.swift`
+- `SkyjoScorekeeper/Models/SessionStore.swift`
+- `SkyjoScorekeeperTests/SessionPersistenceTests.swift`
 
-The accessibility commit also corrected a CI regression: the pipeline.yml had been pinned to Xcode 16.2, which broke when the project was opened and re-saved locally in Xcode 26.5 (LastUpgradeCheck bumped to 2650). The Xcode pin was removed and the test destination was changed from a fragile UDID-lookup to a named simulator (`platform=iOS Simulator,OS=latest,name=iPhone 16`). CI is green.
+**Modified source files:**
+- `SkyjoScorekeeper/Models/Player.swift` — added `Codable`
+- `SkyjoScorekeeper/Models/RoundScore.swift` — added `Codable`
+- `SkyjoScorekeeper/Models/Round.swift` — added `Codable`
+- `SkyjoScorekeeper/Models/GameSession.swift` — `init(snapshot:)`, `snapshot` computed property, save/clear in `commitRound` and `undoLastRound`
+- `SkyjoScorekeeper/SkyjoScorekeeperApp.swift` — launch restore logic, `Route.game(session:)` carries injected `GameSession`
+- `SkyjoScorekeeper/Views/ScoringView.swift` — `init(session:onNewGame:)` accepts injected session
+
+**Context files updated:**
+- `PRODUCT_CONTEXT.md` — session-persistence feature entry added; "No data persistence" decision superseded
+- `DECISIONS.md` — five new decisions covering snapshot pattern, storage location, silent failures, game-over clear, injected session
+- `ROADMAP.md` — features shipped: 7; last shipped updated
+- `CLAUDE.md` — Session Persistence conventions section added
+
+**Commits:**
+- `874f986` — feat: persist active game session across app restarts
+- `8ef47a5` — chore: context update after session-persistence
+
+---
 
 ## This feature is complete
 
-Both sessions are done. The accessibility feature is deployed to `main` on GitHub and CI is passing.
+CI passed. All 12 new tests green. Context fully updated.
 
-## App Store note
-
-No new screenshots are required — the feature is invisible at default system settings. Archive from Xcode and upload to App Store Connect the same way as the iPad Layout release.
+---
 
 ## Starting the next feature
 
-Run `/new-feature` to begin the next item from the roadmap.
+Run `/new-feature` — your roadmap's Up Next section is currently empty, so you'll be asked what to build next.

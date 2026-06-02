@@ -1,61 +1,28 @@
-# Handoff — Session Persistence (Complete)
+# Handoff — Numpad Negative Toggle (Complete)
 
-**Feature:** Session Persistence
-**Status:** Complete — both sessions done, deployed, chronicled
-**Date:** 2026-05-24
+## What We Accomplished
 
----
+Replaced the hard-to-find keyboard-toolbar negative toggle with a custom
+calculator-style numpad built into the score entry sheet. The `+/−` key sits
+in the lower-left, matching the iOS Calculator layout, so entering a negative
+score is now obvious. Player rows are tap-to-focus with a brand-colored ring,
+and the system keyboard no longer appears. Shipped to `main`, CI passed, and
+submitted to the App Store for review (build 7).
 
-## What was built
+## What Has Been Saved
 
-Active games are now automatically saved to disk and restored on next launch. If a player closes the app mid-game — whether by switching apps, killing it, or just walking away — they come back to exactly where they left off: same players, same scores, same round number.
+- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — numpad rewrite
+- `SkyjoScorekeeper/Localizable.xcstrings` — three new accessibility strings
+- `SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj/project.pbxproj` — build number → 7
+- `pipeline/numpad-negative-toggle/` — change brief, QA report, security report
+- `DECISIONS.md` — logged the reversal of the keyboard-toolbar decision
+- `PRODUCT_CONTEXT.md` — updated the score-entry decision and feature description
 
-The app opens to the scoring view when a saved game is found. It opens to the setup screen otherwise. Completed games (any player hitting 100) are cleared immediately so the app never wakes up in a finished state. Starting a new game always clears any saved state.
+## Where We Are
 
-The feature adds no visible UI — the behavior is invisible except in the moment it matters.
+Improvement complete. All six stages done, shipped, and chronicled.
 
----
+## Resume Prompt
 
-## All artifacts and files
-
-**Pipeline artifacts (Session 1):**
-- `pipeline/session-persistence/strategic-brief.md`
-- `pipeline/session-persistence/prd.md`
-- `pipeline/session-persistence/schema.md`
-- `pipeline/session-persistence/design-spec.md`
-- `pipeline/session-persistence/design.html`
-
-**New source files:**
-- `SkyjoScorekeeper/Models/GameSessionSnapshot.swift`
-- `SkyjoScorekeeper/Models/SessionStore.swift`
-- `SkyjoScorekeeperTests/SessionPersistenceTests.swift`
-
-**Modified source files:**
-- `SkyjoScorekeeper/Models/Player.swift` — added `Codable`
-- `SkyjoScorekeeper/Models/RoundScore.swift` — added `Codable`
-- `SkyjoScorekeeper/Models/Round.swift` — added `Codable`
-- `SkyjoScorekeeper/Models/GameSession.swift` — `init(snapshot:)`, `snapshot` computed property, save/clear in `commitRound` and `undoLastRound`
-- `SkyjoScorekeeper/SkyjoScorekeeperApp.swift` — launch restore logic, `Route.game(session:)` carries injected `GameSession`
-- `SkyjoScorekeeper/Views/ScoringView.swift` — `init(session:onNewGame:)` accepts injected session
-
-**Context files updated:**
-- `PRODUCT_CONTEXT.md` — session-persistence feature entry added; "No data persistence" decision superseded
-- `DECISIONS.md` — five new decisions covering snapshot pattern, storage location, silent failures, game-over clear, injected session
-- `ROADMAP.md` — features shipped: 7; last shipped updated
-- `CLAUDE.md` — Session Persistence conventions section added
-
-**Commits:**
-- `874f986` — feat: persist active game session across app restarts
-- `8ef47a5` — chore: context update after session-persistence
-
----
-
-## This feature is complete
-
-CI passed. All 12 new tests green. Context fully updated.
-
----
-
-## Starting the next feature
-
-Run `/new-feature` — your roadmap's Up Next section is currently empty, so you'll be asked what to build next.
+To start the next thing: run `/weft` in a Claude Code session in this project.
+It reads saved state and picks up fresh.

@@ -1,9 +1,9 @@
 {
-  "activeFeature": "numpad-negative-toggle",
+  "activeFeature": null,
   "sessionNumber": 1,
-  "sessionType": "maintain",
-  "currentStage": 5,
-  "lastCompletedStage": 4,
+  "sessionType": null,
+  "currentStage": null,
+  "lastCompletedStage": 6,
   "lastCheckpointStatus": "approved",
   "awaitingHuman": null,
   "confirmedArtifacts": [
@@ -12,5 +12,5 @@
     "pipeline/numpad-negative-toggle/security-report.md"
   ],
   "createdAt": "2026-06-02T00:00:00Z",
-  "updatedAt": "2026-06-02T00:35:00Z"
+  "updatedAt": "2026-06-02T01:00:00Z"
 }

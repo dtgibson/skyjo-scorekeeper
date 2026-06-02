@@ -5,6 +5,27 @@ Maintained by The Chronicler.
 
 ---
 
+## Numpad Negative Toggle — 2026-06-02
+
+**Decision:** Score entry uses a custom calculator-style numpad embedded in the
+sheet, with a `+/−` sign toggle in the lower-left. This **reverses** the prior
+decision that "the negative score toggle lives in the keyboard toolbar, not the
+input row."
+
+**Rationale:** The toolbar button was not discoverable — users who hadn't seen
+it assumed negative scores couldn't be entered. A persistent numpad matching the
+iOS Calculator layout aligns with a mental model users already have, and puts the
+sign toggle exactly where they expect it.
+
+**Implications:** The system `.numberPad` keyboard and its keyboard toolbar are no
+longer used on the score entry sheet. Player rows are tap-to-focus targets with a
+brand-colored focus ring; the numpad drives all digit, sign, and delete input for
+the focused player. Digit input is bounded (max 3 characters per score). The
+`isNegative` state is still owned by `ScoreEntrySheet` as `[UUID: Bool]`, but is
+now driven by the numpad toggle rather than a toolbar button binding.
+
+---
+
 ## Session Persistence — 2026-05-24
 
 **Decision:** Use a separate `GameSessionSnapshot` Codable value type instead of making `GameSession` directly Codable.

@@ -46,7 +46,7 @@ The active game screens. Takes players from setup through scoring rounds to a wi
 **What it does:**
 - Root navigation via `Route` enum in `SkyjoScorekeeperApp` — switches between setup and game without NavigationStack
 - **Scoring view**: shows standings sorted ascending (lowest score first), leader highlighted with green dot and tinted row background, round number in nav bar, "End Game" button (top-left, shows confirmation alert then returns to setup), Undo button (disabled on round 1), "Enter Round N Scores" primary button
-- **Score entry sheet**: bottom sheet (`.large` detent) with per-player score inputs and a Skyjo question section; "Confirm" button disabled until all scores entered and Skyjo question answered
+- **Score entry sheet**: bottom sheet (`.large` detent) with per-player score inputs, a custom calculator-style numpad (with an inline `+/−` sign toggle), and a Skyjo question section; "Confirm" button disabled until all scores entered and Skyjo question answered
 - **Doubling rule**: if a player calls Skyjo but doesn't have the lowest raw score, their score is doubled; a live "×2 → N" preview appears next to their name in the entry sheet
 - **Undo**: removes the most recent round from `GameSession.rounds`, restoring all totals to their previous state
 - **Game over**: triggered when any player's cumulative total reaches 100; transitions to win screen via `fullScreenCover`
@@ -233,8 +233,8 @@ The Okabe-Ito standard colors are chosen for color-blind safety and visual appea
 ### Accessibility: use `@Environment` values directly in ButtonStyle
 `PrimaryButtonStyle` reads `@Environment(\.colorSchemeContrast)` and `@Environment(\.accessibilityReduceMotion)` inside `makeBody` so that HC brand color and reduced-motion press animation are handled at the button level. This avoids threading contrast/motion state through every call site.
 
-### Negative score toggle lives in the keyboard toolbar, not the input row
-The minus/negative toggle for score entry is a single button in the keyboard toolbar (the bar above the numpad), not a per-row button. It applies to the currently focused player. A `−` symbol appears inline next to the score digits when active, communicating negative state by shape rather than color alone. Score text also turns red as a secondary cue. `isNegative` state is owned by `ScoreEntrySheet` as `[UUID: Bool]` and passed as a `Binding<Bool>` to each `ScoreInputRow`.
+### Score entry uses a custom calculator-style numpad with an inline +/− toggle
+~~Negative score toggle lives in the keyboard toolbar~~ — superseded by Numpad Negative Toggle (2026-06-02). Score entry no longer uses the system keyboard. A custom numpad is embedded at the bottom of the score entry sheet with the standard calculator layout (7-8-9 / 4-5-6 / 1-2-3 / `+/−`-0-`⌫`). The `+/−` key in the lower-left toggles the sign for the focused player. Player rows are tap-to-focus targets with a brand-colored focus ring. A `−` symbol appears inline next to the score digits when negative, and the score text turns red as a secondary cue. `isNegative` state is owned by `ScoreEntrySheet` as `[UUID: Bool]`.
 
 ### Accessibility: Font.system text-style overload parameter order
 The three-argument text-style overload is `Font.system(_ style:, design:, weight:)` — `design:` comes BEFORE `weight:`. The fixed-size overload `Font.system(size:weight:design:)` has the opposite order. Mixing these up produces a compiler error that mentions `CGFloat.footnote` which is confusing. Always write `.system(.textStyle, design: .rounded, weight: .bold)` (design first).

@@ -50,12 +50,14 @@ struct PlayerRowView: View {
                                 .frame(width: 12, height: 2)
                                 .clipShape(Capsule())
                         }
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(localized: "Remove \(displayName)"))
             } else {
                 Color.clear
-                    .frame(width: 24, height: 24)
+                    .frame(width: 44, height: 44)
                     .accessibilityHidden(true)
             }
         }

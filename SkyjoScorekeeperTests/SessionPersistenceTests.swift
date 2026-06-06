@@ -173,4 +173,29 @@ final class SessionPersistenceTests: XCTestCase {
         XCTAssertEqual(snap.rounds.count, 1)
         XCTAssertEqual(snap.rounds.first?.scores.count, 2)
     }
+
+    // MARK: - Schema version
+
+    func testNewSnapshotHasCurrentSchemaVersion() {
+        let snapshot = GameSessionSnapshot(players: [Player(name: "Alice")], rounds: [])
+        XCTAssertEqual(snapshot.schemaVersion, GameSessionSnapshot.currentVersion)
+    }
+
+    func testSavedSnapshotRoundtripsSchemaVersion() {
+        SessionStore.save(GameSessionSnapshot(players: [Player(name: "Alice")], rounds: []))
+        XCTAssertEqual(SessionStore.load()?.schemaVersion, GameSessionSnapshot.currentVersion)
+    }
+
+    func testLegacySnapshotWithoutVersionStillDecodes() throws {
+        // A file written before versioning has no `schemaVersion` key. It must
+        // still decode (as nil) rather than failing and wiping the game.
+        let player = Player(name: "Alice")
+        let legacyJSON = """
+        {"players":[{"id":"\(player.id.uuidString)","name":"Alice"}],"rounds":[]}
+        """
+        let snapshot = try JSONDecoder().decode(GameSessionSnapshot.self, from: Data(legacyJSON.utf8))
+        XCTAssertNil(snapshot.schemaVersion)
+        XCTAssertEqual(snapshot.players.map(\.name), ["Alice"])
+        XCTAssertEqual(snapshot.rounds.count, 0)
+    }
 }

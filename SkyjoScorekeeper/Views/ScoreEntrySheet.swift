@@ -7,7 +7,6 @@ struct ScoreEntrySheet: View {
     @State private var rawInputs: [UUID: String] = [:]
     @State private var negativeInputs: [UUID: Bool] = [:]
     @State private var skyjoPlayerID: UUID? = nil
-    @State private var skyjoAnswered = false
     @State private var focusedPlayer: UUID?
 
     private var entries: [UUID: Int] {
@@ -22,11 +21,13 @@ struct ScoreEntrySheet: View {
         session.players.allSatisfy { entries[$0.id] != nil }
     }
 
-    private var canConfirm: Bool { allFilled && skyjoAnswered }
+    private var canConfirm: Bool { allFilled && skyjoPlayerID != nil }
 
     private func minOtherScore(excluding playerID: UUID) -> Int? {
-        guard allFilled else { return nil }
-        return entries.filter { $0.key != playerID }.values.min()
+        // Live: the minimum of whatever other scores are entered so far.
+        // As lower scores come in this only gets more accurate; the
+        // committed result always matches the final (all-filled) preview.
+        entries.filter { $0.key != playerID }.values.min()
     }
 
     var body: some View {
@@ -90,7 +91,7 @@ struct ScoreEntrySheet: View {
                         colorIndex: index,
                         digits: rawInputs[player.id] ?? "",
                         isNegative: negativeInputs[player.id] ?? false,
-                        doublingPreview: doublingPreview(for: player.id),
+                        doubledValue: doubledValue(for: player.id),
                         isFocused: focusedPlayer == player.id,
                         onTap: { focusedPlayer = player.id }
                     )
@@ -116,27 +117,21 @@ struct ScoreEntrySheet: View {
                 .padding(.horizontal, 6)
                 .accessibilityAddTraits(.isHeader)
 
+            Text("The first player to turn over their last card. Their score this round doubles if it isn't the lowest.")
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 6)
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
                 ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
                     SkyjoChip(
                         player: player,
                         colorIndex: index,
                         isSelected: skyjoPlayerID == player.id,
-                        onTap: {
-                            skyjoPlayerID = player.id
-                            skyjoAnswered = true
-                        }
+                        onTap: { skyjoPlayerID = player.id }
                     )
                 }
-                SkyjoChip(
-                    label: String(localized: "Skip"),
-                    isNobody: true,
-                    isSelected: skyjoAnswered && skyjoPlayerID == nil,
-                    onTap: {
-                        skyjoPlayerID = nil
-                        skyjoAnswered = true
-                    }
-                )
             }
             .padding(12)
             .background(Color(.systemBackground))
@@ -183,8 +178,13 @@ struct ScoreEntrySheet: View {
             case .toggle:
                 negativeInputs[id] = !(negativeInputs[id] ?? false)
             case .backspace:
-                rawInputs[id] = String((rawInputs[id] ?? "").dropLast())
+                let trimmed = String((rawInputs[id] ?? "").dropLast())
+                rawInputs[id] = trimmed
+                // Clearing the field also clears the sign, so an empty row
+                // never keeps a stale negative state for the next digit.
+                if trimmed.isEmpty { negativeInputs[id] = false }
             }
+            announceCurrentValue(for: id)
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
@@ -243,15 +243,23 @@ struct ScoreEntrySheet: View {
 
     // MARK: - Helpers
 
-    private func doublingPreview(for playerID: UUID) -> String? {
+    /// Speak the focused player's running score after a numpad press, so a
+    /// VoiceOver user hears the value building up (like a calculator).
+    private func announceCurrentValue(for id: UUID) {
+        let digits = rawInputs[id] ?? ""
+        let negative = negativeInputs[id] ?? false
+        let value = digits.isEmpty ? "0" : (negative ? "-\(digits)" : digits)
+        AccessibilityNotification.Announcement(value).post()
+    }
+
+    private func doubledValue(for playerID: UUID) -> Int? {
         guard
             skyjoPlayerID == playerID,
             let raw = entries[playerID],
             let minOther = minOtherScore(excluding: playerID),
-            raw >= minOther,
-            raw > 0
+            GameSession.isDoubled(raw: raw, minOther: minOther)
         else { return nil }
-        return "×2 → \(raw * 2)"
+        return raw * 2
     }
 }
 
@@ -262,7 +270,7 @@ private struct ScoreInputRow: View {
     let colorIndex: Int
     let digits: String
     let isNegative: Bool
-    let doublingPreview: String?
+    let doubledValue: Int?
     let isFocused: Bool
     let onTap: () -> Void
 
@@ -297,8 +305,8 @@ private struct ScoreInputRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityHidden(true)
 
-            if let preview = doublingPreview {
-                Text(preview)
+            if let doubled = doubledValue {
+                Text(verbatim: "×2 → \(doubled)")
                     .font(.system(.footnote, design: .rounded, weight: .medium))
                     .foregroundStyle(Color(.systemOrange))
                     .transition(.opacity.combined(with: .scale(scale: 0.85)))
@@ -332,37 +340,33 @@ private struct ScoreInputRow: View {
             }
         }
         .onTapGesture { onTap() }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: doublingPreview)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: doubledValue)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.1), value: isFocused)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(rowAccessibilityLabel)
-        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isFocused ? [.isButton, .isSelected] : .isButton)
         .accessibilityHint("Tap to enter score")
     }
 
     private var rowAccessibilityLabel: String {
-        var parts: [String] = [player.trimmedName]
-        if digits.isEmpty {
-            parts.append("no score")
-        } else {
-            let sign = isNegative ? "minus " : ""
-            parts.append("\(sign)\(digits) points")
+        let name = player.trimmedName
+        guard !digits.isEmpty, let magnitude = Int(digits) else {
+            return String(localized: "\(name), no score")
         }
-        if let preview = doublingPreview,
-           let doubled = preview.components(separatedBy: "→").last?.trimmingCharacters(in: .whitespaces) {
-            parts.append("doubles to \(doubled)")
+        let value = isNegative ? -magnitude : magnitude
+        var label = String(localized: "\(name), \(value) points")
+        if let doubled = doubledValue {
+            label += String(localized: ", doubles to \(doubled)")
         }
-        return parts.joined(separator: ", ")
+        return label
     }
 }
 
 // MARK: - Skyjo chip
 
 private struct SkyjoChip: View {
-    var player: Player? = nil
-    var label: String? = nil
-    var colorIndex: Int = 0
-    var isNobody: Bool = false
+    let player: Player
+    let colorIndex: Int
     let isSelected: Bool
     let onTap: () -> Void
 
@@ -371,36 +375,29 @@ private struct SkyjoChip: View {
 
     private var highContrast: Bool { colorSchemeContrast == .increased }
 
-    private var displayLabel: String {
-        if let player { return player.trimmedName }
-        return label ?? ""
-    }
-
-    private var chipAccessibilityLabel: String {
-        isNobody ? String(localized: "Nobody called Skyjo") : String(localized: "\(displayLabel) called Skyjo")
+    private var playerColor: Color {
+        Theme.playerColor(at: colorIndex, highContrast: highContrast)
     }
 
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 6) {
-                if !isNobody, let player {
-                    Circle()
-                        .fill(isSelected ? Theme.playerColor(at: colorIndex, highContrast: highContrast) : Color(.tertiarySystemFill))
-                        .frame(width: 22, height: 22)
-                        .overlay {
-                            Text(String(player.trimmedName.prefix(1)).uppercased())
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(
-                                    isSelected
-                                        ? Theme.playerTextColor(at: colorIndex, highContrast: highContrast)
-                                        : Color(.secondaryLabel)
-                                )
-                        }
-                        .accessibilityHidden(true)
-                }
-                Text(displayLabel)
+                Circle()
+                    .fill(isSelected ? playerColor : Color(.tertiarySystemFill))
+                    .frame(width: 22, height: 22)
+                    .overlay {
+                        Text(String(player.trimmedName.prefix(1)).uppercased())
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                isSelected
+                                    ? Theme.playerTextColor(at: colorIndex, highContrast: highContrast)
+                                    : Color(.secondaryLabel)
+                            )
+                    }
+                    .accessibilityHidden(true)
+                Text(player.trimmedName)
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundStyle(isSelected ? (isNobody ? activeBrand : Theme.playerColor(at: colorIndex, highContrast: highContrast)) : Color(.label))
+                    .foregroundStyle(isSelected ? playerColor : Color(.label))
                     .lineLimit(1)
             }
             .padding(.horizontal, 12)
@@ -408,25 +405,16 @@ private struct SkyjoChip: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected
-                          ? (isNobody ? activeBrand.opacity(0.1) : Theme.playerColor(at: colorIndex, highContrast: highContrast).opacity(0.1))
-                          : Color(.secondarySystemFill))
+                    .fill(isSelected ? playerColor.opacity(0.1) : Color(.secondarySystemFill))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(
-                        isSelected ? (isNobody ? activeBrand : Theme.playerColor(at: colorIndex, highContrast: highContrast)) : Color.clear,
-                        lineWidth: 1.5
-                    )
+                    .strokeBorder(isSelected ? playerColor : Color.clear, lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.12), value: isSelected)
-        .accessibilityLabel(chipAccessibilityLabel)
+        .accessibilityLabel(Text("\(player.trimmedName) ended the round"))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    private var activeBrand: Color {
-        highContrast ? Theme.brandHighContrast : Theme.brand
     }
 }

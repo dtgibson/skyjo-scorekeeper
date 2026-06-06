@@ -35,6 +35,9 @@ struct WinView: View {
                     .frame(maxWidth: .infinity)
             }
         }
+        .onAppear {
+            AccessibilityNotification.Announcement(winnerHeadline).post()
+        }
     }
 
     // MARK: - Hero
@@ -57,6 +60,14 @@ struct WinView: View {
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+
+            if session.wasTieBroken {
+                Text("Tie broken by the lower final round.")
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
@@ -186,7 +197,8 @@ private struct FinalRankRow: View {
         default: placement = String(localized: "Place \(rank)")
         }
         let winnerSuffix = isWinner ? String(localized: ", winner") : ""
-        return String(localized: "\(placement): \(standing.player.trimmedName), \(standing.total) points") + winnerSuffix
+        let bustSuffix = standing.total >= GameSession.bustThreshold ? String(localized: ", over one hundred") : ""
+        return String(localized: "\(placement): \(standing.player.trimmedName), \(standing.total) points") + winnerSuffix + bustSuffix
     }
 
     var body: some View {
@@ -211,7 +223,7 @@ private struct FinalRankRow: View {
 
             Text("\(standing.total)")
                 .font(.system(.title2, design: .rounded, weight: .bold))
-                .foregroundStyle(standing.total >= 100 ? Color(.systemRed) : Color.primary)
+                .foregroundStyle(standing.total >= GameSession.bustThreshold ? Color(.systemRed) : Color.primary)
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 62)

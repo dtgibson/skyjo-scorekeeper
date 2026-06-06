@@ -11,7 +11,16 @@ struct SkyjoScorekeeperApp: App {
 
     init() {
         if let snapshot = SessionStore.load() {
-            _route = State(initialValue: .game(session: GameSession(snapshot: snapshot)))
+            let restored = GameSession(snapshot: snapshot)
+            // Defensive: never restore into a finished game. A completed
+            // game should have cleared its save, but if a stale or
+            // hand-edited file slips through, fall back to setup.
+            if restored.isGameOver {
+                SessionStore.clear()
+                _route = State(initialValue: .setup(initialPlayers: nil))
+            } else {
+                _route = State(initialValue: .game(session: restored))
+            }
         } else {
             _route = State(initialValue: .setup(initialPlayers: nil))
         }

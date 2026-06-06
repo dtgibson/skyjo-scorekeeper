@@ -26,12 +26,20 @@ struct ScoringView: View {
             VStack(spacing: 0) {
                 navBar
                 ScrollView {
-                    standingsCard
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                        .padding(.bottom, 12)
-                        .frame(maxWidth: Theme.contentMaxWidth)
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 10) {
+                        standingsCard
+                        Text("Game ends when someone reaches 100. Lowest total wins.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 8)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
                 }
                 enterButton
                     .padding(.horizontal, 16)
@@ -46,6 +54,10 @@ struct ScoringView: View {
                 showEntrySheet = false
                 if session.isGameOver {
                     showWinView = true
+                } else if let leader = session.standings.first {
+                    AccessibilityNotification.Announcement(
+                        String(localized: "Round recorded. \(leader.player.trimmedName) leads with \(leader.total).")
+                    ).post()
                 }
             }
             .presentationDetents([.large])
@@ -84,6 +96,9 @@ struct ScoringView: View {
 
             Button {
                 session.undoLastRound()
+                AccessibilityNotification.Announcement(
+                    String(localized: "Last round removed.")
+                ).post()
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.uturn.backward")
@@ -186,7 +201,7 @@ private struct StandingRowView: View {
 
             Text("\(standing.total)")
                 .font(.system(.title2, design: .rounded, weight: .bold))
-                .foregroundStyle(standing.total >= 100 ? Color(.systemRed) : Color.primary)
+                .foregroundStyle(totalColor)
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 62)
@@ -200,9 +215,27 @@ private struct StandingRowView: View {
         .accessibilityLabel(rowAccessibilityLabel)
     }
 
+    private var scoreStatus: GameSession.ScoreStatus {
+        GameSession.scoreStatus(for: standing.total)
+    }
+
+    private var totalColor: Color {
+        switch scoreStatus {
+        case .bust: return Color(.systemRed)
+        case .approaching: return Color(.systemOrange)
+        case .normal: return Color.primary
+        }
+    }
+
     private var rowAccessibilityLabel: String {
         let base = String(localized: "\(standing.player.trimmedName), \(standing.total) points")
         let leader = standing.isLeader && showLeaderIndicator ? String(localized: ", currently leading") : ""
-        return base + leader
+        let status: String
+        switch scoreStatus {
+        case .bust: status = String(localized: ", over one hundred")
+        case .approaching: status = String(localized: ", nearing one hundred")
+        case .normal: status = ""
+        }
+        return base + leader + status
     }
 }

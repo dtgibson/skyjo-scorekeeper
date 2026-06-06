@@ -255,4 +255,80 @@ final class GameSessionTests: XCTestCase {
         let session = makeSession(names: ["Alice", "Bob"])
         XCTAssertNil(session.standings.first?.lastRoundScore)
     }
+
+    // MARK: - Shared doubling rule (isDoubled)
+
+    func testIsDoubledWhenAboveOther() {
+        XCTAssertTrue(GameSession.isDoubled(raw: 8, minOther: 5))
+    }
+
+    func testIsDoubledWhenTiedWithOther() {
+        XCTAssertTrue(GameSession.isDoubled(raw: 5, minOther: 5))
+    }
+
+    func testIsNotDoubledWhenStrictlyLowest() {
+        XCTAssertFalse(GameSession.isDoubled(raw: 3, minOther: 8))
+    }
+
+    func testIsNotDoubledWhenNegative() {
+        XCTAssertFalse(GameSession.isDoubled(raw: -3, minOther: -5))
+    }
+
+    func testIsNotDoubledWhenZero() {
+        XCTAssertFalse(GameSession.isDoubled(raw: 0, minOther: -2))
+    }
+
+    func testIsDoubledAgreesWithCommitRound() {
+        // The shared function and the engine's applied score must not drift.
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [8, 5], skyjoIndex: 0)
+        let alice = session.standings.first { $0.player.name == "Alice" }!
+        XCTAssertEqual(alice.lastRoundScore, GameSession.isDoubled(raw: 8, minOther: 5) ? 16 : 8)
+    }
+
+    // MARK: - wasTieBroken
+
+    func testWasTieBrokenTrueWhenTiebreakerDecides() {
+        let session = makeSession(names: ["Alice", "Bob", "Carol"])
+        commit(session, scores: [12, 8, 5])
+        commit(session, scores: [8, 12, 95])
+        // Alice and Bob tie at 20; Alice wins by the lower final round (8 vs 12).
+        XCTAssertTrue(session.wasTieBroken)
+    }
+
+    func testWasTieBrokenFalseWhenCoWinners() {
+        let session = makeSession(names: ["Alice", "Bob", "Carol"])
+        commit(session, scores: [10, 10, 5])
+        commit(session, scores: [10, 10, 95])
+        // Alice and Bob tie completely — co-winners, nothing to break.
+        XCTAssertFalse(session.wasTieBroken)
+    }
+
+    func testWasTieBrokenFalseWhenSingleOutrightWinner() {
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [5, 110])
+        XCTAssertFalse(session.wasTieBroken)
+    }
+
+    func testWasTieBrokenFalseWhenGameNotOver() {
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [5, 10])
+        XCTAssertFalse(session.wasTieBroken)
+    }
+
+    // MARK: - Score status thresholds
+
+    func testScoreStatusNormalBelowDanger() {
+        XCTAssertEqual(GameSession.scoreStatus(for: 84), .normal)
+    }
+
+    func testScoreStatusApproachingAtDangerThreshold() {
+        XCTAssertEqual(GameSession.scoreStatus(for: 85), .approaching)
+        XCTAssertEqual(GameSession.scoreStatus(for: 99), .approaching)
+    }
+
+    func testScoreStatusBustAtThreshold() {
+        XCTAssertEqual(GameSession.scoreStatus(for: 100), .bust)
+        XCTAssertEqual(GameSession.scoreStatus(for: 130), .bust)
+    }
 }

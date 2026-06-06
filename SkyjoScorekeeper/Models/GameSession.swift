@@ -2,6 +2,22 @@ import Foundation
 import Combine
 
 final class GameSession: ObservableObject {
+    /// A player's total reaching this score ends the game.
+    static let bustThreshold = 100
+    /// Totals at or above this (but below `bustThreshold`) are in the danger zone.
+    static let dangerThreshold = 85
+
+    /// How close a player's total is to busting — drives the scoreboard cues.
+    enum ScoreStatus: Equatable {
+        case normal, approaching, bust
+    }
+
+    static func scoreStatus(for total: Int) -> ScoreStatus {
+        if total >= bustThreshold { return .bust }
+        if total >= dangerThreshold { return .approaching }
+        return .normal
+    }
+
     let players: [Player]
     @Published private(set) var rounds: [Round] = []
 
@@ -41,7 +57,7 @@ final class GameSession: ObservableObject {
         }.sorted { $0.total < $1.total }
     }
 
-    var isGameOver: Bool { standings.contains { $0.total >= 100 } }
+    var isGameOver: Bool { standings.contains { $0.total >= Self.bustThreshold } }
 
     var winners: [Player] {
         guard isGameOver, let minimum = standings.first?.total else { return [] }
@@ -51,6 +67,22 @@ final class GameSession: ObservableObject {
         return tied.filter { $0.lastRoundScore == minLast }.map(\.player)
     }
 
+    /// True when two or more players tied on the lowest total and the
+    /// final-round tiebreaker produced a single winner.
+    var wasTieBroken: Bool {
+        guard isGameOver, let minimum = standings.first?.total else { return false }
+        let tiedOnTotal = standings.filter { $0.total == minimum }.count
+        return tiedOnTotal > 1 && winners.count == 1
+    }
+
+    /// The doubling rule, in one place: a round-ender's positive score
+    /// doubles unless it is strictly lower than every other score.
+    /// Used by both `commitRound` and the live entry preview so they
+    /// can never disagree.
+    static func isDoubled(raw: Int, minOther: Int?) -> Bool {
+        raw > 0 && raw >= (minOther ?? Int.min)
+    }
+
     func commitRound(entries: [UUID: Int], skyjoPlayerID: UUID?) {
         let otherMin: Int? = skyjoPlayerID.flatMap { id in
             entries.filter { $0.key != id }.values.min()
@@ -58,8 +90,7 @@ final class GameSession: ObservableObject {
         let scores: [RoundScore] = players.map { player in
             let raw = entries[player.id] ?? 0
             let doubled = skyjoPlayerID == player.id
-                && raw > 0
-                && raw >= (otherMin ?? Int.min)
+                && Self.isDoubled(raw: raw, minOther: otherMin)
             return RoundScore(playerID: player.id, raw: raw, applied: doubled ? raw * 2 : raw)
         }
         rounds.append(Round(number: currentRoundNumber, scores: scores, skyjoPlayerID: skyjoPlayerID))

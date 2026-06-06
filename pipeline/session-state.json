@@ -1,16 +1,21 @@
 {
-  "activeFeature": null,
+  "activeFeature": "app-refinement",
   "sessionNumber": 1,
-  "sessionType": null,
-  "currentStage": null,
-  "lastCompletedStage": 6,
-  "lastCheckpointStatus": "approved",
-  "awaitingHuman": null,
+  "sessionType": "maintain",
+  "currentStage": 5,
+  "lastCompletedStage": 4,
+  "lastCheckpointStatus": "in-progress",
+  "awaitingHuman": {
+    "gateId": "maintain-stage-5-deploy",
+    "stage": 5,
+    "openedAt": "2026-06-06T00:00:00Z"
+  },
   "confirmedArtifacts": [
-    "pipeline/numpad-negative-toggle/change-brief.md",
-    "pipeline/numpad-negative-toggle/qa-report.md",
-    "pipeline/numpad-negative-toggle/security-report.md"
+    "pipeline/app-refinement/change-brief.md",
+    "pipeline/app-refinement/findings.md",
+    "pipeline/app-refinement/qa-report.md",
+    "pipeline/app-refinement/security-report.md"
   ],
-  "createdAt": "2026-06-02T00:00:00Z",
-  "updatedAt": "2026-06-02T01:00:00Z"
+  "createdAt": "2026-06-05T00:00:00Z",
+  "updatedAt": "2026-06-06T00:00:00Z"
 }

@@ -17,6 +17,8 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - `Player` is a value type (`struct`) with `id: UUID` and `name: String`
 - `GameState` is `ObservableObject` with `@Published var players: [Player]`
 - Import `Combine` in any file that uses `ObservableObject`
+- The doubling rule has one home: `GameSession.isDoubled(raw:minOther:)`. Views (e.g. the live entry preview) must call it, never reimplement it
+- Score thresholds are named: `GameSession.bustThreshold` (100) and `dangerThreshold` (85), surfaced via `GameSession.scoreStatus(for:)`. Never hardcode 85/100
 
 ### iPad layout
 - `Theme.contentMaxWidth` (600pt) is the single width ceiling — never hardcode a max width per-view
@@ -29,6 +31,7 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - Typography: SF Rounded throughout (`Font.system(..., design: .rounded)`)
 - Corner radii: 14pt for cards/rows, 16pt for primary button
 - Font.system text-style overload parameter order: `design:` before `weight:` — `.system(.body, design: .rounded, weight: .bold)`. The fixed-size overload has weight before design.
+- SF Rounded has no italic face — `.italic()` is a silent no-op on `.system(design: .rounded)`. For emphasis use a heavier `weight:`, `.underline()`, or switch that element to `design: .default` (which does italicize).
 
 ### Accessibility
 - All decorative elements (avatars, emoji, drag handles) must be `.accessibilityHidden(true)`
@@ -36,6 +39,9 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - All animations must be wrapped: `reduceMotion ? nil : .easeInOut(...)` — read `@Environment(\.accessibilityReduceMotion)`
 - All views that use brand or player colors must read `@Environment(\.colorSchemeContrast)` and pass HC variants when `colorSchemeContrast == .increased`
 - All fixed-height rows must use `frame(minHeight:)` not `frame(height:)` to support Dynamic Type
+- Tappable controls must have a touch target ≥ 44pt — wrap small visuals in a `.frame(width: 44, height: 44).contentShape(Rectangle())` rather than enlarging the visual
+- Announce meaningful state changes to VoiceOver with `AccessibilityNotification.Announcement(...).post()` (e.g. round committed, undo, game won) — silent state changes leave VoiceOver users with no feedback
+- Never recover data by parsing a display string for an accessibility label — compute the value from the model (the doubling label takes the doubled `Int` directly, not a split of the "×2 → N" text)
 
 ### Localization
 - All new user-facing strings and VoiceOver accessibility labels must have entries in `SkyjoScorekeeper/Localizable.xcstrings`
@@ -50,6 +56,7 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - `GameSession` has two inits: `init(players:)` clears saved state (fresh game), `init(snapshot:)` restores without clearing — never mix them up
 - `init(snapshot:)` initializes `@Published` backing storage directly with `_rounds = Published(initialValue: snapshot.rounds)` — this is intentional; do not change it to `self.rounds = snapshot.rounds`
 - All `SessionStore` operations fail silently — do not add error propagation or alerts
+- `GameSessionSnapshot.schemaVersion` is an optional `Int` (current: `GameSessionSnapshot.currentVersion`) — keep it optional so pre-versioning files decode as `nil`. When the persisted model changes, bump `currentVersion` and branch on it to migrate
 
 ### CI/CD
 - Runner: `macos-15`, no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode

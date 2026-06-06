@@ -207,16 +207,16 @@ The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 1
 Attempted as a workaround during the accessibility session. It fails with actool when the iphonesimulator SDK version bundled with Xcode doesn't match the available simulator runtimes on the runner. iOS Simulator destination with code signing disabled (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`) is the correct approach.
 
 ### Active game persisted to Application Support
-~~No data persistence~~ — superseded by Session Persistence (2026-05-24). Active game state (players + all rounds) is written to `ApplicationSupport/active-game.json` after every round mutation. The file is cleared when a game ends or a new game starts. Historical scores and match history are not stored — only the current in-progress game.
+~~No data persistence~~ — superseded by Session Persistence (2026-05-24). Active game state (players + all rounds) is written to `ApplicationSupport/active-game.json` after every round mutation. The file is cleared when a game ends or a new game starts. Historical scores and match history are not stored — only the current in-progress game. The snapshot carries an optional `schemaVersion` (current: 1, added 2026-06-06) so a future model change can migrate old files instead of silently discarding an in-progress game; legacy files without the key decode as `nil`. On launch the restored game is re-checked for game-over and falls back to setup if somehow already finished.
 
 ### Root navigation uses a Route enum, not NavigationStack
 `SkyjoScorekeeperApp` owns a `@State private var route: Route` with cases `.setup` and `.game`. Switching routes replaces the entire view tree. This avoids NavigationStack complexity for an app with only two top-level screens.
 
 ### Doubling rule: applies when Skyjo caller's score is >= minimum of other players
-If the player who called Skyjo scores the same as the lowest other player (a tie), they ARE doubled — only strictly less than all others escapes doubling. Implemented in `GameSession.commitRound` by computing `otherMin` (minimum of other players' scores, excluding the caller), then doubling when `raw >= otherMin && raw > 0`. An earlier implementation used `raw > minRaw` (including the caller in the minimum), which incorrectly let ties escape — this was corrected.
+If the player who called Skyjo scores the same as the lowest other player (a tie), they ARE doubled — only strictly less than all others escapes doubling. The rule now lives in one place — `GameSession.isDoubled(raw:minOther:)` (`raw > 0 && raw >= minOther`) — used by both `commitRound` and the live entry-sheet preview so they cannot drift (unified 2026-06-06). An earlier implementation used `raw > minRaw` (including the caller in the minimum), which incorrectly let ties escape — this was corrected.
 
-### Skyjo question must be answered before confirming a round
-The confirm button in `ScoreEntrySheet` requires `skyjoAnswered == true` (either a player selected, or "Nobody" tapped). This prevents accidentally skipping the doubling rule.
+### A round-ender must always be selected before confirming a round
+~~Skyjo question must be answered (player or "Nobody")~~ — refined 2026-06-06. The confirm button in `ScoreEntrySheet` now requires a specific player to be selected as the round-ender (`skyjoPlayerID != nil`). The "No one"/"Nobody" chip was removed: in Skyjo a round always ends when a player turns over their last card, so there is always an ender. A helper line under "Who ended the round?" explains who the ender is and the doubling rule.
 
 ### iPad layout uses a single contentMaxWidth constant and the two-frame idiom
 All four screens reference `Theme.contentMaxWidth` (600pt) — no view hardcodes a width. The SwiftUI pattern for constrained+centered content is the two-frame idiom: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`. The inner frame caps width; the outer frame centers it. New views that have primary content should follow this pattern for iPad compatibility.

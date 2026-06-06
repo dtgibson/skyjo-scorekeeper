@@ -1,22 +1,27 @@
-# Handoff — Numpad Negative Toggle (Complete)
+# Handoff — App Refinement (Complete)
 
 ## What We Accomplished
 
-Replaced the hard-to-find keyboard-toolbar negative toggle with a custom
-calculator-style numpad built into the score entry sheet. The `+/−` key sits
-in the lower-left, matching the iOS Calculator layout, so entering a negative
-score is now obvious. Player rows are tap-to-focus with a brand-colored ring,
-and the system keyboard no longer appears. Shipped to `main`, CI passed, and
-submitted to the App Store for review (build 7).
+A comprehensive app review (four parallel reviewers across accessibility, UX,
+code quality, and robustness) found the app solid, then we shipped four
+refinement bundles: clearer first-time guidance (inline rule helper, scoreboard
+caption, removed the misleading "No one" chip, tie-break explanation); quick
+fixes (stale-negative numpad bug, amber/red danger cues, 44pt remove target,
+save-file version field, restore safety net); a live doubling preview; and
+deeper VoiceOver (announcements, running numpad value, a sturdier label, and a
+unified doubling rule). All 10 new strings were translated into the 35 supported
+languages. Shipped to `main`, CI green, ships as 1.4 (build 8).
 
 ## What Has Been Saved
 
-- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — numpad rewrite
-- `SkyjoScorekeeper/Localizable.xcstrings` — three new accessibility strings
-- `SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj/project.pbxproj` — build number → 7
-- `pipeline/numpad-negative-toggle/` — change brief, QA report, security report
-- `DECISIONS.md` — logged the reversal of the keyboard-toolbar decision
-- `PRODUCT_CONTEXT.md` — updated the score-entry decision and feature description
+- `pipeline/app-refinement/findings.md` — the full review
+- `pipeline/app-refinement/change-brief.md`, `qa-report.md`, `security-report.md`
+- Source: `ScoreEntrySheet`, `ScoringView`, `WinView`, `PlayerRowView`,
+  `GameSession`, `GameSessionSnapshot`, `SkyjoScorekeeperApp`
+- `SkyjoScorekeeper/Localizable.xcstrings` — 10 new strings × 35 locales
+- Tests: `GameSessionTests`, `SessionPersistenceTests` (16 new)
+- `PRODUCT_CONTEXT.md`, `DECISIONS.md`, `CLAUDE.md` — updated
+- Commit `19930e1` (feature) plus the context-update commit
 
 ## Where We Are
 

@@ -1,15 +1,11 @@
 {
-  "activeFeature": "app-refinement",
+  "activeFeature": null,
   "sessionNumber": 1,
-  "sessionType": "maintain",
-  "currentStage": 5,
-  "lastCompletedStage": 4,
-  "lastCheckpointStatus": "in-progress",
-  "awaitingHuman": {
-    "gateId": "maintain-stage-5-deploy",
-    "stage": 5,
-    "openedAt": "2026-06-06T00:00:00Z"
-  },
+  "sessionType": null,
+  "currentStage": null,
+  "lastCompletedStage": 6,
+  "lastCheckpointStatus": "approved",
+  "awaitingHuman": null,
   "confirmedArtifacts": [
     "pipeline/app-refinement/change-brief.md",
     "pipeline/app-refinement/findings.md",
@@ -17,5 +13,5 @@
     "pipeline/app-refinement/security-report.md"
   ],
   "createdAt": "2026-06-05T00:00:00Z",
-  "updatedAt": "2026-06-06T00:00:00Z"
+  "updatedAt": "2026-06-06T00:30:00Z"
 }

@@ -5,6 +5,34 @@ Maintained by The Chronicler.
 
 ---
 
+## App Refinement — 2026-06-06
+
+A batch of refinements from a comprehensive app review (see `pipeline/app-refinement/findings.md`).
+
+**Decision:** Removed the "No one"/"Nobody" round-ender chip; a specific player must always be selected.
+**Rationale:** In Skyjo a round always ends when a player turns over their last card, so "nobody ended it" is not a real state. The chip's "Skip" label also misled users into silently disabling the doubling rule.
+**Implications:** `ScoreEntrySheet` gates Confirm on `skyjoPlayerID != nil`. Refines the prior "Skyjo question must be answered" decision.
+
+---
+
+**Decision:** The doubling rule lives in one shared function, `GameSession.isDoubled(raw:minOther:)`.
+**Rationale:** It was implemented twice (engine + entry-sheet preview) and had to be hand-kept in sync. A single source of truth, unit-tested, prevents drift.
+**Implications:** Views must call `GameSession.isDoubled` rather than reimplement the rule. The live preview and the committed result are guaranteed to agree.
+
+---
+
+**Decision:** Score-status thresholds are named constants — `GameSession.bustThreshold` (100) and `dangerThreshold` (85) — surfaced via `GameSession.scoreStatus(for:)`.
+**Rationale:** The 100 game-over value was hardcoded in several views; an "approaching" cue needed a second threshold. Centralizing both removes magic numbers and drives the amber/red scoreboard cues.
+**Implications:** Use these constants and `scoreStatus(for:)`; do not hardcode 85/100.
+
+---
+
+**Decision:** `GameSessionSnapshot` carries an optional `schemaVersion` (current 1).
+**Rationale:** The save file had no version tag, so any future model change would make old files fail to decode and silently wipe an in-progress game. An optional field is backward-compatible — legacy files decode as `nil`.
+**Implications:** When the persisted model changes, bump `currentVersion` and branch on it to migrate. Never make `schemaVersion` non-optional.
+
+---
+
 ## Numpad Negative Toggle — 2026-06-02
 
 **Decision:** Score entry uses a custom calculator-style numpad embedded in the

@@ -10,7 +10,7 @@ fixes (stale-negative numpad bug, amber/red danger cues, 44pt remove target,
 save-file version field, restore safety net); a live doubling preview; and
 deeper VoiceOver (announcements, running numpad value, a sturdier label, and a
 unified doubling rule). All 10 new strings were translated into the 35 supported
-languages. Shipped to `main`, CI green, ships as 1.4 (build 8).
+languages. Shipped to `main`, CI green, ships as 1.5 (build 9).
 
 ## What Has Been Saved
 

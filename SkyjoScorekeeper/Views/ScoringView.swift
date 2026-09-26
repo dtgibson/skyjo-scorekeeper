@@ -5,7 +5,6 @@ struct ScoringView: View {
     let onNewGame: ([Player]?) -> Void
 
     @State private var showEntrySheet = false
-    @State private var showWinView = false
     @State private var showEndGameAlert = false
 
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
@@ -19,12 +18,25 @@ struct ScoringView: View {
         self.onNewGame = onNewGame
     }
 
-    var body: some View {
-        ZStack {
-            Color(.systemGroupedBackground).ignoresSafeArea()
+    // Presentation follows the shared session, so every open window agrees:
+    // when the game ends in one window, each window closes its entry sheet
+    // and shows the result.
+    private var entrySheetPresented: Binding<Bool> {
+        Binding(
+            get: { showEntrySheet && !session.isGameOver },
+            set: { showEntrySheet = $0 }
+        )
+    }
 
+    private var winViewPresented: Binding<Bool> {
+        Binding(get: { session.isGameOver }, set: { _ in })
+    }
+
+    var body: some View {
+        // A local stack whose only job is to host the system toolbar. Root
+        // navigation stays the Route enum in SkyjoScorekeeperApp; nothing is pushed.
+        NavigationStack {
             VStack(spacing: 0) {
-                navBar
                 ScrollView {
                     VStack(spacing: 10) {
                         standingsCard
@@ -47,23 +59,27 @@ struct ScoringView: View {
                     .frame(maxWidth: Theme.contentMaxWidth)
                     .frame(maxWidth: .infinity)
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle("Round \(session.currentRoundNumber)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarContent }
+            .tint(activeBrand)
         }
-        .sheet(isPresented: $showEntrySheet) {
+        .sheet(isPresented: entrySheetPresented) {
             ScoreEntrySheet(session: session) { entries, skyjoPlayerID in
                 session.commitRound(entries: entries, skyjoPlayerID: skyjoPlayerID)
                 showEntrySheet = false
-                if session.isGameOver {
-                    showWinView = true
-                } else if let leader = session.standings.first {
+                if !session.isGameOver, let leader = session.standings.first {
                     AccessibilityNotification.Announcement(
                         String(localized: "Round recorded. \(leader.player.trimmedName) leads with \(leader.total).")
                     ).post()
                 }
             }
             .presentationDetents([.large])
-            .presentationDragIndicator(.hidden)
+            .presentationDragIndicator(.visible)
+            .fittedEntryPanel(playerCount: session.players.count)
         }
-        .fullScreenCover(isPresented: $showWinView) {
+        .fullScreenCover(isPresented: winViewPresented) {
             WinView(session: session, onNewGame: onNewGame)
         }
         .alert("End Game?", isPresented: $showEndGameAlert) {
@@ -74,47 +90,43 @@ struct ScoringView: View {
         }
     }
 
-    // MARK: - Nav bar
+    // MARK: - Toolbar
 
-    private var navBar: some View {
-        HStack {
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
             Button {
                 showEndGameAlert = true
             } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "xmark")
-                    Text("End Game")
-                }
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                .foregroundStyle(activeBrand)
+                toolbarLabel("End Game", systemImage: "xmark")
             }
-            .frame(width: 80, alignment: .leading)
+        }
 
-            Text("Round \(session.currentRoundNumber)")
-                .font(.system(.headline, design: .rounded))
-                .frame(maxWidth: .infinity)
-
+        ToolbarItem(placement: .primaryAction) {
             Button {
                 session.undoLastRound()
                 AccessibilityNotification.Announcement(
                     String(localized: "Last round removed.")
                 ).post()
             } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.uturn.backward")
-                    Text("Undo")
-                }
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                .foregroundStyle(session.rounds.isEmpty ? Color(.tertiaryLabel) : activeBrand)
+                toolbarLabel("Undo", systemImage: "arrow.uturn.backward")
             }
             .disabled(session.rounds.isEmpty)
             .accessibilityHint("Removes the most recent round's scores")
-            .frame(width: 80, alignment: .trailing)
         }
-        .frame(minHeight: 52)
-        .padding(.horizontal, 20)
-        .frame(maxWidth: Theme.contentMaxWidth)
-        .frame(maxWidth: .infinity)
+    }
+
+    /// Title and symbol, both visible. The toolbar collapses a plain `Label` to
+    /// its icon (even with `.titleAndIcon`), so the pair is composed by hand.
+    /// No fixed width: the system sizes the glass capsule to the words, so long
+    /// languages never truncate. The title is the VoiceOver label.
+    private func toolbarLabel(_ title: LocalizedStringKey, systemImage: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+                .accessibilityHidden(true)
+            Text(title)
+        }
+        .fontDesign(.rounded)
     }
 
     // MARK: - Standings

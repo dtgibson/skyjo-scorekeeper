@@ -4,11 +4,15 @@ struct GameSetupView: View {
     @StateObject private var gameState: GameState
     @State private var showEasterEgg = false
     @State private var highlightErrors = false
+    /// True in short windows (iPhone Duo, iPhone Mirroring pulled short): the
+    /// title shrinks and the ready note moves beside Start, so more names show.
+    @State private var isShortHeight = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize: CGFloat = 40
+    @ScaledMetric(relativeTo: .largeTitle) private var compactTitleFontSize: CGFloat = 26
 
     private let onStart: ([Player]) -> Void
 
@@ -29,7 +33,7 @@ struct GameSetupView: View {
                 ScrollView {
                     playerSection
                         .padding(.horizontal, 16)
-                        .padding(.top, 28)
+                        .padding(.top, isShortHeight ? 14 : 28)
                         .padding(.bottom, 12)
                         .frame(maxWidth: Theme.contentMaxWidth)
                         .frame(maxWidth: .infinity)
@@ -41,6 +45,7 @@ struct GameSetupView: View {
                     .frame(maxWidth: Theme.contentMaxWidth)
                     .frame(maxWidth: .infinity)
             }
+            .onAvailableSize(update: $isShortHeight) { LayoutMode.isShort(height: $0.height) }
         }
         .overlay {
             if showEasterEgg {
@@ -59,18 +64,24 @@ struct GameSetupView: View {
     private var headerSection: some View {
         VStack(spacing: 7) {
             Text("Skyjo Scorekeeper")
-                .font(.system(size: titleFontSize, weight: .heavy, design: .rounded))
+                .font(.system(
+                    size: isShortHeight ? compactTitleFontSize : titleFontSize,
+                    weight: .heavy,
+                    design: .rounded
+                ))
                 .foregroundStyle(colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand)
-                .tracking(-1.5)
+                .tracking(isShortHeight ? -0.8 : -1.5)
                 .onLongPressGesture(minimumDuration: 3) {
                     showEasterEgg = true
                 }
 
-            Text("Who's playing today?")
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(.secondary)
+            if !isShortHeight {
+                Text("Who's playing today?")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.top, 20)
+        .padding(.top, isShortHeight ? 12 : 20)
         .frame(maxWidth: .infinity)
     }
 
@@ -142,22 +153,38 @@ struct GameSetupView: View {
 
     // MARK: - Start section
 
+    @ViewBuilder
     private var startSection: some View {
-        VStack(spacing: 11) {
-            Button(action: attemptStart) {
-                Label("Start Game", systemImage: "play.fill")
-                    .font(.system(.headline, design: .rounded))
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 58)
+        if isShortHeight {
+            HStack(spacing: 14) {
+                startButton
+                statusText
+                    .lineLimit(1)
             }
-            .buttonStyle(PrimaryButtonStyle(isEnabled: gameState.canStart))
-            .disabled(!gameState.canStart)
-
-            Text(statusNote)
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(gameState.canStart ? Color(.systemGreen) : Color(.tertiaryLabel))
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: gameState.canStart)
+        } else {
+            VStack(spacing: 11) {
+                startButton
+                statusText
+            }
         }
+    }
+
+    private var startButton: some View {
+        Button(action: attemptStart) {
+            Label("Start Game", systemImage: "play.fill")
+                .font(.system(.headline, design: .rounded))
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: isShortHeight ? 52 : 58)
+        }
+        .buttonStyle(PrimaryButtonStyle(isEnabled: gameState.canStart))
+        .disabled(!gameState.canStart)
+    }
+
+    private var statusText: some View {
+        Text(statusNote)
+            .font(.system(.footnote, design: .rounded))
+            .foregroundStyle(gameState.canStart ? Color(.systemGreen) : Color(.tertiaryLabel))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: gameState.canStart)
     }
 
     private var statusNote: String {

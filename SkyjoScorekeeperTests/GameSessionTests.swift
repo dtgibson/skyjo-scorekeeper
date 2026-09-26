@@ -240,6 +240,15 @@ final class GameSessionTests: XCTestCase {
         XCTAssertFalse(session.isGameOver)
     }
 
+    func testCommitRoundIgnoredAfterGameOver() {
+        // A second window's entry sheet must not add rounds to a finished game.
+        let session = makeSession(names: ["Alice", "Bob"])
+        commit(session, scores: [5, 110])
+        XCTAssertTrue(session.isGameOver)
+        commit(session, scores: [3, 4])
+        XCTAssertEqual(session.rounds.count, 1)
+    }
+
     // MARK: - lastRoundScore
 
     func testLastRoundScoreReflectsMostRecentAppliedScore() {
@@ -330,5 +339,37 @@ final class GameSessionTests: XCTestCase {
     func testScoreStatusBustAtThreshold() {
         XCTAssertEqual(GameSession.scoreStatus(for: 100), .bust)
         XCTAssertEqual(GameSession.scoreStatus(for: 130), .bust)
+    }
+}
+
+// MARK: - Adaptive layout
+
+final class AdaptiveLayoutTests: XCTestCase {
+
+    func testLayoutModeFollowsAvailableSpace() {
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 402, height: 778)), .tall, "iPhone, portrait")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 393, height: 460)), .short, "iPhone Mirroring, pulled short")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 660, height: 504)), .wide, "iPhone Duo, open")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 1180, height: 796)), .wide, "iPad, landscape")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 820, height: 1136)), .tall, "iPad, portrait")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 720, height: 580)), .wide, "fitted entry panel, 8 players")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 540, height: 620)), .tall, "iOS 17 form sheet")
+    }
+
+    func testLayoutModeBoundaries() {
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 400, height: 575)), .tall, "575pt is not short")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 559, height: 500)), .short, "559pt is too narrow for side by side")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 560, height: 500)), .wide)
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 720, height: 600)), .wide, "aspect exactly 1.2")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 719, height: 600)), .tall, "aspect just under 1.2")
+        XCTAssertEqual(LayoutMode(size: .zero), .tall, "unmeasured space keeps the tall layout")
+    }
+
+    func testFittedEntryPanelHeightFollowsPlayerCount() {
+        XCTAssertEqual(ScoreEntrySheet.fittedPanelHeight(playerCount: 2), 430)
+        XCTAssertEqual(ScoreEntrySheet.fittedPanelHeight(playerCount: 3), 480)
+        XCTAssertEqual(ScoreEntrySheet.fittedPanelHeight(playerCount: 4), 480)
+        XCTAssertEqual(ScoreEntrySheet.fittedPanelHeight(playerCount: 6), 530)
+        XCTAssertEqual(ScoreEntrySheet.fittedPanelHeight(playerCount: 8), 580)
     }
 }

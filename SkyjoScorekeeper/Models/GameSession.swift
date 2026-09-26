@@ -84,6 +84,10 @@ final class GameSession: ObservableObject {
     }
 
     func commitRound(entries: [UUID: Int], skyjoPlayerID: UUID?) {
+        // A finished game takes no more rounds, e.g. an entry sheet left open
+        // in a second window after the game ended in the first.
+        guard !isGameOver else { return }
+
         let otherMin: Int? = skyjoPlayerID.flatMap { id in
             entries.filter { $0.key != id }.values.min()
         }

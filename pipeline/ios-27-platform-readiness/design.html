@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyjo Scorekeeper — iOS 27 readiness</title>
+<style>
+/* ---------- Page tokens (indigo-tinted neutrals) ---------- */
+:root {
+  --page-bg: #F4F4FB;
+  --page-bg-2: #E9E9F7;
+  --page-ink: #1B1A33;
+  --page-muted: #5E5C7A;
+  --page-line: #DCDBEE;
+  --page-card: #FFFFFF;
+  --brand: #3730A3;
+  --brand-hc: #2A2475;
+  --brand-soft: rgba(55, 48, 163, 0.10);
+  --shadow: rgba(27, 26, 51, 0.10);
+
+  /* iOS system semantics (light) */
+  --sys-grouped: #F2F2F7;
+  --sys-bg: #FFFFFF;
+  --label: #1C1C1E;
+  --label-2: rgba(60, 60, 67, 0.60);
+  --label-3: rgba(60, 60, 67, 0.30);
+  --separator: rgba(60, 60, 67, 0.29);
+  --fill-2: rgba(120, 120, 128, 0.16);
+  --fill-3: rgba(118, 118, 128, 0.12);
+  --green: #34C759;
+  --orange: #FF9500;
+  --red: #FF3B30;
+
+  /* Player palette — position-indexed (Okabe–Ito) */
+  --p0: #3730A3; --p1: #E69F00; --p2: #009E73; --p3: #D55E00; --p4: #0072B2; --p5: #CC79A7; --p6: #56B4E9; --p7: #F0E442;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 120ms;
+  --t-med: 240ms;
+  --font: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page-bg: #14132A; --page-bg-2: #1C1B36; --page-ink: #F1F0FA; --page-muted: #A5A3C2;
+    --page-line: #2B2A4A; --page-card: #1F1E3A; --shadow: rgba(0, 0, 20, 0.45);
+  }
+}
+:root[data-theme="dark"] {
+  --page-bg: #14132A; --page-bg-2: #1C1B36; --page-ink: #F1F0FA; --page-muted: #A5A3C2;
+  --page-line: #2B2A4A; --page-card: #1F1E3A; --shadow: rgba(0, 0, 20, 0.45);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font);
+  color: var(--page-ink);
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(55, 48, 163, 0.14), transparent 60%),
+    radial-gradient(800px 420px at 100% 0%, rgba(230, 159, 0, 0.08), transparent 55%),
+    linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-2) 100%);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 16px 96px; }
+
+/* ---------- Page typography ---------- */
+h1 { font-size: 34px; line-height: 1.1; letter-spacing: -0.6px; font-weight: 800; margin: 0 0 6px; }
+.lede { color: var(--page-muted); font-size: 17px; max-width: 720px; margin: 0 0 22px; }
+h2 { font-size: 24px; letter-spacing: -0.3px; font-weight: 800; margin: 0 0 4px; }
+.sub { color: var(--page-muted); font-size: 15px; margin: 0 0 16px; max-width: 760px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--brand); margin: 0 0 6px; }
+
+/* ---------- Sticky controls ---------- */
+.controls {
+  position: sticky; top: 8px; z-index: 20;
+  display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+  padding: 10px 12px; margin: 0 0 36px;
+  background: color-mix(in srgb, var(--page-card) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--page-line); border-radius: 16px;
+  box-shadow: 0 8px 28px var(--shadow);
+}
+.seg { display: inline-flex; background: var(--brand-soft); border-radius: 12px; padding: 3px; gap: 2px; }
+.seg button {
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--page-ink);
+  background: transparent; border: 0; border-radius: 9px; padding: 7px 12px; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.seg button:hover { background: rgba(55, 48, 163, 0.10); }
+.seg button:active { transform: scale(0.97); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; box-shadow: 0 2px 8px rgba(55, 48, 163, 0.35); }
+.seg button:focus-visible, .toggle input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ctl-label { font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--page-muted); margin-right: 2px; }
+.shape-note { font-size: 13px; color: var(--page-muted); flex: 1 1 260px; min-width: 200px; }
+.shape-note strong { color: var(--page-ink); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle span.sw { width: 40px; height: 24px; border-radius: 12px; background: var(--page-line); position: relative; transition: background var(--t-fast) var(--ease); }
+.toggle span.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px var(--shadow); transition: transform var(--t-fast) var(--ease); }
+.toggle input:checked + span.sw { background: var(--brand); }
+.toggle input:checked + span.sw::after { transform: translateX(16px); }
+
+/* ---------- Surface sections ---------- */
+.surface { margin: 0 0 64px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 860px) { .pair { grid-template-columns: 1fr; } }
+.col .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+.col.before .tag { background: rgba(94, 92, 122, 0.12); color: var(--page-muted); }
+.col.after .tag { background: var(--brand-soft); color: var(--brand); }
+.stage { position: relative; width: 100%; overflow: visible; }
+.frame { position: absolute; top: 0; left: 0; transform-origin: top left; }
+.note { font-size: 13.5px; color: var(--page-muted); margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--page-line); background: color-mix(in srgb, var(--page-card) 60%, transparent); border-radius: 0 10px 10px 0; }
+.col.after .note { border-left-color: var(--brand); }
+.note b { color: var(--page-ink); }
+.rules { margin: 18px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rule { background: var(--page-card); border: 1px solid var(--page-line); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; color: var(--page-muted); box-shadow: 0 2px 10px var(--shadow); }
+.rule h4 { margin: 0 0 4px; font-size: 14px; color: var(--page-ink); }
+
+/* ---------- Device frames ---------- */
+.frame { transition: width var(--t-med) var(--ease), height var(--t-med) var(--ease), border-radius var(--t-med) var(--ease); }
+.screen { position: absolute; overflow: hidden; background: var(--sys-grouped); container-type: size; font-family: var(--font); color: var(--label); font-size: 17px; line-height: 1.3; transition: width var(--t-med) var(--ease), height var(--t-med) var(--ease), border-radius var(--t-med) var(--ease); }
+.frame.phone { background: #16152B; border-radius: 56px; box-shadow: 0 18px 40px var(--shadow), inset 0 0 0 2px #3A3956; }
+.frame.phone .screen { top: 10px; left: 10px; border-radius: 46px; }
+.frame.phone .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 122px; height: 36px; background: #0E0E1C; border-radius: 20px; z-index: 5; }
+.frame.duo { background: #16152B; border-radius: 34px; box-shadow: 0 18px 40px var(--shadow), inset 0 0 0 2px #3A3956; }
+.frame.duo .screen { top: 8px; left: 8px; border-radius: 26px; }
+.frame.duo .cam { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: #0E0E1C; z-index: 5; }
+.frame.ipad { background: #16152B; border-radius: 36px; box-shadow: 0 18px 40px var(--shadow), inset 0 0 0 2px #3A3956; }
+.frame.ipad .screen { top: 18px; left: 18px; border-radius: 20px; }
+.frame.ipad .cam { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; border-radius: 50%; background: #2B2A4A; z-index: 5; }
+.frame.mac { border-radius: 12px; background: #ECEBF5; box-shadow: 0 18px 40px var(--shadow), 0 0 0 1px rgba(27, 26, 51, 0.18); overflow: hidden; }
+.frame.mac .titlebar { position: absolute; top: 0; left: 0; right: 0; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #5E5C7A; background: #ECEBF5; border-bottom: 1px solid #D6D5E6; }
+.frame.mac .lights { position: absolute; left: 10px; top: 9px; display: flex; gap: 7px; }
+.frame.mac .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.frame.mac .screen { top: 30px; left: 0; border-radius: 0; }
+
+/* status bar */
+.status { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 28px; font-size: 15px; font-weight: 600; z-index: 4; pointer-events: none; }
+.status .r { display: flex; gap: 5px; align-items: center; }
+.status .r i { display: block; width: 18px; height: 11px; border: 1.6px solid var(--label); border-radius: 3px; position: relative; opacity: .9; }
+.status .r i::after { content: ""; position: absolute; inset: 1.5px; background: var(--label); border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: var(--label); opacity: .85; z-index: 4; }
+
+/* ---------- App primitives ---------- */
+.app { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; }
+.content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.content, .sheet .list, .sheet .skyjo, .chips { scrollbar-width: none; }
+.content::-webkit-scrollbar, .sheet .list::-webkit-scrollbar, .sheet .skyjo::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
+.cap { width: 100%; max-width: 600px; margin: 0 auto; }
+.sec-h { font-size: 13px; font-weight: 500; letter-spacing: 0.5px; color: var(--label-2); padding: 0 6px; margin: 0 0 8px; }
+.card { background: var(--sys-bg); border-radius: 14px; box-shadow: 0 1px 3px rgba(27, 26, 51, 0.06); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 0 16px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; height: 0.5px; background: var(--separator); }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex: 0 0 auto; }
+.avatar.p0 { background: var(--p0); } .avatar.p1 { background: var(--p1); } .avatar.p2 { background: var(--p2); } .avatar.p3 { background: var(--p3); }
+.avatar.p4 { background: var(--p4); } .avatar.p5 { background: var(--p5); } .avatar.p6 { background: var(--p6); color: var(--label); } .avatar.p7 { background: var(--p7); color: var(--label); }
+.name { flex: 1 1 auto; font-size: 17px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.total { font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+.total.warn { color: var(--orange); } .total.bust { color: var(--red); }
+.crown { width: 12px; height: 12px; color: var(--green); opacity: 0; }
+.row.leader { background: rgba(52, 199, 89, 0.07); } .row.leader .crown { opacity: 1; }
+.caption { font-size: 12px; color: var(--label-2); text-align: center; padding: 0 8px; }
+.btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; background: var(--brand); color: #fff; font-size: 17px; font-weight: 600; border-radius: 16px; border: 0; width: 100%; font-family: inherit; cursor: pointer; transition: transform 100ms var(--ease), opacity var(--t-fast) var(--ease); }
+.btn-primary:active { transform: scale(0.985); }
+.btn-primary.disabled { opacity: 0.28; pointer-events: none; }
+.btn-text { display: flex; align-items: center; justify-content: center; min-height: 44px; color: var(--brand); font-weight: 500; font-size: 15px; background: transparent; border: 0; width: 100%; font-family: inherit; cursor: pointer; border-radius: 12px; transition: background var(--t-fast) var(--ease); }
+.btn-text:hover { background: var(--brand-soft); }
+svg.sym { width: 1em; height: 1em; display: inline-block; vertical-align: -0.12em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Scoring — before (custom bar) ---------- */
+.navbar-custom { display: flex; align-items: center; min-height: 52px; padding: 0 20px; max-width: 600px; margin: 0 auto; width: 100%; }
+.navbar-custom .side { width: 80px; font-size: 15px; font-weight: 500; color: var(--brand); display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
+.navbar-custom .side.r { justify-content: flex-end; }
+.navbar-custom .ttl { flex: 1; text-align: center; font-size: 17px; font-weight: 600; }
+.scoring-body { padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.enter { padding: 0 16px 8px; }
+
+/* ---------- Scoring — after (system toolbar, Liquid Glass) ---------- */
+.toolbar { position: absolute; left: 0; right: 0; height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 6; }
+.toolbar .ttl { position: absolute; left: 50%; transform: translateX(-50%); font-size: 17px; font-weight: 600; letter-spacing: -0.1px; }
+.glass { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 500; color: var(--brand); font-family: inherit; border: 0.5px solid rgba(255, 255, 255, 0.85); cursor: pointer;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(22px) saturate(1.7); -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  box-shadow: 0 1px 2px rgba(27, 26, 51, 0.10), 0 6px 18px rgba(27, 26, 51, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(27, 26, 51, 0.04);
+  transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease); white-space: nowrap; }
+.glass:hover { background: rgba(255, 255, 255, 0.78); }
+.glass:active { transform: scale(0.96); box-shadow: 0 1px 2px rgba(27, 26, 51, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+.glass.dim { color: var(--label-3); }
+.glass svg.sym { width: 15px; height: 15px; stroke-width: 2.6; }
+
+/* ---------- Sheet ---------- */
+.dimmer { position: absolute; inset: 0; background: rgba(27, 26, 51, 0.22); z-index: 8; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--sys-grouped); border-radius: 30px 30px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -6px 30px rgba(27, 26, 51, 0.18); container-type: size; transition: top var(--t-med) var(--ease), left var(--t-med) var(--ease), right var(--t-med) var(--ease), bottom var(--t-med) var(--ease), border-radius var(--t-med) var(--ease); }
+.sheet.centered { border-radius: 26px; }
+.handle-custom { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); margin: 12px auto 8px; flex: 0 0 auto; }
+.grabber { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); z-index: 3; }
+.sheet .body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.sheet .list { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 16px 16px; display: flex; flex-direction: column; gap: 20px; }
+.sheet.after .list { padding-top: 22px; }
+.sheet .divider { height: 0.5px; background: var(--separator); flex: 0 0 auto; }
+.sheet .pad { flex: 0 0 auto; }
+.sheet .pad .skyjo { display: none; }
+.entry { cursor: pointer; min-height: 64px; }
+.entry .ring { position: absolute; inset: 4px 6px; border-radius: 10px; border: 2px solid var(--brand); opacity: 0; transform: scale(0.985); transition: opacity 100ms var(--ease), transform 100ms var(--ease); pointer-events: none; }
+.entry.focused .ring { opacity: 1; transform: scale(1); }
+.entry .dbl { font-size: 13px; font-weight: 500; color: var(--orange); white-space: nowrap; transition: opacity 150ms var(--ease), transform 150ms var(--ease); }
+.entry .dbl.hidden { opacity: 0; transform: scale(0.85); }
+.entry .val { display: flex; align-items: center; gap: 1px; }
+.entry .val .neg { color: var(--red); font-size: 22px; font-weight: 700; opacity: 0; }
+.entry .val.negative .neg { opacity: 1; }
+.entry .val .num { width: 52px; text-align: right; font-size: 22px; font-weight: 700; }
+.entry .val .num.empty { color: var(--label-3); }
+.entry .val.negative .num { color: var(--red); }
+.hint { font-size: 13px; color: var(--label-2); padding: 0 6px; margin: -2px 0 8px; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding: 12px; }
+.chip { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: var(--fill-2); font-size: 15px; font-weight: 500; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; color: var(--label); transition: background 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease); }
+.chip .mini { width: 22px; height: 22px; border-radius: 50%; background: var(--fill-3); color: var(--label-2); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.chip.on { border-color: var(--pc); color: var(--pc); background: color-mix(in srgb, var(--pc) 10%, transparent); }
+.chip.on .mini { background: var(--pc); color: var(--pt, #fff); }
+.chip.p0 { --pc: var(--p0); } .chip.p1 { --pc: var(--p1); } .chip.p2 { --pc: var(--p2); } .chip.p3 { --pc: var(--p3); }
+.chip.p4 { --pc: var(--p4); } .chip.p5 { --pc: var(--p5); } .chip.p6 { --pc: var(--p6); --pt: var(--label); } .chip.p7 { --pc: var(--p7); --pt: var(--label); }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 10px 16px; }
+.key { height: 54px; border-radius: 10px; background: var(--fill-2); border: 0; font-family: inherit; font-size: 22px; font-weight: 500; color: var(--label); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 90ms var(--ease), background 90ms var(--ease); }
+.key:hover { background: rgba(120, 120, 128, 0.22); }
+.key:active { transform: scale(0.96); background: rgba(120, 120, 128, 0.3); }
+.key.sm { font-size: 17px; font-weight: 600; }
+.key svg.sym { width: 20px; height: 20px; stroke-width: 2; }
+.confirm { padding: 0 16px 8px; }
+
+/* Sheet — after: adapt by available space (container queries on the sheet itself) */
+@container (max-height: 575px) {
+  .sheet.after .list { padding-top: 18px; gap: 12px; }
+  .sheet.after .sec-h { margin-bottom: 6px; }
+  .sheet.after .hint { display: none; }
+  .sheet.after .chips { display: flex; overflow-x: auto; padding: 8px; }
+  .sheet.after .chip { flex: 1 0 auto; min-height: 44px; }
+  .sheet.after .key { height: 44px; }
+  .sheet.after .numpad { padding: 6px 16px; }
+  .sheet.after .btn-primary { min-height: 50px; }
+  .sheet.after .confirm { padding-bottom: 6px; }
+}
+@container ((max-height: 575px) or (min-aspect-ratio: 6/5)) and (min-width: 560px) {
+  .sheet.after .hint { display: none; }
+  .sheet.after .body { flex-direction: row; }
+  .sheet.after .list { flex: 1 1 auto; padding: 18px 12px 14px 16px; justify-content: safe center; }
+  .sheet.after .list .skyjo { display: none; }
+  .sheet.after .divider { width: 0.5px; height: auto; align-self: stretch; margin: 12px 0; }
+  .sheet.after .pad { width: 284px; flex: 0 0 284px; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 0 0; }
+  .sheet.after .pad .skyjo { display: block; flex: 0 1 auto; min-height: 96px; overflow-y: auto; padding: 0 16px 0 12px; }
+  .sheet.after .pad .skyjo .sec-h { margin-bottom: 6px; }
+  .sheet.after .pad .skyjo .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; overflow: visible; padding: 8px; }
+  .sheet.after .pad .padwrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; }
+  .sheet.after .numpad { flex: 1 1 auto; min-height: 0; grid-template-rows: repeat(4, minmax(44px, 1fr)); max-height: 300px; padding: 6px 16px 6px 12px; }
+  .sheet.after .key { height: auto; min-height: 44px; }
+  .sheet.after .confirm { padding: 0 16px 6px 12px; }
+  .sheet.after .btn-primary { min-height: 52px; }
+}
+
+/* ---------- Win ---------- */
+.hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 52px 24px 8px; flex: 0 0 auto; background: linear-gradient(180deg, rgba(55, 48, 163, 0.07), var(--sys-grouped)); margin-bottom: 24px; transition: padding var(--t-med) var(--ease); }
+.hero .emoji { font-size: 64px; line-height: 1; }
+.hero .head { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: var(--brand); line-height: 1.15; }
+.hero .subt { font-size: 15px; color: var(--label-2); }
+.win-actions { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 10px; }
+.medal { font-size: 18px; }
+.row.winner { background: rgba(55, 48, 163, 0.18); }
+.win-list { padding: 0 16px 12px; }
+@container ((max-height: 575px) or ((min-width: 560px) and (min-aspect-ratio: 6/5))) {
+  .app.win.after .hero { flex-direction: row; justify-content: center; align-items: center; gap: 14px; padding: 16px 24px 12px; margin-bottom: 12px; text-align: left; }
+  .app.win.after .hero .emoji { font-size: 40px; }
+  .app.win.after .hero .head { font-size: 24px; }
+  .app.win.after .hero .txt { display: flex; flex-direction: column; gap: 2px; }
+  .app.win.after .win-actions { flex-direction: row; align-items: stretch; gap: 10px; }
+  .app.win.after .win-actions .btn-primary { flex: 3 1 0; min-height: 52px; }
+  .app.win.after .win-actions .btn-text { flex: 0 1 auto; width: auto; padding: 0 18px; min-height: 52px; background: var(--brand-soft); border-radius: 16px; white-space: nowrap; }
+}
+.hero .txt { display: contents; }
+
+/* ---------- Setup ---------- */
+.setup-head { text-align: center; padding: 20px 16px 0; flex: 0 0 auto; transition: padding var(--t-med) var(--ease); }
+.setup-head .ttl { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; color: var(--brand); line-height: 1.1; }
+.setup-head .subt { font-size: 15px; color: var(--label-2); margin-top: 6px; }
+.setup-list { padding: 28px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+.prow { min-height: 54px; padding: 0 14px; }
+.prow .avatar { width: 30px; height: 30px; font-size: 13px; }
+.prow + .prow::before { left: 56px; }
+.prow .rm { width: 24px; height: 24px; border-radius: 50%; background: var(--red); position: relative; margin: 10px; }
+.prow .rm::after { content: ""; position: absolute; left: 6px; top: 11px; width: 12px; height: 2px; border-radius: 1px; background: #fff; }
+.addp { display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 14px; }
+.addp .plus { width: 30px; height: 30px; border-radius: 50%; background: var(--green); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
+.start { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 11px; align-items: center; }
+.start .ok { font-size: 13px; color: var(--green); }
+@container (max-height: 575px) {
+  .app.setup.after .setup-head { padding: 12px 16px 0; }
+  .app.setup.after .setup-head .ttl { font-size: 26px; letter-spacing: -0.8px; }
+  .app.setup.after .setup-head .subt { display: none; }
+  .app.setup.after .setup-list { padding-top: 14px; }
+  .app.setup.after .start { flex-direction: row; gap: 14px; }
+  .app.setup.after .start .btn-primary { min-height: 52px; }
+  .app.setup.after .start .ok { white-space: nowrap; }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01s !important; animation: none !important; }
+}
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { transition-duration: 0.01s !important; animation: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Skyjo Scorekeeper · iOS 27 readiness</p>
+  <h1>Same app, any window shape.</h1>
+  <p class="lede">iOS 27 lets the app be resized — on iPhone Duo, in iPhone Mirroring on a Mac, and in iPad windows. The tall iPhone screen you use today stays exactly as it is; the four surfaces below learn to reflow when the window gets short or wide. Pick a window shape and a player count (the app allows two to eight) and compare today's app with the proposal. The app icon is unchanged.</p>
+</header>
+
+<div class="controls" role="group" aria-label="Window shape">
+  <span class="ctl-label">Window</span>
+  <div class="seg" id="shapes">
+    <button type="button" data-shape="phone" aria-pressed="true">iPhone</button>
+    <button type="button" data-shape="duo" aria-pressed="false">iPhone Duo (open)</button>
+    <button type="button" data-shape="ipad" aria-pressed="false">iPad landscape</button>
+    <button type="button" data-shape="ipadV" aria-pressed="false">iPad portrait</button>
+    <button type="button" data-shape="mac" aria-pressed="false">iPhone Mirroring</button>
+  </div>
+  <span class="ctl-label">Players</span>
+  <div class="seg" id="counts">
+    <button type="button" data-count="2" aria-pressed="false">2</button>
+    <button type="button" data-count="4" aria-pressed="true">4</button>
+    <button type="button" data-count="8" aria-pressed="false">8</button>
+  </div>
+  <div class="shape-note" id="shape-note"></div>
+  <div class="shape-note" id="count-note"></div>
+  <label class="toggle"><input type="checkbox" id="rm"><span class="sw"></span>Reduce Motion</label>
+</div>
+
+<!-- ============ 1. SCOREBOARD ============ -->
+<section class="surface" id="scoring">
+  <p class="eyebrow">1 · Scoreboard</p>
+  <h2>Hand-built top bar → system toolbar</h2>
+  <p class="sub">End Game and Undo become real toolbar buttons with the Liquid Glass look, and "Round 4" becomes the screen's title. Nothing else on the scoreboard moves. Because the bar is now the system's, it also gets iPhone Duo's side-edge placement and long-language sizing for free.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame" data-mock="scoring-before"></div></div>
+      <p class="note" data-note="scoring-before"></p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame" data-mock="scoring-after"></div></div>
+      <p class="note" data-note="scoring-after"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. SCORE ENTRY ============ -->
+<section class="surface" id="entry">
+  <p class="eyebrow">2 · Score entry sheet</p>
+  <h2>Player rows stay visible, whatever the height</h2>
+  <p class="sub">Today the numpad and Confirm button take a fixed 340pt, so in a short window the player list is squeezed to nothing — you can't see whose score you're typing. The proposal keeps the tall-iPhone layout as it is, and reflows only when the sheet is short. The custom drag handle is replaced by the system grabber.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame" data-mock="entry-before"></div></div>
+      <p class="note" data-note="entry-before"></p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame" data-mock="entry-after"></div></div>
+      <p class="note" data-note="entry-after"></p>
+    </div>
+  </div>
+  <div class="rules">
+    <div class="rule"><h4>Tall and narrow (iPhone)</h4>Unchanged: rows, "who ended the round", numpad, Confirm — stacked. Only the grabber changes.</div>
+    <div class="rule"><h4>Wide, or short (iPad, Duo)</h4>On iPad and Duo the sheet becomes a 720×480 panel. Rows on the left; "who ended", numpad and Confirm on the right. Keys grow from 44pt to fill the column.</div>
+    <div class="rule"><h4>Too short, and narrow</h4>Still stacked, but tighter: 44pt keys, chips in one scrolling row, helper line hidden. At least two rows stay in view.</div>
+    <div class="rule"><h4>How it decides</h4>By the space the sheet actually has — clearly wider than tall, or too short to show two rows stacked. Never by which device it is or which way it's turned.</div>
+  </div>
+</section>
+
+<!-- ============ 3. WIN SCREEN ============ -->
+<section class="surface" id="win">
+  <p class="eyebrow">3 · Win screen</p>
+  <h2>Standings stay on screen, actions stay in reach</h2>
+  <p class="sub">The trophy header and the two buttons are pinned above and below the standings. In a short window that leaves no room for the standings themselves. When space is short, the header turns into a single line with the trophy beside the name, and the two actions sit side by side.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame" data-mock="win-before"></div></div>
+      <p class="note" data-note="win-before"></p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame" data-mock="win-after"></div></div>
+      <p class="note" data-note="win-after"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. SETUP ============ -->
+<section class="surface" id="setup">
+  <p class="eyebrow">4 · Game setup</p>
+  <h2>Checked — one small adjustment</h2>
+  <p class="sub">Setup mostly survives a short window: the name list scrolls. The one thing worth changing is the big title, which costs about 95pt before the first name appears. When space is short the title shrinks, the "Who's playing today?" line hides, and the "4 players ready" note moves beside the Start button. Nothing changes on a tall iPhone.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame" data-mock="setup-before"></div></div>
+      <p class="note" data-note="setup-before"></p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame" data-mock="setup-after"></div></div>
+      <p class="note" data-note="setup-after"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. APP ICON ============ -->
+<section class="surface" id="icon">
+  <p class="eyebrow">5 · App icon</p>
+  <h2>Unchanged for now</h2>
+  <p class="sub">The current icon stays as it is. It remains fully supported on iOS 26 and 27; a layered version can be revisited another time.</p>
+</section>
+
+</div>
+
+<!-- ================= TEMPLATES (app shells; rows are generated per player count) ================= -->
+<template id="tpl-scoring-before">
+  <div class="app scoring" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="navbar-custom">
+      <span class="side">ICON_X End Game</span>
+      <span class="ttl">Round 4</span>
+      <span class="side r">ICON_UNDO Undo</span>
+    </div>
+    <div class="content"><div class="cap scoring-body">STANDINGS_CARD<p class="caption">Game ends when someone reaches 100. Lowest total wins.</p></div></div>
+    <div class="cap enter"><button class="btn-primary" type="button">ICON_UP Enter Round 4 Scores</button></div>
+  </div>
+</template>
+
+<template id="tpl-scoring-after">
+  <div class="app scoring" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="toolbar">
+      <button class="glass" type="button" aria-label="End Game">ICON_X End Game</button>
+      <span class="ttl">Round 4</span>
+      <button class="glass" type="button" aria-label="Undo last round">ICON_UNDO Undo</button>
+    </div>
+    <div class="content" style="position:relative"><div class="cap scoring-body" style="padding-top: 60px">STANDINGS_CARD<p class="caption">Game ends when someone reaches 100. Lowest total wins.</p></div></div>
+    <div class="cap enter"><button class="btn-primary" type="button">ICON_UP Enter Round 4 Scores</button></div>
+  </div>
+</template>
+
+<template id="tpl-entry-before">
+  <div class="dimmer"></div>
+  <div class="sheet before">
+    <div class="handle-custom"></div>
+    <div class="body">
+      <div class="list"><div class="cap">ENTRY_ROWS</div><div class="cap skyjo">SKYJO_SECTION</div></div>
+      <div class="divider"></div>
+      <div class="pad"><div class="cap">NUMPAD</div><div class="cap confirm">CONFIRM</div></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-entry-after">
+  <div class="dimmer"></div>
+  <div class="sheet after">
+    <div class="grabber"></div>
+    <div class="body">
+      <div class="list"><div class="cap">ENTRY_ROWS</div><div class="cap skyjo">SKYJO_SECTION</div></div>
+      <div class="divider"></div>
+      <div class="pad"><div class="cap skyjo">SKYJO_SECTION</div><div class="cap padwrap">NUMPAD</div><div class="cap confirm">CONFIRM</div></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-win-before">
+  <div class="app win before" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="hero"><span class="emoji">🏆</span><span class="txt"><span class="head">Priya Wins!</span><span class="subt">9 rounds played</span></span></div>
+    <div class="content"><div class="cap win-list">WIN_ROWS</div></div>
+    <div class="cap win-actions"><button class="btn-primary" type="button">ICON_REDO New Game — Same Players</button><button class="btn-text" type="button">Start Fresh</button></div>
+  </div>
+</template>
+
+<template id="tpl-win-after">
+  <div class="app win after" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="hero"><span class="emoji">🏆</span><span class="txt"><span class="head">Priya Wins!</span><span class="subt">9 rounds played</span></span></div>
+    <div class="content"><div class="cap win-list">WIN_ROWS</div></div>
+    <div class="cap win-actions"><button class="btn-primary" type="button">ICON_REDO New Game — Same Players</button><button class="btn-text" type="button">Start Fresh</button></div>
+  </div>
+</template>
+
+<template id="tpl-setup-before">
+  <div class="app setup before" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="setup-head"><div class="ttl">Skyjo Scorekeeper</div><div class="subt">Who's playing today?</div></div>
+    <div class="content"><div class="cap setup-list">SETUP_ROWS</div></div>
+    <div class="cap start"><button class="btn-primary" type="button">ICON_PLAY Start Game</button><span class="ok">STATUS_NOTE</span></div>
+  </div>
+</template>
+
+<template id="tpl-setup-after">
+  <div class="app setup after" style="top: var(--safe-top); bottom: var(--safe-bottom);">
+    <div class="setup-head"><div class="ttl">Skyjo Scorekeeper</div><div class="subt">Who's playing today?</div></div>
+    <div class="content"><div class="cap setup-list">SETUP_ROWS</div></div>
+    <div class="cap start"><button class="btn-primary" type="button">ICON_PLAY Start Game</button><span class="ok">STATUS_NOTE</span></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  // Window shapes, in points. Duo point sizes are Apple-unpublished: the value here is an
+  // estimate of a passport-shaped inner display; the layout rule is space-driven so it holds.
+  var SHAPES = {
+    phone: { w: 393, h: 852, safeTop: 59, safeBottom: 34, frame: 'phone', bezel: 10,
+      note: '<strong>iPhone, tall portrait.</strong> The baseline — today\'s screen. Apart from the toolbar and the grabber, nothing changes here.' },
+    duo:   { w: 660, h: 560, safeTop: 40, safeBottom: 20, frame: 'duo', bezel: 8, regular: true,
+      note: '<strong>iPhone Duo, open.</strong> Wider than tall, and the portrait lock is ignored. Today\'s App Store build actually appears in a phone-shaped box in the middle of this display; as soon as the app is rebuilt on the iOS 27 SDK — which this pass does, and the App Store will require — it gets the whole window. That is what "Today" shows. Apple hasn\'t published the exact size, so the shape is an estimate.' },
+    ipad:  { w: 1180, h: 820, safeTop: 24, safeBottom: 20, frame: 'ipad', bezel: 18, regular: true,
+      note: '<strong>iPad, landscape, full screen</strong> (11-inch). Wide and fairly short — the same arrangement as Duo. A wide-and-short iPad window behaves the same way.' },
+    ipadV: { w: 820, h: 1180, safeTop: 24, safeBottom: 20, frame: 'ipad', bezel: 18, regular: true,
+      note: '<strong>iPad, portrait, full screen</strong> (11-inch). Tall — the scoreboard, win and setup screens keep today\'s layout. The entry sheet is the same panel as on Duo.' },
+    mac:   { w: 393, h: 460, safeTop: 50, safeBottom: 34, frame: 'mac', bezel: 0,
+      note: '<strong>iPhone Mirroring on a Mac,</strong> with the window pulled short. Narrow and short — the hardest case.' }
+  };
+
+  var COUNT_NOTES = {
+    2: '<strong>Two players.</strong> Everything fits everywhere. The wide entry sheet shrinks to the height the numpad needs; the two rows sit centred beside it.',
+    4: '<strong>Four players.</strong> The baseline you have already seen.',
+    8: '<strong>Eight players</strong> (the maximum). Lists scroll wherever eight rows don\'t fit — exactly as they do today. The wide entry sheet grows so all eight rows show on iPad, and scrolls on Duo with the row you\'re typing kept in view; the eight "who ended" chips sit in four short rows. Scroll inside any screen to see the rest.'
+  };
+
+  var NOTES = {
+    'scoring-before': {
+      phone: 'Fixed 80pt buttons: fine in English, but "End Game" already fills its box — longer languages and large text truncate.',
+      duo: 'The bar spans the window as a plain strip. On Duo, only system bars move to the side edge; this one can\'t.',
+      ipad: 'Today\'s bar, capped at 600pt in the middle of a wide screen.',
+      ipadV: 'Today\'s bar, capped at 600pt.',
+      mac: 'Works. Same truncation risk as on iPhone.' },
+    'scoring-after': {
+      phone: 'Glass capsules for End Game and Undo, "Round 4" as the title. Undo dims when there\'s nothing to undo. Content slides under the bar as it scrolls.',
+      duo: 'The system owns the bar now, so on Duo it can place the controls at the side edge and away from the fold — no work from us.',
+      ipad: 'The system bar spans the screen, with the title centred and the two buttons at the edges. Standings stay capped at 600pt.',
+      ipadV: 'System bar across the top; everything else is today\'s layout.',
+      mac: 'Same bar. The buttons size to their words, so nothing truncates.' },
+    'entry-before': {
+      phone: 'Rows and the "who ended" question above a fixed numpad; with many players the list scrolls. Custom drag handle at the top.',
+      duo: 'Once the app fills the wide window, the sheet is centred by the system — but the fixed numpad and button leave room for barely two rows, so you can\'t see whose score you\'re typing.',
+      ipad: 'Today: a 540-wide form sheet, stacked. Three rows in view; the rest scroll.',
+      ipadV: 'Today: the 540-wide stacked form sheet, three rows in view.',
+      mac: 'The list is pushed off the sheet almost entirely.' },
+    'entry-after': {
+      phone: 'Identical to today except the system grabber replaces the custom handle. Tap a row or a chip to feel the focus ring and ×2 preview.',
+      duo: 'Short and wide: the rows on the left; "who ended", numpad and Confirm on the right. The keys grow to fill the column, so there is no empty band. With eight players the rows scroll and the one you\'re typing stays in view.',
+      ipad: 'A wider, shorter panel (720pt wide): rows on the left, "who ended", numpad and Confirm on the right — the Duo arrangement. Its height follows the player count, from 430pt for two up to 580pt for eight.',
+      ipadV: 'The same panel as Duo and landscape, so the sheet looks and works the same on every iPad. If you\'d rather keep the tall stacked sheet in portrait, that is a one-line change.',
+      mac: 'Short and narrow: stacked but tighter — 44pt keys, chips in one scrolling row. Two or three rows stay in view and the rest scroll.' },
+    'win-before': {
+      phone: 'Trophy, headline, standings, two actions — all in view (eight standings scroll).',
+      duo: 'The pinned header and buttons leave one row of standings.',
+      ipad: 'Today\'s layout. It fits, with a lot of empty space above the standings.',
+      ipadV: 'Today\'s layout.',
+      mac: 'The standings disappear entirely; only the header and buttons remain.' },
+    'win-after': {
+      phone: 'Unchanged from today.',
+      duo: 'One-line header with the trophy beside the name; New Game and Start Fresh side by side. Six standings fit; eight scroll.',
+      ipad: 'The wide arrangement from Duo: one-line header, actions side by side, standings higher up. All eight fit.',
+      ipadV: 'Unchanged — a tall screen keeps the full trophy header.',
+      mac: 'Header and actions each take one line, leaving the standings the middle of the screen.' },
+    'setup-before': {
+      phone: 'Today\'s setup screen. Eight names fit without scrolling.',
+      duo: 'The big title costs ~95pt; three names fit before the list scrolls. Tolerable.',
+      ipad: 'Today\'s setup screen. Plenty of room.',
+      ipadV: 'Today\'s layout.',
+      mac: 'About two rows visible under the large title.' },
+    'setup-after': {
+      phone: 'Unchanged from today.',
+      duo: 'Smaller title, subtitle hidden, the ready note beside the Start button. One extra row of names in view; eight scroll.',
+      ipad: 'Unchanged — the big title is the welcome moment, and there is room for it.',
+      ipadV: 'Unchanged.',
+      mac: 'Same treatment — the list gets the space the title used to take.' }
+  };
+
+  var ICON = {
+    X: '<svg class="sym" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    UNDO: '<svg class="sym" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
+    UP: '<svg class="sym" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg>',
+    REDO: '<svg class="sym" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>',
+    PLAY: '<svg class="sym" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M7 4l13 8-13 8z"/></svg>',
+    DEL: '<svg class="sym" viewBox="0 0 24 24"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 10l5 5M17 10l-5 5"/></svg>',
+    CROWN: '<svg class="crown" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>',
+    NOCROWN: '<svg class="crown" viewBox="0 0 24 24"></svg>'
+  };
+
+  // Realistic table: running totals after three rounds, and final totals after nine.
+  var PLAYERS = [
+    { name: 'Shawn', total: 58, final: 91 },
+    { name: 'Dave',  total: 67, final: 96 },
+    { name: 'Priya', total: 41, final: 78 },
+    { name: 'Marco', total: 88, final: 104 },
+    { name: 'Lena',  total: 46, final: 82 },
+    { name: 'Tomás', total: 79, final: 99 },
+    { name: 'Aiko',  total: 72, final: 87 },
+    { name: 'Ben',   total: 83, final: 101 }
+  ];
+  // Round 4 in progress per player count: who has typed what, who is focused, who ended the round.
+  var COUNTS = {
+    2: { roster: [2, 3], entries: { 2: '22', 3: '9' }, focused: 2, ended: 2 },
+    4: { roster: [0, 1, 2, 3], entries: { 0: '14', 1: '9', 2: '22', 3: '' }, focused: 3, ended: 2 },
+    8: { roster: [0, 1, 2, 3, 4, 5, 6, 7], entries: { 0: '14', 1: '9', 2: '22', 3: '7', 4: '6', 5: '11', 6: '3', 7: '' }, focused: 7, ended: 2 }
+  };
+  var DANGER = 85, BUST = 100;
+
+  function initial(name) { return name.charAt(0).toUpperCase(); }
+  function avatar(pos, name, cls) { return '<span class="avatar p' + pos + (cls ? ' ' + cls : '') + '">' + initial(name) + '</span>'; }
+  function posOf(state, idx) { return state.roster.indexOf(idx); }
+
+  function standingsHTML(state) {
+    var sorted = state.roster.slice().sort(function (a, b) { return PLAYERS[a].total - PLAYERS[b].total; });
+    var rows = sorted.map(function (idx, i) {
+      var p = PLAYERS[idx], cls = p.total >= BUST ? ' bust' : p.total >= DANGER ? ' warn' : '';
+      return '<div class="row' + (i === 0 ? ' leader' : '') + '">' + avatar(posOf(state, idx), p.name) +
+        '<span class="name">' + p.name + '</span>' + (i === 0 ? ICON.CROWN : ICON.NOCROWN) +
+        '<span class="total' + cls + '">' + p.total + '</span></div>';
+    }).join('');
+    return '<div><div class="sec-h">STANDINGS</div><div class="card">' + rows + '</div></div>';
+  }
+
+  // The doubling rule has one home in the app (GameSession.isDoubled); this mirrors it for the preview.
+  function doubledFor(state, idx) {
+    if (state.ended !== idx) return null;
+    var raw = state.entries[idx]; if (raw === '' || raw === undefined) return null;
+    raw = parseInt(raw, 10);
+    var others = state.roster.filter(function (o) { return o !== idx && state.entries[o] !== '' && state.entries[o] !== undefined; })
+      .map(function (o) { return parseInt(state.entries[o], 10); });
+    if (!others.length) return null;
+    return raw > Math.min.apply(null, others) ? raw * 2 : null;
+  }
+
+  function entryRowsHTML(state) {
+    var rows = state.roster.map(function (idx) {
+      var p = PLAYERS[idx], v = state.entries[idx] || '', d = doubledFor(state, idx);
+      return '<div class="row entry' + (state.focused === idx ? ' focused' : '') + '" data-p="' + idx + '">' +
+        avatar(posOf(state, idx), p.name) + '<span class="name">' + p.name + '</span>' +
+        '<span class="dbl' + (d === null ? ' hidden' : '') + '">×2 → ' + (d === null ? '' : d) + '</span>' +
+        '<span class="val"><span class="neg">−</span><span class="num' + (v === '' ? ' empty' : '') + '">' + (v === '' ? '0' : v) + '</span></span>' +
+        '<span class="ring"></span></div>';
+    }).join('');
+    return '<div><div class="sec-h">ROUND 4 SCORES</div><div class="card">' + rows + '</div></div>';
+  }
+
+  function chipsHTML(state) {
+    var chips = state.roster.map(function (idx) {
+      var p = PLAYERS[idx];
+      return '<button class="chip p' + posOf(state, idx) + (state.ended === idx ? ' on' : '') + '" type="button" data-p="' + idx + '">' +
+        '<span class="mini">' + initial(p.name) + '</span>' + p.name + '</button>';
+    }).join('');
+    return '<div><div class="sec-h">WHO ENDED THE ROUND?</div>' +
+      '<div class="hint">The first player to turn over their last card. Their score this round doubles if it isn\'t the lowest.</div>' +
+      '<div class="card chips">' + chips + '</div></div>';
+  }
+
+  function numpadHTML() {
+    var keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3'].map(function (k) { return '<button class="key" type="button">' + k + '</button>'; }).join('');
+    return '<div class="numpad">' + keys +
+      '<button class="key sm" type="button" aria-label="Toggle negative">+/−</button><button class="key" type="button">0</button>' +
+      '<button class="key" type="button" aria-label="Delete">' + ICON.DEL + '</button></div>';
+  }
+
+  function confirmHTML(state) {
+    var filled = state.roster.every(function (idx) { return state.entries[idx] !== '' && state.entries[idx] !== undefined; });
+    var ok = filled && state.ended !== null;
+    return '<button class="btn-primary' + (ok ? '' : ' disabled') + '" type="button">Confirm Round 4</button>';
+  }
+
+  function winRowsHTML(state) {
+    var sorted = state.roster.slice().sort(function (a, b) { return PLAYERS[a].final - PLAYERS[b].final; });
+    var medals = ['🥇', '🥈', '🥉'];
+    var rows = sorted.map(function (idx, i) {
+      var p = PLAYERS[idx];
+      return '<div class="row' + (i === 0 ? ' winner' : '') + '">' + avatar(posOf(state, idx), p.name) +
+        '<span class="name">' + p.name + '</span>' + (i < 3 ? '<span class="medal">' + medals[i] + '</span>' : '') +
+        '<span class="total' + (p.final >= BUST ? ' bust' : '') + '">' + p.final + '</span></div>';
+    }).join('');
+    return '<div><div class="sec-h">FINAL STANDINGS</div><div class="card">' + rows + '</div></div>';
+  }
+
+  function setupRowsHTML(state) {
+    var rows = state.roster.map(function (idx) {
+      var p = PLAYERS[idx];
+      return '<div class="row prow">' + avatar(posOf(state, idx), p.name) + '<span class="name">' + p.name + '</span><span class="rm"></span></div>';
+    }).join('');
+    var add = state.roster.length < 8 ? '<div class="card addp"><span class="plus">+</span><span class="name">Add Player</span></div>' : '';
+    return '<div><div class="sec-h">PLAYERS</div><div class="card">' + rows + '</div>' + add + '</div>';
+  }
+
+  function tpl(id) { return document.getElementById('tpl-' + id).innerHTML; }
+  function build(kind, state) {
+    var html = tpl(kind);
+    return html.split('STANDINGS_CARD').join(standingsHTML(state))
+      .split('ENTRY_ROWS').join(entryRowsHTML(state))
+      .split('SKYJO_SECTION').join(chipsHTML(state))
+      .split('NUMPAD').join(numpadHTML())
+      .split('CONFIRM').join(confirmHTML(state))
+      .split('WIN_ROWS').join(winRowsHTML(state))
+      .split('SETUP_ROWS').join(setupRowsHTML(state))
+      .split('STATUS_NOTE').join(state.roster.length + ' players ready')
+      .split('ICON_X').join(ICON.X).split('ICON_UNDO').join(ICON.UNDO).split('ICON_UP').join(ICON.UP)
+      .split('ICON_REDO').join(ICON.REDO).split('ICON_PLAY').join(ICON.PLAY);
+  }
+
+  var frames = Array.prototype.slice.call(document.querySelectorAll('.frame[data-mock]'));
+  var shape = 'phone', count = 4;
+
+  function freshState() {
+    var c = COUNTS[count];
+    var entries = {}; c.roster.forEach(function (idx) { entries[idx] = c.entries[idx]; });
+    return { roster: c.roster.slice(), entries: entries, focused: c.focused, ended: c.ended };
+  }
+
+  function renderFrame(f) {
+    var kind = f.getAttribute('data-mock');
+    var st = f._state;
+    f.innerHTML = '<div class="chrome"></div><div class="screen"><div class="status"><span>9:41</span><span class="r"><i></i></span></div>' + build(kind, st) + '<div class="home"></div></div>';
+    if (kind.indexOf('entry') === 0) {
+      // background scoreboard behind the sheet, for realism
+      var bg = document.createElement('div');
+      bg.innerHTML = build('scoring-after', st);
+      var screen = f.querySelector('.screen');
+      screen.insertBefore(bg.firstElementChild, screen.children[1]);
+    }
+  }
+
+  // Proposed sheet on a regular-width window: .presentationSizing(.fitted), 720pt wide, ideal
+  // height driven by the right column — chips rows (2 per row) + numpad + Confirm. 430 / 480 / 580.
+  function idealSheetHeight(n) {
+    var r = Math.ceil(n / 2), chips = 42 + 44 * r + 6 * (r - 1);
+    return 344 + chips;
+  }
+
+  function styleFrame(f) {
+    var s = SHAPES[shape], kind = f.getAttribute('data-mock'), n = f._state.roster.length;
+    f.className = 'frame ' + s.frame;
+    var outerW = s.w + s.bezel * 2, outerH = s.h + s.bezel * 2 + (s.frame === 'mac' ? 30 : 0);
+    f.style.width = outerW + 'px'; f.style.height = outerH + 'px';
+    var chrome = f.querySelector('.chrome');
+    chrome.innerHTML = s.frame === 'phone' ? '<div class="island"></div>' :
+      s.frame === 'duo' ? '<div class="cam"></div>' :
+      s.frame === 'ipad' ? '<div class="cam"></div>' :
+      '<div class="titlebar"><span class="lights"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></span>iPhone Mirroring</div>';
+    var sc = f.querySelector('.screen');
+    sc.style.width = s.w + 'px'; sc.style.height = s.h + 'px';
+    sc.style.setProperty('--safe-top', s.safeTop + 'px');
+    sc.style.setProperty('--safe-bottom', s.safeBottom + 'px');
+    var status = sc.querySelector('.status');
+    status.style.height = s.safeTop + 'px';
+    status.style.paddingTop = s.frame === 'phone' || s.frame === 'mac' ? '6px' : '0';
+    sc.querySelector('.home').style.display = (s.frame === 'phone' || s.frame === 'mac' || s.frame === 'ipad') ? 'block' : 'none';
+
+    var sheet = sc.querySelector('.sheet');
+    if (sheet) {
+      if (s.regular) { // regular width: the system presents a centred form sheet
+        var isAfter = sheet.classList.contains('after'), sw, shh;
+        if (!isAfter) { sw = 540; shh = Math.min(620, s.h - 56); }                                  // today: default form sheet
+        else if (s.frame === 'duo') { sw = Math.min(600, s.w - 48); shh = Math.min(idealSheetHeight(n) + 24, s.h - 56); } // fitted panel clamped to the Duo window
+        else { sw = Math.min(720, s.w - 48); shh = Math.min(idealSheetHeight(n), s.h - 56); }        // proposed: fitted, 720 × ideal(n)
+        sheet.classList.add('centered');
+        sheet.style.left = ((s.w - sw) / 2) + 'px'; sheet.style.right = ((s.w - sw) / 2) + 'px';
+        sheet.style.top = ((s.h - shh) / 2) + 'px'; sheet.style.bottom = ((s.h - shh) / 2) + 'px';
+      } else {
+        sheet.classList.remove('centered');
+        sheet.style.left = '0'; sheet.style.right = '0'; sheet.style.bottom = '0';
+        sheet.style.top = (s.frame === 'phone' ? 44 : Math.max(10, s.safeTop - 8)) + 'px';
+      }
+    }
+    var note = f.closest('.col').querySelector('.note');
+    if (note) note.innerHTML = NOTES[kind][shape];
+  }
+
+  // Keep the focused row in view (you tapped it, so you scrolled to it). In the proposed sheet the
+  // app does this itself with ScrollViewReader.scrollTo when focus changes.
+  function scrollFocused(f) {
+    var list = f.querySelector('.sheet .list'); if (!list) return;
+    var row = list.querySelector('.entry.focused'); if (!row) return;
+    var go = function () {
+      var top = row.offsetTop, bottom = top + row.offsetHeight;
+      if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight + 10;
+      else if (top < list.scrollTop) list.scrollTop = Math.max(0, top - 10);
+    };
+    go(); setTimeout(go, 300);
+  }
+
+  function layout() {
+    document.querySelectorAll('.pair').forEach(function (pair) {
+      var cols = pair.querySelectorAll('.col');
+      var colW = cols[0].clientWidth;
+      cols.forEach(function (col) {
+        var f = col.querySelector('.frame'); if (!f) return;
+        var outerW = parseFloat(f.style.width), outerH = parseFloat(f.style.height);
+        var scale = Math.min(0.78, colW / outerW);
+        f.style.transform = 'scale(' + scale + ')';
+        col.querySelector('.stage').style.height = Math.ceil(outerH * scale) + 'px';
+      });
+    });
+  }
+
+  function applyShape() {
+    document.getElementById('shape-note').innerHTML = SHAPES[shape].note;
+    frames.forEach(function (f) { styleFrame(f); scrollFocused(f); });
+    layout();
+  }
+  function rebuildAll() {
+    document.getElementById('count-note').innerHTML = COUNT_NOTES[count];
+    frames.forEach(function (f) { f._state = freshState(); renderFrame(f); });
+    applyShape();
+  }
+
+  document.getElementById('shapes').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    shape = b.getAttribute('data-shape');
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    applyShape();
+  });
+  document.getElementById('counts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    count = parseInt(b.getAttribute('data-count'), 10);
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    rebuildAll();
+  });
+  document.getElementById('rm').addEventListener('change', function () {
+    document.body.classList.toggle('reduce-motion', this.checked);
+  });
+  window.addEventListener('resize', layout);
+
+  // Interactions inside the proposed sheet: focus a row, pick who ended the round.
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('.sheet.after .entry'), chip = e.target.closest('.sheet.after .chip');
+    if (!row && !chip) return;
+    var f = (row || chip).closest('.frame'), st = f._state;
+    if (row) st.focused = parseInt(row.getAttribute('data-p'), 10);
+    if (chip) st.ended = parseInt(chip.getAttribute('data-p'), 10);
+    var list = f.querySelector('.sheet .list'), keep = list ? list.scrollTop : 0;
+    renderFrame(f); styleFrame(f);
+    var nl = f.querySelector('.sheet .list'); if (nl) nl.scrollTop = keep;
+    scrollFocused(f);
+  });
+
+  var q = /[?&]shape=(phone|duo|ipadV|ipad|mac)/.exec(location.search);
+  if (q) { shape = q[1]; document.querySelectorAll('#shapes button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-shape') === shape ? 'true' : 'false'); }); }
+  var qc = /[?&]players=(2|4|8)/.exec(location.search);
+  if (qc) { count = parseInt(qc[1], 10); document.querySelectorAll('#counts button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-count') === qc[1] ? 'true' : 'false'); }); }
+  rebuildAll();
+})();
+</script>
+</body>
+</html>

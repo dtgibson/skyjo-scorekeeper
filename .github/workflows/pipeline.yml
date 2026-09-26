@@ -8,7 +8,9 @@ on:
 
 jobs:
   quality:
-    runs-on: macos-15
+    # Xcode 27 image (its default Xcode is 27.x, so no xcode-select pin).
+    # If this preview image proves flaky, fall back to macos-26.
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v5
 
@@ -17,7 +19,7 @@ jobs:
           xcodebuild test \
             -project SkyjoScorekeeper/SkyjoScorekeeper.xcodeproj \
             -scheme SkyjoScorekeeper \
-            -destination "platform=iOS Simulator,OS=latest,name=iPhone 16" \
+            -destination "platform=iOS Simulator,OS=latest,name=iPhone 17" \
             -resultBundlePath TestResults \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

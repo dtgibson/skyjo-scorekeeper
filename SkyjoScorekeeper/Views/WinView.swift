@@ -4,13 +4,21 @@ struct WinView: View {
     let session: GameSession
     let onNewGame: ([Player]?) -> Void
 
+    @State private var layoutMode: LayoutMode = .tall
+
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     @ScaledMetric(relativeTo: .title) private var headlineFontSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .title2) private var compactHeadlineFontSize: CGFloat = 24
 
     private var activeBrand: Color {
         colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
     }
+
+    /// Short or wide windows (iPhone Duo, iPad landscape, iPhone Mirroring pulled
+    /// short) get a one-line header and paired actions, so the standings keep
+    /// the middle of the screen.
+    private var isCompact: Bool { layoutMode != .tall }
 
     var body: some View {
         ZStack {
@@ -18,7 +26,7 @@ struct WinView: View {
 
             VStack(spacing: 0) {
                 heroSection
-                    .padding(.bottom, 24)
+                    .padding(.bottom, isCompact ? 12 : 24)
 
                 ScrollView {
                     rankingsCard
@@ -34,6 +42,7 @@ struct WinView: View {
                     .frame(maxWidth: Theme.contentMaxWidth)
                     .frame(maxWidth: .infinity)
             }
+            .onAvailableSize(update: $layoutMode, LayoutMode.init(size:))
         }
         .onAppear {
             AccessibilityNotification.Announcement(winnerHeadline).post()
@@ -43,6 +52,25 @@ struct WinView: View {
     // MARK: - Hero
 
     private var heroSection: some View {
+        Group {
+            if isCompact {
+                compactHero
+            } else {
+                tallHero
+            }
+        }
+        .frame(maxWidth: Theme.contentMaxWidth)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [activeBrand.opacity(0.07), Color(.systemGroupedBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+
+    private var tallHero: some View {
         VStack(spacing: 8) {
             Spacer().frame(height: 52)
 
@@ -62,24 +90,46 @@ struct WinView: View {
                 .multilineTextAlignment(.center)
 
             if session.wasTieBroken {
-                Text("Tie broken by the lower final round.")
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(.secondary)
+                tieBrokenNote
                     .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
-        .frame(maxWidth: Theme.contentMaxWidth)
-        .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(
-                colors: [activeBrand.opacity(0.07), Color(.systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+    }
+
+    private var compactHero: some View {
+        HStack(spacing: 14) {
+            Text(winnerEmoji)
+                .font(.system(size: 40))
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(winnerHeadline)
+                    .font(.system(size: compactHeadlineFontSize, weight: .heavy, design: .rounded))
+                    .foregroundStyle(activeBrand)
+                    .tracking(-0.5)
+
+                Text(winnerSubtitle)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                if session.wasTieBroken {
+                    tieBrokenNote
+                }
+            }
+            .multilineTextAlignment(.leading)
+        }
+        .padding(.top, 16)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
+    }
+
+    private var tieBrokenNote: some View {
+        Text("Tie broken by the lower final round.")
+            .font(.system(.footnote, design: .rounded))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Rankings
@@ -115,7 +165,23 @@ struct WinView: View {
 
     // MARK: - Action buttons
 
+    @ViewBuilder
     private var actionButtons: some View {
+        if isCompact {
+            // Side by side on one line. In a narrow window the decorative icon
+            // is dropped first; if a long language or large text still can't
+            // fit, the actions stack rather than wrap inside the row.
+            ViewThatFits(in: .horizontal) {
+                pairedActions(showsIcon: true)
+                pairedActions(showsIcon: false)
+                stackedActions
+            }
+        } else {
+            stackedActions
+        }
+    }
+
+    private var stackedActions: some View {
         VStack(spacing: 10) {
             Button {
                 onNewGame(session.players)
@@ -123,7 +189,7 @@ struct WinView: View {
                 Label("New Game — Same Players", systemImage: "arrow.clockwise")
                     .font(.system(.headline, design: .rounded))
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 58)
+                    .frame(minHeight: isCompact ? 52 : 58)
             }
             .buttonStyle(PrimaryButtonStyle(isEnabled: true))
 
@@ -135,6 +201,44 @@ struct WinView: View {
                     .foregroundStyle(activeBrand)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func pairedActions(showsIcon: Bool) -> some View {
+        HStack(spacing: 10) {
+            Button {
+                onNewGame(session.players)
+            } label: {
+                Group {
+                    if showsIcon {
+                        Label("New Game — Same Players", systemImage: "arrow.clockwise")
+                    } else {
+                        Text("New Game — Same Players")
+                    }
+                }
+                .font(.system(.headline, design: .rounded))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+            }
+            .buttonStyle(PrimaryButtonStyle(isEnabled: true))
+
+            Button {
+                onNewGame(nil)
+            } label: {
+                Text("Start Fresh")
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(activeBrand)
+                    .lineLimit(1)
+                    .padding(.horizontal, 18)
+                    .frame(minHeight: 52)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(activeBrand.opacity(0.10))
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
         }

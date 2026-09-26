@@ -1,33 +1,41 @@
-# Handoff — App Refinement (Complete)
+# Handoff — iOS 27 Platform Readiness (Paused)
 
 ## What We Accomplished
 
-A comprehensive app review (four parallel reviewers across accessibility, UX,
-code quality, and robustness) found the app solid, then we shipped four
-refinement bundles: clearer first-time guidance (inline rule helper, scoreboard
-caption, removed the misleading "No one" chip, tie-break explanation); quick
-fixes (stale-negative numpad bug, amber/red danger cues, 44pt remove target,
-save-file version field, restore safety net); a live doubling preview; and
-deeper VoiceOver (announcements, running numpad value, a sturdier label, and a
-unified doubling rule). All 10 new strings were translated into the 35 supported
-languages. Shipped to `main`, CI green, ships as 1.5 (build 9).
+We scoped and designed a readiness pass so Skyjo Scorekeeper ships on Xcode 27 /
+iOS 27 and works well on iPhone Duo, iPhone Mirroring, and iPad in both
+orientations. The Evaluator confirmed the requirements (iOS 27 SDK required from
+April 2027; iPhone Duo is real and ships Oct 23 with iOS 27.1; iOS 27 makes iPhone
+apps resizable). The Designer's refinement was approved after three rounds with you:
+system toolbar and grabber, and the entry sheet, win screen, and setup reflowing by
+available space. Horizontal iPad and Duo share the side-by-side entry sheet, and the
+layouts hold up with 2 to 8 players. The app icon stays as it is for now.
 
 ## What Has Been Saved
 
-- `pipeline/app-refinement/findings.md` — the full review
-- `pipeline/app-refinement/change-brief.md`, `qa-report.md`, `security-report.md`
-- Source: `ScoreEntrySheet`, `ScoringView`, `WinView`, `PlayerRowView`,
-  `GameSession`, `GameSessionSnapshot`, `SkyjoScorekeeperApp`
-- `SkyjoScorekeeper/Localizable.xcstrings` — 10 new strings × 35 locales
-- Tests: `GameSessionTests`, `SessionPersistenceTests` (16 new)
-- `PRODUCT_CONTEXT.md`, `DECISIONS.md`, `CLAUDE.md` — updated
-- Commit `19930e1` (feature) plus the context-update commit
+- `pipeline/project.json` (created this session)
+- `pipeline/ios-27-platform-readiness/change-brief.md`
+- `pipeline/ios-27-platform-readiness/platform-research.md`
+- `pipeline/ios-27-platform-readiness/design-refinement.md`
+- `pipeline/ios-27-platform-readiness/design.html`
 
 ## Where We Are
 
-Improvement complete. All six stages done, shipped, and chronicled.
+Stage 2 of 7 (The Designer) is complete and approved. Paused at the handoff to
+The Engineer (Stage 3). No code has been written yet.
 
 ## Resume Prompt
 
-To start the next thing: run `/weft` in a Claude Code session in this project.
-It reads saved state and picks up fresh.
+To resume this session: run `/weft` in a Claude Code session in
+this project. It reads saved state and picks up exactly here. (The
+prompt below is an explicit fallback if you want to paste it.)
+
+---
+
+Resume the Weft Improve build `ios-27-platform-readiness` for project
+skyjo-scorekeeper (design-pass shape, 7 steps). Last completed stage: 2 (The
+Designer, approved). Next: Stage 3, The Engineer, building
+`design-refinement.md` + `design.html` against `change-brief.md`. Execution mode:
+Studio Style (user participates only in the Designer), so Engineer, Tester, and
+Auditor run hands-off and the deploy sign-off is gated. Load
+`pipeline/session-state.json` first.

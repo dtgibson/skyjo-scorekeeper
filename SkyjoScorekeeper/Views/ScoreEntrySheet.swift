@@ -4,10 +4,29 @@ struct ScoreEntrySheet: View {
     @ObservedObject var session: GameSession
     let onCommit: ([UUID: Int], UUID?) -> Void
 
+    // Entry state lives here, not inside the mode-specific layouts, so it
+    // survives a live switch between stacked and side-by-side.
     @State private var rawInputs: [UUID: String] = [:]
     @State private var negativeInputs: [UUID: Bool] = [:]
     @State private var skyjoPlayerID: UUID? = nil
     @State private var focusedPlayer: UUID?
+    @State private var layoutMode: LayoutMode = .tall
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// Ideal width of the fitted panel (iOS 18+, regular width).
+    static let fittedPanelWidth: CGFloat = 720
+    /// Width of the "who ended" / numpad / Confirm column in the side-by-side layout.
+    private static let controlColumnWidth: CGFloat = 284
+
+    /// Ideal height of the fitted panel: the numpad column (344pt) plus the
+    /// "who ended" chips block, two chips per row. 430 / 480 / 530 / 580pt for
+    /// 2 / 4 / 6 / 8 players. The system clamps it to the window.
+    static func fittedPanelHeight(playerCount: Int) -> CGFloat {
+        let chipRows = CGFloat((max(playerCount, 1) + 1) / 2)
+        let chipsBlock = 42 + 44 * chipRows + 6 * (chipRows - 1)
+        return 344 + chipsBlock
+    }
 
     private var entries: [UUID: Int] {
         Dictionary(uniqueKeysWithValues: session.players.compactMap { player in
@@ -31,19 +50,37 @@ struct ScoreEntrySheet: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            handle
+        Group {
+            switch layoutMode {
+            case .tall, .short: stackedLayout
+            case .wide: sideBySideLayout
+            }
+        }
+        .onAvailableSize(update: $layoutMode, LayoutMode.init(size:))
+        .background(Color(.systemGroupedBackground))
+        .onAppear { focusedPlayer = session.players.first?.id }
+    }
 
-            ScrollView {
-                VStack(spacing: 20) {
-                    scoresSection
-                    skyjoSection
+    // MARK: - Stacked (tall, and tight when short)
+
+    private var isTight: Bool { layoutMode == .short }
+
+    private var stackedLayout: some View {
+        VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: isTight ? 12 : 20) {
+                        scoresSection
+                        skyjoSection(style: isTight ? .singleRow : .adaptiveGrid)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, isTight ? 18 : 22)
+                    .padding(.bottom, 16)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
-                .frame(maxWidth: Theme.contentMaxWidth)
-                .frame(maxWidth: .infinity)
+                .onAppear { scrollToFocusedRow(proxy, animated: false) }
+                .onChange(of: focusedPlayer) { _, _ in scrollToFocusedRow(proxy, animated: true) }
             }
 
             Divider()
@@ -54,23 +91,72 @@ struct ScoreEntrySheet: View {
 
             confirmButton
                 .padding(.horizontal, 16)
-                .padding(.bottom, 8)
+                .padding(.bottom, isTight ? 6 : 8)
                 .frame(maxWidth: Theme.contentMaxWidth)
                 .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
-        .onAppear { focusedPlayer = session.players.first?.id }
     }
 
-    // MARK: - Handle
+    // MARK: - Side by side (wide)
 
-    private var handle: some View {
-        RoundedRectangle(cornerRadius: 3)
-            .fill(Color(.tertiaryLabel))
-            .frame(width: 36, height: 5)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            .accessibilityHidden(true)
+    private var sideBySideLayout: some View {
+        HStack(spacing: 0) {
+            rowsColumn
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(2)
+
+            Divider()
+                .padding(.vertical, 12)
+
+            controlsColumn
+                .frame(width: Self.controlColumnWidth)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(1)
+        }
+    }
+
+    /// Player rows: centred when they fit, top-aligned and scrolling when they don't.
+    private var rowsColumn: some View {
+        ScrollViewReader { proxy in
+            ViewThatFits(in: .vertical) {
+                rowsColumnContent
+                ScrollView { rowsColumnContent }
+            }
+            .onAppear { scrollToFocusedRow(proxy, animated: false) }
+            .onChange(of: focusedPlayer) { _, _ in scrollToFocusedRow(proxy, animated: true) }
+        }
+    }
+
+    private var rowsColumnContent: some View {
+        scoresSection
+            .padding(EdgeInsets(top: 18, leading: 16, bottom: 14, trailing: 12))
+            .frame(maxWidth: Theme.contentMaxWidth)
+            .frame(maxWidth: .infinity)
+    }
+
+    /// "Who ended", numpad and Confirm. The chips take only the height they need
+    /// (scrolling only if they must); the numpad keys grow into what remains.
+    private var controlsColumn: some View {
+        VStack(spacing: 0) {
+            ViewThatFits(in: .vertical) {
+                skyjoSection(style: .twoColumnGrid)
+                ScrollView { skyjoSection(style: .twoColumnGrid) }
+                    .frame(minHeight: 96)
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 16)
+            .layoutPriority(1)
+
+            numpad
+
+            confirmButton
+                .padding(.leading, 12)
+                .padding(.trailing, 16)
+                .padding(.bottom, 6)
+        }
+        .padding(.top, 10)
     }
 
     // MARK: - Scores
@@ -95,6 +181,7 @@ struct ScoreEntrySheet: View {
                         isFocused: focusedPlayer == player.id,
                         onTap: { focusedPlayer = player.id }
                     )
+                    .id(player.id)
                     if index < session.players.count - 1 {
                         Divider().padding(.leading, 64)
                     }
@@ -108,8 +195,17 @@ struct ScoreEntrySheet: View {
 
     // MARK: - Skyjo question
 
-    private var skyjoSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private enum ChipStyle {
+        /// Tall: adaptive grid with the helper line.
+        case adaptiveGrid
+        /// Tight: one row, scrolling sideways when the chips don't fit.
+        case singleRow
+        /// Side by side: two fixed columns.
+        case twoColumnGrid
+    }
+
+    private func skyjoSection(style: ChipStyle) -> some View {
+        VStack(alignment: .leading, spacing: style == .adaptiveGrid ? 8 : 6) {
             Text("WHO ENDED THE ROUND?")
                 .font(.system(.footnote, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -117,26 +213,59 @@ struct ScoreEntrySheet: View {
                 .padding(.horizontal, 6)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("The first player to turn over their last card. Their score this round doubles if it isn't the lowest.")
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 6)
+            if style == .adaptiveGrid {
+                Text("The first player to turn over their last card. Their score this round doubles if it isn't the lowest.")
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 6)
+            }
 
+            chips(style: style)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+        }
+    }
+
+    @ViewBuilder
+    private func chips(style: ChipStyle) -> some View {
+        switch style {
+        case .adaptiveGrid:
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 8)], spacing: 8) {
-                ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
-                    SkyjoChip(
-                        player: player,
-                        colorIndex: index,
-                        isSelected: skyjoPlayerID == player.id,
-                        onTap: { skyjoPlayerID = player.id }
-                    )
-                }
+                chipButtons
             }
             .padding(12)
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+        case .singleRow:
+            // Chips share the width when they fit; otherwise the row scrolls.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { chipButtons }
+                    .padding(8)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) { chipButtons }
+                        .padding(8)
+                }
+                .scrollIndicators(.hidden)
+            }
+        case .twoColumnGrid:
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)],
+                spacing: 6
+            ) {
+                chipButtons
+            }
+            .padding(8)
+        }
+    }
+
+    private var chipButtons: some View {
+        ForEach(Array(session.players.enumerated()), id: \.element.id) { index, player in
+            SkyjoChip(
+                player: player,
+                colorIndex: index,
+                isSelected: skyjoPlayerID == player.id,
+                onTap: { skyjoPlayerID = player.id }
+            )
         }
     }
 
@@ -153,9 +282,21 @@ struct ScoreEntrySheet: View {
             numpadRow([.digit(1), .digit(2), .digit(3)])
             numpadRow([.toggle, .digit(0), .backspace])
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(numpadInsets)
     }
+
+    private var numpadInsets: EdgeInsets {
+        switch layoutMode {
+        case .tall: EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
+        case .short: EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
+        case .wide: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 16)
+        }
+    }
+
+    /// Keys are 54pt tall stacked, 44pt in the tight stack, and grow from 44pt
+    /// to fill the side-by-side column. Always at least 44pt (touch target).
+    private var keyMinHeight: CGFloat { layoutMode == .tall ? 54 : 44 }
+    private var keyMaxHeight: CGFloat? { layoutMode == .wide ? 72 : nil }
 
     private func numpadRow(_ keys: [NumpadKey]) -> some View {
         HStack(spacing: 4) {
@@ -186,12 +327,7 @@ struct ScoreEntrySheet: View {
             }
             announceCurrentValue(for: id)
         } label: {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(key == .toggle && isNegActive
-                          ? Color(.systemRed).opacity(0.12)
-                          : Color(.secondarySystemFill))
-
+            Group {
                 switch key {
                 case .digit(let n):
                     Text("\(n)")
@@ -208,9 +344,16 @@ struct ScoreEntrySheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 54)
+            .frame(minHeight: keyMinHeight, maxHeight: keyMaxHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(key == .toggle && isNegActive
+                          ? Color(.systemRed).opacity(0.12)
+                          : Color(.secondarySystemFill))
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 10))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(NumpadKeyStyle())
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.35)
         .accessibilityLabel(numpadKeyLabel(key, isNegActive: isNegActive))
@@ -235,13 +378,36 @@ struct ScoreEntrySheet: View {
             Text("Confirm Round \(session.currentRoundNumber)")
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 58)
+                .frame(minHeight: confirmMinHeight)
         }
         .buttonStyle(PrimaryButtonStyle(isEnabled: canConfirm))
         .disabled(!canConfirm)
+        // Keep its full height when large text wraps it to two lines, so the
+        // chips above scroll instead of pushing Confirm out of the panel.
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var confirmMinHeight: CGFloat {
+        switch layoutMode {
+        case .tall: 58
+        case .short: 50
+        case .wide: 52
+        }
     }
 
     // MARK: - Helpers
+
+    /// Keep the row being typed into in view after a tap (or a layout switch).
+    private func scrollToFocusedRow(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let id = focusedPlayer else { return }
+        if animated && !reduceMotion {
+            withAnimation(.easeOut(duration: 0.24)) {
+                proxy.scrollTo(id, anchor: .center)
+            }
+        } else {
+            proxy.scrollTo(id, anchor: .center)
+        }
+    }
 
     /// Speak the focused player's running score after a numpad press, so a
     /// VoiceOver user hears the value building up (like a calculator).
@@ -260,6 +426,40 @@ struct ScoreEntrySheet: View {
             GameSession.isDoubled(raw: raw, minOther: minOther)
         else { return nil }
         return raw * 2
+    }
+}
+
+// MARK: - Presentation sizing
+
+extension View {
+    /// In a regular-width window (iPad, iPhone Duo open) on iOS 18+, present the
+    /// entry sheet as a centred panel sized to its content: 720pt wide, with a
+    /// height that follows the player count. On iOS 17 the default form sheet is
+    /// kept (and the stacked layout applies). Compact width is unaffected.
+    @ViewBuilder
+    func fittedEntryPanel(playerCount: Int) -> some View {
+        if #available(iOS 18, *) {
+            frame(
+                idealWidth: ScoreEntrySheet.fittedPanelWidth,
+                idealHeight: ScoreEntrySheet.fittedPanelHeight(playerCount: playerCount)
+            )
+            .presentationSizing(.fitted)
+        } else {
+            self
+        }
+    }
+}
+
+// MARK: - Numpad key style
+
+private struct NumpadKeyStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.09), value: configuration.isPressed)
     }
 }
 

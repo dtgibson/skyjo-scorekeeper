@@ -40,3 +40,94 @@ enum Theme {
         return palette[index % palette.count].1
     }
 }
+
+// MARK: - Adaptive layout
+
+/// How a screen arranges itself, decided only by the space it is given.
+/// iOS 27 windows can be any shape (iPhone Duo, iPhone Mirroring, resizable
+/// iPad windows), so never branch on orientation, device idiom, or screen size.
+enum LayoutMode: Equatable {
+    /// Today's tall arrangement.
+    case tall
+    /// Too short for the tall arrangement, and too narrow to go side by side.
+    case short
+    /// Wide enough to go side by side, and either short or clearly wider than tall.
+    case wide
+
+    /// Below this height the tall layouts can no longer keep their content in view
+    /// (the stacked entry sheet needs this much to show two player rows).
+    static let shortHeight: CGFloat = 575
+    /// The narrowest width that fits a 284pt control column beside the player rows.
+    static let wideMinWidth: CGFloat = 560
+    /// Width ÷ height at or above which a space counts as clearly wider than tall.
+    static let wideAspectRatio: CGFloat = 1.2
+
+    init(size: CGSize) {
+        guard size.width > 0, size.height > 0 else {
+            self = .tall
+            return
+        }
+        let short = Self.isShort(height: size.height)
+        if size.width >= Self.wideMinWidth,
+           short || size.width / size.height >= Self.wideAspectRatio {
+            self = .wide
+        } else if short {
+            self = .short
+        } else {
+            self = .tall
+        }
+    }
+
+    /// True when the height alone is too short for the tall arrangement.
+    static func isShort(height: CGFloat) -> Bool {
+        height > 0 && height < shortHeight
+    }
+}
+
+extension View {
+    /// Fills the space this view is offered and keeps `value` in step with a value
+    /// derived from that space. The keyboard is ignored, so typing never reflows a
+    /// screen. The first reading applies instantly; later changes (a window being
+    /// resized) animate ease-out over 240ms, or apply instantly with Reduce Motion.
+    func onAvailableSize<Value: Equatable>(
+        update value: Binding<Value>,
+        _ derive: @escaping (CGSize) -> Value
+    ) -> some View {
+        modifier(AvailableSizeReader(value: value, derive: derive))
+    }
+}
+
+private struct AvailableSizeReader<Value: Equatable>: ViewModifier {
+    @Binding var value: Value
+    let derive: (CGSize) -> Value
+
+    @State private var hasMeasured = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            // Exactly the offered size, even when content overflows it (large
+            // Dynamic Type), so the reading is the container, never the content.
+            // Otherwise an overflowing layout could flip its own mode.
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .background {
+                // Measure inside the keyboard-ignoring region (the order of these
+                // two modifiers matters: measuring outside it reads the size the
+                // keyboard left over).
+                Color.clear
+                    .onGeometryChange(for: CGSize.self) { proxy in
+                        proxy.size
+                    } action: { size in
+                        guard size.width > 0, size.height > 0 else { return }
+                        let newValue = derive(size)
+                        if newValue != value {
+                            withAnimation(hasMeasured && !reduceMotion ? .easeOut(duration: 0.24) : nil) {
+                                value = newValue
+                            }
+                        }
+                        hasMeasured = true
+                    }
+                    .ignoresSafeArea(.keyboard)
+            }
+    }
+}

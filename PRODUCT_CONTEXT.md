@@ -44,12 +44,12 @@ The app's launch screen. Handles all pre-game configuration before a round of Sk
 The active game screens. Takes players from setup through scoring rounds to a winner, with full Skyjo rules enforcement.
 
 **What it does:**
-- Root navigation via `Route` enum in `SkyjoScorekeeperApp` — switches between setup and game without NavigationStack
-- **Scoring view**: shows standings sorted ascending (lowest score first), leader highlighted with green dot and tinted row background, round number in nav bar, "End Game" button (top-left, shows confirmation alert then returns to setup), Undo button (disabled on round 1), "Enter Round N Scores" primary button
-- **Score entry sheet**: bottom sheet (`.large` detent) with per-player score inputs, a custom calculator-style numpad (with an inline `+/−` sign toggle), and a Skyjo question section; "Confirm" button disabled until all scores entered and Skyjo question answered
+- Root navigation via `Route` enum in `SkyjoScorekeeperApp` — switches between setup and game; the scoreboard hosts a local NavigationStack only for its toolbar
+- **Scoring view**: shows standings sorted ascending (lowest score first), leader marked with a crown and tinted row background, and a system toolbar with "Round N" as the title, "End Game" (leading, shows confirmation alert then returns to setup) and Undo (trailing, disabled on round 1), plus an "Enter Round N Scores" primary button
+- **Score entry sheet**: system sheet with the system grabber (a side-by-side panel in wide windows) with per-player score inputs, a custom calculator-style numpad (with an inline `+/−` sign toggle), and a "who ended the round" section; "Confirm" button disabled until all scores entered and a round-ender chosen
 - **Doubling rule**: if a player calls Skyjo but doesn't have the lowest raw score, their score is doubled; a live "×2 → N" preview appears next to their name in the entry sheet
 - **Undo**: removes the most recent round from `GameSession.rounds`, restoring all totals to their previous state
-- **Game over**: triggered when any player's cumulative total reaches 100; transitions to win screen via `fullScreenCover`
+- **Game over**: triggered when any player's cumulative total reaches 100; the win screen appears in every open window and no further rounds can be scored
 - **Win screen**: hero section with winner name and emoji, final standings with 🥇🥈🥉 medals, red totals ≥ 100, two action buttons ("New Game — Same Players" and "Start Fresh")
 - **Tiebreaker**: when multiple players are tied for lowest total, the winner is the one with the lowest score in the final round; if still tied, all are declared co-winners
 
@@ -73,28 +73,9 @@ The active game screens. Takes players from setup through scoring rounds to a wi
 
 ---
 
-### iPad Layout (Completed 2026-05-16)
+### Adaptive Layout
 
-Adapts all four screens to display natively on iPad by constraining content to a maximum width and centering it. iPhone layout is unchanged.
-
-**What it does:**
-- All four screens (GameSetupView, ScoringView, ScoreEntrySheet, WinView) center their primary content within a 600pt maximum width column on iPad
-- On iPhone (screen width < 600pt), layout is pixel-identical to before — the constraint has no effect
-- iPad is now a supported device destination in the Xcode target (previously iPhone-only, which caused the app to run in scaled compatibility mode on iPad)
-
-**Files changed:**
-- `SkyjoScorekeeper/Theme.swift` — `Theme.contentMaxWidth: CGFloat = 600` added as the single source of truth
-- `SkyjoScorekeeper/Views/GameSetupView.swift` — player list and start button constrained
-- `SkyjoScorekeeper/Views/ScoringView.swift` — nav bar, standings card, enter button constrained
-- `SkyjoScorekeeper/Views/ScoreEntrySheet.swift` — scroll content and confirm button constrained
-- `SkyjoScorekeeper/Views/WinView.swift` — hero section, rankings card, action buttons constrained; winner row background opacity bumped 0.06 → 0.18
-
-**Pipeline artifacts:**
-- `pipeline/ipad-layout/strategic-brief.md`
-- `pipeline/ipad-layout/prd.md`
-- `pipeline/ipad-layout/schema.md`
-- `pipeline/ipad-layout/design-spec.md`
-- `pipeline/ipad-layout/design.html`
+The app runs natively on iPhone and iPad and works in any window shape — resizable iPad windows, iPhone Mirroring, and iPhone Duo's wide display — with each screen reflowing into a tall, short, or wide arrangement by the space it has (content capped at a centered 600pt column), and two open windows of the app staying in sync on the same game.
 
 ---
 
@@ -197,11 +178,11 @@ Two players with names starting with the same letter get different colors becaus
 ### iOS 17.0 minimum deployment target
 Set explicitly in Xcode for both the app target and the test target. The project was originally created on a machine running macOS 26.x which auto-set deployment targets to the host OS version — this caused CI failures until corrected.
 
-### CI uses default Xcode on macos-15, not a pinned version
-Pinning to any specific Xcode version is fragile. Xcode 16.2 was originally pinned; it was removed during the accessibility session when `LastUpgradeCheck = 2650` (from the user's local Xcode 26.5) caused actool to fail with Xcode 16.2. The workflow uses `runs-on: macos-15` with no `xcode-select` override. Never add a pinned version back without updating it to match the user's local Xcode.
+### CI uses the default Xcode on the xcode-27 runner, not a pinned version
+CI builds with the Xcode and SDK the app ships with (the App Store requires the iOS 27 SDK from April 2027). The workflow uses `runs-on: xcode-27`, whose default Xcode is 27, with no `xcode-select` override; `macos-26` is the fallback if that preview image is flaky. Pinning a specific Xcode is fragile — an earlier Xcode 16.2 pin made actool fail once the project was saved by a newer local Xcode.
 
 ### CI test destination uses a named simulator, not UDID
-The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 16"`. An earlier UDID-lookup approach (`xcrun simctl list | grep iPhone`) was unreliable — macos-15 runners don't pre-list simulators as "available" without a boot step. The named destination with `OS=latest` resolves correctly with whatever iOS version is installed on the runner.
+The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 17"`. An earlier UDID-lookup approach (`xcrun simctl list | grep iPhone`) was unreliable — hosted runners don't pre-list simulators as "available" without a boot step. The named destination with `OS=latest` resolves to whatever iOS version the runner image has; the name must be one that image ships.
 
 ### "Designed for iPhone" Mac destination is not viable in CI
 Attempted as a workaround during the accessibility session. It fails with actool when the iphonesimulator SDK version bundled with Xcode doesn't match the available simulator runtimes on the runner. iOS Simulator destination with code signing disabled (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`) is the correct approach.
@@ -210,7 +191,7 @@ Attempted as a workaround during the accessibility session. It fails with actool
 ~~No data persistence~~ — superseded by Session Persistence (2026-05-24). Active game state (players + all rounds) is written to `ApplicationSupport/active-game.json` after every round mutation. The file is cleared when a game ends or a new game starts. Historical scores and match history are not stored — only the current in-progress game. The snapshot carries an optional `schemaVersion` (current: 1, added 2026-06-06) so a future model change can migrate old files instead of silently discarding an in-progress game; legacy files without the key decode as `nil`. On launch the restored game is re-checked for game-over and falls back to setup if somehow already finished.
 
 ### Root navigation uses a Route enum, not NavigationStack
-`SkyjoScorekeeperApp` owns a `@State private var route: Route` with cases `.setup` and `.game`. Switching routes replaces the entire view tree. This avoids NavigationStack complexity for an app with only two top-level screens.
+`SkyjoScorekeeperApp` owns a `@State private var route: Route` with cases `.setup` and `.game`. Switching routes replaces the entire view tree. This avoids NavigationStack complexity for an app with only two top-level screens. The scoreboard wraps itself in a local NavigationStack only to host its system toolbar; it never pushes screens.
 
 ### Doubling rule: applies when Skyjo caller's score is >= minimum of other players
 If the player who called Skyjo scores the same as the lowest other player (a tie), they ARE doubled — only strictly less than all others escapes doubling. The rule now lives in one place — `GameSession.isDoubled(raw:minOther:)` (`raw > 0 && raw >= minOther`) — used by both `commitRound` and the live entry-sheet preview so they cannot drift (unified 2026-06-06). An earlier implementation used `raw > minRaw` (including the caller in the minimum), which incorrectly let ties escape — this was corrected.
@@ -218,8 +199,8 @@ If the player who called Skyjo scores the same as the lowest other player (a tie
 ### A round-ender must always be selected before confirming a round
 ~~Skyjo question must be answered (player or "Nobody")~~ — refined 2026-06-06. The confirm button in `ScoreEntrySheet` now requires a specific player to be selected as the round-ender (`skyjoPlayerID != nil`). The "No one"/"Nobody" chip was removed: in Skyjo a round always ends when a player turns over their last card, so there is always an ender. A helper line under "Who ended the round?" explains who the ender is and the doubling rule.
 
-### iPad layout uses a single contentMaxWidth constant and the two-frame idiom
-All four screens reference `Theme.contentMaxWidth` (600pt) — no view hardcodes a width. The SwiftUI pattern for constrained+centered content is the two-frame idiom: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`. The inner frame caps width; the outer frame centers it. New views that have primary content should follow this pattern for iPad compatibility.
+### Layout adapts by available space, with a single contentMaxWidth cap
+All four screens reference `Theme.contentMaxWidth` (600pt) — no view hardcodes a width. The SwiftUI pattern for constrained+centered content is the two-frame idiom: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`. The inner frame caps width; the outer frame centers it. Each screen's arrangement (tall, short, or wide) comes from `LayoutMode`, read through `onAvailableSize` — never orientation, device idiom, or size class — because iOS 27 windows can be any shape. New views that have primary content should follow both patterns.
 
 ### iPad is a supported device destination
 The Xcode target was updated to include iPad alongside iPhone. The app was previously "Designed for iPhone" only, which caused it to run in scaled compatibility mode on iPad. All new screens must work correctly on both device families.

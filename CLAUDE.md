@@ -19,11 +19,19 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - Import `Combine` in any file that uses `ObservableObject`
 - The doubling rule has one home: `GameSession.isDoubled(raw:minOther:)`. Views (e.g. the live entry preview) must call it, never reimplement it
 - Score thresholds are named: `GameSession.bustThreshold` (100) and `dangerThreshold` (85), surfaced via `GameSession.scoreStatus(for:)`. Never hardcode 85/100
+- All open windows share one `GameSession`. Anything every window must agree on (win screen, open sheets) derives from session state such as `session.isGameOver`, never a per-view flag. Rules for a finished game live in the model (`commitRound` ignores rounds after game over), not only in the UI
 
-### iPad layout
+### Layout (iPhone, iPad, any window size)
 - `Theme.contentMaxWidth` (600pt) is the single width ceiling — never hardcode a max width per-view
 - Use the two-frame idiom for primary content regions: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`
 - The app supports both iPhone and iPad — new views must apply this pattern
+- Screens adapt only by the space they are offered: derive a `LayoutMode` (`.tall` / `.short` / `.wide`) with `.onAvailableSize(update:_:)` in `Theme.swift`. It is the single home for the thresholds (575pt short, 560pt wide, 1.2 ratio) — never hardcode them, and never branch on orientation, device idiom, `UIScreen`, or size class
+- Use `onAvailableSize` rather than a hand-rolled `GeometryReader`: it takes exactly the offered space and measures inside `.ignoresSafeArea(.keyboard)`, so large text and the keyboard can't flip the layout. Keep view state above the mode-specific subviews so a live resize keeps what's been typed
+
+### Navigation and toolbars
+- Root navigation is the `Route` enum in `SkyjoScorekeeperApp`. A screen may wrap itself in a local `NavigationStack` only to host a system toolbar — never to push screens
+- A toolbar button with a title uses an `HStack` of symbol + `Text` (symbol `.accessibilityHidden(true)`) — iOS 27 drops the title of a toolbar `Label` even with `.labelStyle(.titleAndIcon)`
+- `AccentColor` in the asset catalog is empty, so system-tinted controls don't pick up the brand — tint them explicitly with `Theme.brand` / `Theme.brandHighContrast`
 
 ### Styling
 - Brand color: `Theme.brand` (indigo #3730A3); HC variant: `Theme.brandHighContrast`
@@ -59,7 +67,7 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - `GameSessionSnapshot.schemaVersion` is an optional `Int` (current: `GameSessionSnapshot.currentVersion`) — keep it optional so pre-versioning files decode as `nil`. When the persisted model changes, bump `currentVersion` and branch on it to migrate
 
 ### CI/CD
-- Runner: `macos-15`, no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode
-- Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 16` — named simulator, not UDID lookup
+- Runner: `xcode-27` (its default Xcode is 27), no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode. CI must build with the Xcode the app ships with; if the preview image is flaky, fall back to `macos-26`
+- Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 17` — named simulator, not UDID lookup
 - Code signing: disabled for simulator tests (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`)
 - Workflow file: `.github/workflows/pipeline.yml`

@@ -5,6 +5,38 @@ Maintained by The Chronicler.
 
 ---
 
+## iOS 27 Platform Readiness — 2026-09-26
+
+**Decision:** CI moves from `runs-on: macos-15` to `runs-on: xcode-27` (image default Xcode 27, still no `xcode-select` pin), and the test simulator from "iPhone 16" to "iPhone 17". This **modifies** the earlier "default Xcode on macos-15, no pin" decision. `macos-26` is the documented fallback if the preview image is flaky.
+**Rationale:** The App Store requires the iOS 27 SDK from April 2027, and CI was still building with Xcode 16.4, so it wasn't testing what the app ships with. The no-pin rule stands: pins break when the project is saved by a newer Xcode. "iPhone 17" exists on every candidate image.
+**Implications:** When Apple's next SDK requirement lands, move the runner label to that Xcode's image rather than adding a pin. Keep the simulator name to one that image ships.
+
+---
+
+**Decision:** Screens adapt by the space their window offers — tall, short, or wide — through `LayoutMode` and `onAvailableSize` in `Theme.swift`, never by orientation, device idiom, or size class. This extends the iPad `contentMaxWidth` two-frame idiom (kept) from width to height and shape.
+**Rationale:** iOS 27 makes iPhone apps resizable and ignores the portrait lock in resizable settings, iPhone Duo's inner display ignores orientation locks, and iPhone Mirroring can be dragged short. Orientation no longer predicts the space available.
+**Implications:** New or changed screens must stay usable from tall-narrow to short-wide. The thresholds (575pt, 560pt, 1.2) have one home. Standard iPhones keep the portrait lock: landscape iPhone was considered and left out to avoid accidental mid-round rotation, and can be revisited now the layouts support it.
+
+---
+
+**Decision:** Two open windows of the app share one game and stay in sync. The win screen and entry sheet are presented from shared session state (`session.isGameOver`), and `commitRound` ignores rounds after game over.
+**Rationale:** iPad and iPhone Duo allow two windows of one app. A per-window flag let one window show a finished game as still in play, and a second window's open sheet could score into a finished game.
+**Implications:** Cross-window agreement comes from the shared `GameSession`; finished-game rules are enforced in the model, not only the UI.
+
+---
+
+**Decision:** The scoreboard uses a system toolbar (End Game, Undo, "Round N" title) hosted by a local `NavigationStack`, and the entry sheet uses the system grabber. Root navigation stays the `Route` enum.
+**Rationale:** System chrome gets the iOS 27 Liquid Glass look and sizes to its words, where the custom bar wrapped at large text sizes. The local stack exists only to host the toolbar, so the reasons for the `Route` enum still hold.
+**Implications:** Never use the local stack to push screens. The iOS 17.0 deployment target is kept; newer APIs are gated with `#available`.
+
+---
+
+**Decision:** Out of scope, tracked in `ROADMAP.md`: the app icon (current asset-catalog icon kept, not rebuilt in Icon Composer), iPhone Duo fold avoidance with `ReservedRegion` (needs the iOS 27.1 SDK, which the App Store doesn't accept yet), widgets, Live Activities, App Intents, and Swift 6 language mode (not required; Swift 5 mode still supported).
+**Rationale:** This build was the minimum to ship on iOS 27 and work in any window shape; the rest is either blocked on a beta SDK or new-feature territory.
+**Implications:** Revisit `ReservedRegion` once Xcode 27.1 is final.
+
+---
+
 ## App Refinement — 2026-06-06
 
 A batch of refinements from a comprehensive app review (see `pipeline/app-refinement/findings.md`).

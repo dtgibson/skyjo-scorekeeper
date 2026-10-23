@@ -27,6 +27,8 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - The app supports both iPhone and iPad — new views must apply this pattern
 - Screens adapt only by the space they are offered: derive a `LayoutMode` (`.tall` / `.short` / `.wide`) with `.onAvailableSize(update:_:)` in `Theme.swift`. It is the single home for the thresholds (575pt short, 560pt wide, 1.2 ratio) — never hardcode them, and never branch on orientation, device idiom, `UIScreen`, or size class
 - Use `onAvailableSize` rather than a hand-rolled `GeometryReader`: it takes exactly the offered space and measures inside `.ignoresSafeArea(.keyboard)`, so large text and the keyboard can't flip the layout. Keep view state above the mode-specific subviews so a live resize keeps what's been typed
+- iPhone Duo's fold and camera are part of the space offered: `.onAvailableSpace(update:_:)` in `Theme.swift` reads them (`ReservedRegion` `.division` / `.occlusion`, gated `#available(iOS 27.1, *)`) into `AvailableSpace`, the single home for that logic. When a fold runs top to bottom through a screen, `space.pages` gives its two pages: lay them out with `HStack(spacing: pages.spacing)` and `.page(pages.leading)` / `.page(pages.trailing)` — list on the left page, heading and primary action on the right, nothing in the fold. A side-to-side fold (tabletop) keeps the tall layout; only overlays and the entry sheet use `upperPage` / `lowerPage`
+- Lists may cross the fold; controls may not. Never use `DeviceHinge` / `onHingeChange` or branch on pose — adapt to space and regions only
 
 ### Navigation and toolbars
 - Root navigation is the `Route` enum in `SkyjoScorekeeperApp`. A screen may wrap itself in a local `NavigationStack` only to host a system toolbar — never to push screens
@@ -67,7 +69,8 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - `GameSessionSnapshot.schemaVersion` is an optional `Int` (current: `GameSessionSnapshot.currentVersion`) — keep it optional so pre-versioning files decode as `nil`. When the persisted model changes, bump `currentVersion` and branch on it to migrate
 
 ### CI/CD
-- Runner: `xcode-27` (its default Xcode is 27), no Xcode version pinned — never add `xcode-select` pin; it breaks when pbxproj is saved by a newer Xcode. CI must build with the Xcode the app ships with; if the preview image is flaky, fall back to `macos-26`
-- Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 17` — named simulator, not UDID lookup
+- Runner: `xcode-27`; never add an `xcode-select` pin — it breaks when pbxproj is saved by a newer Xcode. CI must build with the Xcode the app ships with; if the preview image is flaky, fall back to `macos-26`
+- The app ships on Xcode 27.1 (`ReservedRegion` is 27.1-only) but the image defaults to 27.0, so the job sets `DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer`. Delete that line once the image's default Xcode reaches 27.1. Locally, `xcode-select` may point at the Command Line Tools: prefix `xcodebuild`/`xcrun` with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+- Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 17` — named simulator, not UDID lookup. Under Xcode 27.1 it resolves to iPhone 17 on iOS 27.0, the newest runtime with that device (the 27.1 runtime ships only iPhone Duo)
 - Code signing: disabled for simulator tests (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`)
 - Workflow file: `.github/workflows/pipeline.yml`

@@ -349,7 +349,9 @@ final class AdaptiveLayoutTests: XCTestCase {
     func testLayoutModeFollowsAvailableSpace() {
         XCTAssertEqual(LayoutMode(size: CGSize(width: 402, height: 778)), .tall, "iPhone, portrait")
         XCTAssertEqual(LayoutMode(size: CGSize(width: 393, height: 460)), .short, "iPhone Mirroring, pulled short")
-        XCTAssertEqual(LayoutMode(size: CGSize(width: 660, height: 504)), .wide, "iPhone Duo, open")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 951, height: 629)), .wide, "iPhone Duo, open")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 382, height: 644)), .tall, "iPhone Duo, closed (outer display)")
+        XCTAssertEqual(LayoutMode(size: CGSize(width: 669, height: 911)), .tall, "iPhone Duo, propped (tabletop)")
         XCTAssertEqual(LayoutMode(size: CGSize(width: 1180, height: 796)), .wide, "iPad, landscape")
         XCTAssertEqual(LayoutMode(size: CGSize(width: 820, height: 1136)), .tall, "iPad, portrait")
         XCTAssertEqual(LayoutMode(size: CGSize(width: 720, height: 580)), .wide, "fitted entry panel, 8 players")
@@ -363,6 +365,55 @@ final class AdaptiveLayoutTests: XCTestCase {
         XCTAssertEqual(LayoutMode(size: CGSize(width: 720, height: 600)), .wide, "aspect exactly 1.2")
         XCTAssertEqual(LayoutMode(size: CGSize(width: 719, height: 600)), .tall, "aspect just under 1.2")
         XCTAssertEqual(LayoutMode(size: .zero), .tall, "unmeasured space keeps the tall layout")
+    }
+
+    /// iPhone Duo open: a 24pt fold down the middle of a 951 × 629pt screen.
+    func testVerticalFoldSplitsSpaceIntoPages() {
+        let space = AvailableSpace(
+            size: CGSize(width: 951, height: 629),
+            divisions: [CGRect(x: 463.5, y: -20, width: 24, height: 669)]
+        )
+        XCTAssertEqual(space.division, .vertical(band: 463.5...487.5))
+        XCTAssertEqual(space.pages?.leading, CGRect(x: 0, y: 0, width: 463.5, height: 629))
+        XCTAssertEqual(space.pages?.trailing, CGRect(x: 487.5, y: 0, width: 463.5, height: 629))
+        XCTAssertEqual(space.pages?.spacing, 24)
+        XCTAssertNil(space.upperPage)
+
+        // A camera region reaching into a page's top half moves that page down;
+        // one inside the safe area (above the space) moves nothing.
+        let withCamera = AvailableSpace(
+            size: CGSize(width: 951, height: 629),
+            divisions: [CGRect(x: 463.5, y: 0, width: 24, height: 629)],
+            occlusions: [CGRect(x: 884, y: 9, width: 37, height: 37), CGRect(x: 400, y: -40, width: 37, height: 37)]
+        )
+        XCTAssertEqual(withCamera.pages?.trailing, CGRect(x: 487.5, y: 46, width: 463.5, height: 583))
+        XCTAssertEqual(withCamera.pages?.leading.minY, 0)
+    }
+
+    /// iPhone Duo propped: the fold runs side to side; screens keep their tall
+    /// layout and only the upper/lower pages are offered.
+    func testHorizontalFoldOffersUpperAndLowerPages() {
+        let space = AvailableSpace(
+            size: CGSize(width: 669, height: 911),
+            divisions: [CGRect(x: 0, y: 443.5, width: 669, height: 24)]
+        )
+        XCTAssertEqual(space.division, .horizontal(band: 443.5...467.5))
+        XCTAssertNil(space.pages)
+        XCTAssertEqual(space.upperPage, CGRect(x: 0, y: 0, width: 669, height: 443.5))
+        XCTAssertEqual(space.lowerPage, CGRect(x: 0, y: 467.5, width: 669, height: 443.5))
+    }
+
+    func testFoldOutsideOrAtTheEdgeLeavesSpaceUndivided() {
+        let size = CGSize(width: 463, height: 629)
+        XCTAssertNil(AvailableSpace(size: size).division, "closed, standard iPhones, iPad")
+        XCTAssertNil(
+            AvailableSpace(size: size, divisions: [CGRect(x: 463, y: 0, width: 24, height: 629)]).division,
+            "Split View window beside the fold"
+        )
+        XCTAssertNil(
+            AvailableSpace(size: size, divisions: [CGRect(x: 451, y: 0, width: 24, height: 629)]).division,
+            "fold overlapping the window's edge leaves no room on one side"
+        )
     }
 
     func testFittedEntryPanelHeightFollowsPlayerCount() {

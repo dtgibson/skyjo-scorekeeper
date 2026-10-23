@@ -8,9 +8,13 @@ on:
 
 jobs:
   quality:
-    # Xcode 27 image (its default Xcode is 27.x, so no xcode-select pin).
-    # If this preview image proves flaky, fall back to macos-26.
+    # Xcode 27 image. If this preview image proves flaky, fall back to macos-26.
     runs-on: xcode-27
+    env:
+      # The app ships on Xcode 27.1 (iPhone Duo's ReservedRegion API is 27.1-only),
+      # but this image still defaults to 27.0. Select 27.1 for this job only;
+      # delete this once the xcode-27 image's default Xcode is 27.1 or later.
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
     steps:
       - uses: actions/checkout@v5
 

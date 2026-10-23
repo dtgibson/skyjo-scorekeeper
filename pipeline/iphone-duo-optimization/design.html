@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyjo on iPhone Duo</title>
+<meta name="description" content="Fold-avoidance refinement of Skyjo Scorekeeper's existing screens for iPhone Duo: open, tabletop and closed, today versus proposed.">
+<style>
+/* ---------- Page tokens (indigo-tinted neutrals, same as the iOS 27 mockup) ---------- */
+:root {
+  --page-bg: #F4F4FB;
+  --page-bg-2: #E9E9F7;
+  --page-ink: #1B1A33;
+  --page-muted: #5E5C7A;
+  --page-line: #DCDBEE;
+  --page-card: #FFFFFF;
+  --brand: #3730A3;
+  --brand-hc: #2A2475;
+  --brand-soft: rgba(55, 48, 163, 0.10);
+  --shadow: rgba(27, 26, 51, 0.10);
+  --ok: #1F8A4C;
+  --bad: #C8322B;
+
+  /* iOS system semantics (light appearance inside the devices) */
+  --sys-grouped: #F2F2F7;
+  --sys-bg: #FFFFFF;
+  --label: #1C1C1E;
+  --label-2: rgba(60, 60, 67, 0.60);
+  --label-3: rgba(60, 60, 67, 0.30);
+  --separator: rgba(60, 60, 67, 0.29);
+  --fill-2: rgba(120, 120, 128, 0.16);
+  --fill-3: rgba(118, 118, 128, 0.12);
+  --green: #34C759;
+  --orange: #FF9500;
+  --red: #FF3B30;
+
+  /* Player palette — position-indexed (Okabe–Ito), Theme.playerColor(at:) */
+  --p0: #3730A3; --p1: #E69F00; --p2: #009E73; --p3: #D55E00; --p4: #0072B2; --p5: #CC79A7; --p6: #56B4E9; --p7: #F0E442;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 120ms;
+  --t-med: 240ms;
+  --font: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page-bg: #14132A; --page-bg-2: #1C1B36; --page-ink: #F1F0FA; --page-muted: #A5A3C2;
+    --page-line: #2B2A4A; --page-card: #1F1E3A; --shadow: rgba(0, 0, 20, 0.45); --ok: #5BD08A; --bad: #FF7B72;
+  }
+}
+:root[data-theme="dark"] {
+  --page-bg: #14132A; --page-bg-2: #1C1B36; --page-ink: #F1F0FA; --page-muted: #A5A3C2;
+  --page-line: #2B2A4A; --page-card: #1F1E3A; --shadow: rgba(0, 0, 20, 0.45); --ok: #5BD08A; --bad: #FF7B72;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font);
+  color: var(--page-ink);
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(55, 48, 163, 0.14), transparent 60%),
+    radial-gradient(800px 420px at 100% 0%, rgba(230, 159, 0, 0.08), transparent 55%),
+    linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-2) 100%);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 16px 96px; }
+
+/* ---------- Page typography ---------- */
+h1 { font-size: 34px; line-height: 1.1; letter-spacing: -0.6px; font-weight: 800; margin: 0 0 6px; }
+.lede { color: var(--page-muted); font-size: 17px; max-width: 760px; margin: 0 0 22px; }
+h2 { font-size: 24px; letter-spacing: -0.3px; font-weight: 800; margin: 0 0 4px; }
+.sub { color: var(--page-muted); font-size: 15px; margin: 0 0 16px; max-width: 760px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--brand); margin: 0 0 6px; }
+
+/* ---------- The idea, in three rules ---------- */
+.rules { margin: 0 0 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rule { background: var(--page-card); border: 1px solid var(--page-line); border-radius: 14px; padding: 14px 16px; font-size: 13.5px; color: var(--page-muted); box-shadow: 0 2px 10px var(--shadow); }
+.rule h4 { margin: 0 0 4px; font-size: 15px; color: var(--page-ink); }
+.rule .n { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; align-items: center; justify-content: center; margin-right: 8px; vertical-align: -5px; }
+
+/* ---------- Sticky controls ---------- */
+.controls {
+  position: sticky; top: 8px; z-index: 20;
+  display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+  padding: 10px 12px; margin: 0 0 14px;
+  background: color-mix(in srgb, var(--page-card) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--page-line); border-radius: 16px;
+  box-shadow: 0 8px 28px var(--shadow);
+}
+.seg { display: inline-flex; background: var(--brand-soft); border-radius: 12px; padding: 3px; gap: 2px; }
+.seg button {
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--page-ink);
+  background: transparent; border: 0; border-radius: 9px; padding: 7px 12px; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.seg button:hover { background: rgba(55, 48, 163, 0.10); }
+.seg button:active { transform: scale(0.97); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: #fff; box-shadow: 0 2px 8px rgba(55, 48, 163, 0.35); }
+.seg button:focus-visible, .toggle input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ctl-label { font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--page-muted); margin-right: 2px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle span.sw { width: 40px; height: 24px; border-radius: 12px; background: var(--page-line); position: relative; transition: background var(--t-fast) var(--ease); }
+.toggle span.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px var(--shadow); transition: transform var(--t-fast) var(--ease); }
+.toggle input:checked + span.sw { background: var(--brand); }
+.toggle input:checked + span.sw::after { transform: translateX(16px); }
+.pose-note { font-size: 13.5px; color: var(--page-muted); margin: 0 0 34px; display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+.pose-note strong { color: var(--page-ink); }
+.legend { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { display: inline-block; width: 22px; height: 12px; border-radius: 3px; }
+.legend i.fold-sw { background: linear-gradient(90deg, rgba(27,26,51,0.02), rgba(27,26,51,0.22), rgba(27,26,51,0.02)); border: 1px dashed rgba(55,48,163,0.5); }
+.legend i.cam-sw { width: 12px; height: 12px; border-radius: 50%; background: #0E0E1C; box-shadow: 0 0 0 2px rgba(55,48,163,0.45); }
+.legend i.hit-sw { border: 2px solid var(--bad); background: rgba(200, 50, 43, 0.12); }
+
+/* ---------- Surface sections ---------- */
+.surface { margin: 0 0 64px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+.pair.single { grid-template-columns: minmax(0, 720px); justify-content: center; }
+.pair.single .col.before { display: none; }
+@media (max-width: 860px) { .pair { grid-template-columns: 1fr; } }
+.col .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+.col.before .tag { background: rgba(94, 92, 122, 0.12); color: var(--page-muted); }
+.col.after .tag { background: var(--brand-soft); color: var(--brand); }
+.stage { position: relative; width: 100%; overflow: visible; }
+.frame { position: absolute; top: 0; left: 0; transform-origin: top left; }
+.verdict { display: inline-flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13px; font-weight: 600; padding: 5px 10px 5px 8px; border-radius: 999px; background: color-mix(in srgb, var(--page-card) 70%, transparent); border: 1px solid var(--page-line); }
+.verdict i { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: 0 0 auto; }
+.verdict.bad i { background: var(--bad); }
+.verdict.bad { color: var(--bad); }
+.verdict.good { color: var(--ok); }
+.note { font-size: 13.5px; color: var(--page-muted); margin: 10px 0 0; padding: 10px 12px; border-left: 3px solid var(--page-line); background: color-mix(in srgb, var(--page-card) 60%, transparent); border-radius: 0 10px 10px 0; }
+.col.after .note { border-left-color: var(--brand); }
+.note b { color: var(--page-ink); }
+.cond { display: inline-block; font-size: 12px; font-weight: 700; color: var(--orange); background: rgba(255, 149, 0, 0.12); border-radius: 999px; padding: 3px 9px; margin-left: 6px; vertical-align: 2px; }
+
+/* ---------- Device frame ---------- */
+.frame.duo { background: #16152B; border-radius: 34px; box-shadow: 0 18px 40px var(--shadow), inset 0 0 0 2px #3A3956; transition: width var(--t-med) var(--ease), height var(--t-med) var(--ease); }
+.frame.duo .screen { position: absolute; top: 8px; left: 8px; border-radius: 26px; overflow: hidden; background: var(--sys-grouped); font-family: var(--font); color: var(--label); font-size: 17px; line-height: 1.3; }
+.cam-occ { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #0E0E1C; z-index: 14; box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 0 0 0 4px rgba(55,48,163,0.45); }
+.status { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 28px 0 60px; font-size: 15px; font-weight: 600; z-index: 4; pointer-events: none; }
+.status .r { display: flex; gap: 5px; align-items: center; }
+.status .r i { display: block; width: 18px; height: 11px; border: 1.6px solid var(--label); border-radius: 3px; position: relative; opacity: .9; }
+.status .r i::after { content: ""; position: absolute; inset: 1.5px; background: var(--label); border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: var(--label); opacity: .85; z-index: 4; }
+
+/* The fold: ReservedRegion(.division), drawn over everything so you see what sits under it */
+.fold { position: absolute; z-index: 12; pointer-events: none; }
+.fold.v { top: 0; bottom: 0; background: linear-gradient(90deg, rgba(27,26,51,0.00), rgba(27,26,51,0.10) 30%, rgba(27,26,51,0.20) 50%, rgba(27,26,51,0.10) 70%, rgba(27,26,51,0.00)); border-left: 1px dashed rgba(55,48,163,0.45); border-right: 1px dashed rgba(55,48,163,0.45); }
+.fold.h { left: 0; right: 0; background: linear-gradient(180deg, rgba(27,26,51,0.00), rgba(27,26,51,0.10) 30%, rgba(27,26,51,0.20) 50%, rgba(27,26,51,0.10) 70%, rgba(27,26,51,0.00)); border-top: 1px dashed rgba(55,48,163,0.45); border-bottom: 1px dashed rgba(55,48,163,0.45); }
+.fold .lbl { position: absolute; font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; background: var(--brand); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.fold.v .lbl { top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+.fold.h .lbl { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.fold.hot { background: linear-gradient(90deg, rgba(200,50,43,0.00), rgba(200,50,43,0.16) 30%, rgba(200,50,43,0.30) 50%, rgba(200,50,43,0.16) 70%, rgba(200,50,43,0.00)); border-color: rgba(200,50,43,0.6); }
+.fold.h.hot { background: linear-gradient(180deg, rgba(200,50,43,0.00), rgba(200,50,43,0.16) 30%, rgba(200,50,43,0.30) 50%, rgba(200,50,43,0.16) 70%, rgba(200,50,43,0.00)); }
+.fold.hot .lbl { background: var(--bad); }
+
+/* Tappable areas (toggle) and the ones caught in the fold (always shown) */
+.show-hits [data-hit] { outline: 2px dashed rgba(55, 48, 163, 0.55); outline-offset: -2px; }
+[data-hit].in-fold { outline: 2.5px solid var(--bad) !important; outline-offset: -2px; box-shadow: 0 0 0 6px rgba(200, 50, 43, 0.14) !important; }
+
+/* ---------- App primitives ---------- */
+.app { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; }
+.app.enter { animation: rise var(--t-med) var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.content, .sheet .list, .sheet .skyjo, .chips { scrollbar-width: none; }
+.content::-webkit-scrollbar, .sheet .list::-webkit-scrollbar, .sheet .skyjo::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
+.cap { width: 100%; max-width: 600px; margin: 0 auto; }
+.fill { flex: 1 1 auto; min-height: 12px; }
+.sec-h { font-size: 13px; font-weight: 500; letter-spacing: 0.5px; color: var(--label-2); padding: 0 6px; margin: 0 0 8px; }
+.card { background: var(--sys-bg); border-radius: 14px; box-shadow: 0 1px 3px rgba(27, 26, 51, 0.06); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 0 16px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 64px; right: 0; height: 0.5px; background: var(--separator); }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex: 0 0 auto; }
+.avatar.p0 { background: var(--p0); } .avatar.p1 { background: var(--p1); } .avatar.p2 { background: var(--p2); } .avatar.p3 { background: var(--p3); }
+.avatar.p4 { background: var(--p4); } .avatar.p5 { background: var(--p5); } .avatar.p6 { background: var(--p6); color: var(--label); } .avatar.p7 { background: var(--p7); color: var(--label); }
+.name { flex: 1 1 auto; font-size: 17px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.total { font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+.total.warn { color: var(--orange); } .total.bust { color: var(--red); }
+.crown { width: 12px; height: 12px; color: var(--green); opacity: 0; }
+.row.leader { background: rgba(52, 199, 89, 0.07); } .row.leader .crown { opacity: 1; }
+.caption { font-size: 12px; color: var(--label-2); text-align: center; padding: 0 8px; }
+.btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; background: var(--brand); color: #fff; font-size: 17px; font-weight: 600; border-radius: 16px; border: 0; width: 100%; font-family: inherit; cursor: pointer; transition: transform 100ms var(--ease), filter var(--t-fast) var(--ease); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active { transform: scale(0.985); }
+.btn-primary:focus-visible { outline: 3px solid rgba(55,48,163,0.4); outline-offset: 2px; }
+.btn-primary.disabled { opacity: 0.28; pointer-events: none; }
+.btn-text { display: flex; align-items: center; justify-content: center; min-height: 44px; color: var(--brand); font-weight: 500; font-size: 15px; background: transparent; border: 0; width: 100%; font-family: inherit; cursor: pointer; border-radius: 12px; transition: background var(--t-fast) var(--ease); }
+.btn-text:hover { background: var(--brand-soft); }
+.btn-tint { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 18px; color: var(--brand); font-weight: 500; font-size: 15px; background: var(--brand-soft); border: 0; border-radius: 16px; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background var(--t-fast) var(--ease); }
+.btn-tint:hover { background: rgba(55, 48, 163, 0.16); }
+svg.sym { width: 1em; height: 1em; display: inline-block; vertical-align: -0.12em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Pages: the two halves of an open Duo, separated by the fold band */
+.pages { position: absolute; left: 0; right: 0; display: flex; }
+.pages.v { flex-direction: row; }
+.page { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; position: relative; }
+
+/* ---------- Scoring ---------- */
+.toolbar { position: absolute; left: 0; right: 0; height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 6; }
+.toolbar .ttl { position: absolute; left: 50%; transform: translateX(-50%); font-size: 17px; font-weight: 600; letter-spacing: -0.1px; }
+.glass { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 500; color: var(--brand); font-family: inherit; border: 0.5px solid rgba(255, 255, 255, 0.85); cursor: pointer;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(22px) saturate(1.7); -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  box-shadow: 0 1px 2px rgba(27, 26, 51, 0.10), 0 6px 18px rgba(27, 26, 51, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(27, 26, 51, 0.04);
+  transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease); white-space: nowrap; }
+.glass:hover { background: rgba(255, 255, 255, 0.78); }
+.glass:active { transform: scale(0.96); box-shadow: 0 1px 2px rgba(27, 26, 51, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+.glass svg.sym { width: 15px; height: 15px; stroke-width: 2.6; }
+.scoring-body { padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.enter { padding: 0 16px 8px; }
+.round-head { text-align: center; padding: 20px 24px 0; }
+.round-head .ttl { font-size: 34px; font-weight: 800; letter-spacing: -0.8px; color: var(--brand); line-height: 1.1; }
+.round-head .caption { margin-top: 10px; font-size: 13px; }
+
+/* ---------- Sheet ---------- */
+.dimmer { position: absolute; inset: 0; background: rgba(27, 26, 51, 0.22); z-index: 8; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--sys-grouped); border-radius: 30px 30px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -6px 30px rgba(27, 26, 51, 0.18); container-type: size; }
+.sheet.centered { border-radius: 26px; box-shadow: 0 18px 50px rgba(27, 26, 51, 0.28); }
+.grabber { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); z-index: 3; }
+.sheet .body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.sheet .list { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 16px 16px; display: flex; flex-direction: column; gap: 20px; }
+.sheet .divider { height: 0.5px; background: var(--separator); flex: 0 0 auto; }
+.sheet .pad { flex: 0 0 auto; }
+.sheet .pad .skyjo { display: none; }
+.entry { cursor: pointer; min-height: 64px; }
+.entry .ring { position: absolute; inset: 4px 6px; border-radius: 10px; border: 2px solid var(--brand); opacity: 0; transform: scale(0.985); transition: opacity 100ms var(--ease), transform 100ms var(--ease); pointer-events: none; }
+.entry.focused .ring { opacity: 1; transform: scale(1); }
+.entry .dbl { font-size: 13px; font-weight: 500; color: var(--orange); white-space: nowrap; }
+.entry .val .num { width: 52px; text-align: right; font-size: 22px; font-weight: 700; }
+.entry .val .num.empty { color: var(--label-3); }
+.hint { font-size: 13px; color: var(--label-2); padding: 0 6px; margin: -2px 0 8px; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; padding: 12px; }
+.chip { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: var(--fill-2); font-size: 15px; font-weight: 500; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; color: var(--label); transition: background 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease); }
+.chip:hover { background: rgba(120, 120, 128, 0.22); }
+.chip .mini { width: 22px; height: 22px; border-radius: 50%; background: var(--fill-3); color: var(--label-2); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.chip.on { border-color: var(--pc); color: var(--pc); background: color-mix(in srgb, var(--pc) 10%, transparent); }
+.chip.on .mini { background: var(--pc); color: var(--pt, #fff); }
+.chip.p0 { --pc: var(--p0); } .chip.p1 { --pc: var(--p1); } .chip.p2 { --pc: var(--p2); } .chip.p3 { --pc: var(--p3); }
+.chip.p4 { --pc: var(--p4); } .chip.p5 { --pc: var(--p5); } .chip.p6 { --pc: var(--p6); --pt: var(--label); } .chip.p7 { --pc: var(--p7); --pt: var(--label); }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 10px 16px; }
+.key { height: 54px; border-radius: 10px; background: var(--fill-2); border: 0; font-family: inherit; font-size: 22px; font-weight: 500; color: var(--label); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 90ms var(--ease), background 90ms var(--ease); }
+.key:hover { background: rgba(120, 120, 128, 0.22); }
+.key:active { transform: scale(0.96); background: rgba(120, 120, 128, 0.3); }
+.key.sm { font-size: 17px; font-weight: 600; }
+.key svg.sym { width: 20px; height: 20px; stroke-width: 2; }
+.confirm { padding: 0 16px 8px; }
+
+/* Sheet reflow by its own size — exactly what shipped in the iOS 27 build */
+@container (max-height: 575px) {
+  .sheet .list { padding-top: 18px; gap: 12px; }
+  .sheet .sec-h { margin-bottom: 6px; }
+  .sheet .hint { display: none; }
+  .sheet .chips { display: flex; overflow-x: auto; padding: 8px; }
+  .sheet .chip { flex: 1 0 auto; min-height: 44px; }
+  .sheet .key { height: 44px; }
+  .sheet .numpad { padding: 6px 16px; }
+  .sheet .btn-primary { min-height: 50px; }
+  .sheet .confirm { padding-bottom: 6px; }
+}
+@container ((max-height: 575px) or (min-aspect-ratio: 6/5)) and (min-width: 560px) {
+  .sheet .hint { display: none; }
+  .sheet .body { flex-direction: row; }
+  .sheet .list { flex: 1 1 auto; padding: 18px 12px 14px 16px; justify-content: safe center; }
+  .sheet .list .skyjo { display: none; }
+  .sheet .divider { width: 0.5px; height: auto; align-self: stretch; margin: 12px 0; }
+  .sheet .pad { width: 284px; flex: 0 0 284px; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 0 0; }
+  .sheet .pad .skyjo { display: block; flex: 0 1 auto; min-height: 96px; overflow-y: auto; padding: 0 16px 0 12px; }
+  .sheet .pad .skyjo .sec-h { margin-bottom: 6px; }
+  .sheet .pad .skyjo .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; overflow: visible; padding: 8px; }
+  .sheet .pad .padwrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; }
+  .sheet .numpad { flex: 1 1 auto; min-height: 0; grid-template-rows: repeat(4, minmax(44px, 1fr)); max-height: 300px; padding: 6px 16px 6px 12px; }
+  .sheet .key { height: auto; min-height: 44px; }
+  .sheet .confirm { padding: 0 16px 6px 12px; }
+  .sheet .btn-primary { min-height: 52px; }
+}
+/* Fallback A — vertical fold: the sheet's own divider becomes the fold */
+.sheet.foldv .body { flex-direction: row; gap: var(--band); }
+.sheet.foldv .list { flex: 0 0 var(--lp); padding: 18px 16px 14px 16px; }
+.sheet.foldv .divider { display: none; }
+.sheet.foldv .pad { width: auto; flex: 1 1 auto; padding: 10px 0 0; }
+.sheet.foldv .pad .skyjo { padding: 0 16px; }
+.sheet.foldv .numpad { padding: 6px 16px; max-height: 320px; }
+.sheet.foldv .confirm { padding: 0 16px 6px; }
+/* Fallback B — horizontal fold (tabletop): rows above, every control below */
+.sheet.foldh .body { flex-direction: column; gap: var(--band); }
+.sheet.foldh .list { flex: 0 0 var(--lp); padding: 18px 16px 12px; justify-content: flex-start; }
+.sheet.foldh .list .skyjo { display: none; }
+.sheet.foldh .divider { display: none; }
+.sheet.foldh .pad { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: flex-start; padding: 0; }
+.sheet.foldh .pad .skyjo { display: block; padding: 0 16px; }
+.sheet.foldh .hint { display: none; }
+.sheet.foldh .pad .skyjo .sec-h { margin-bottom: 6px; }
+.sheet.foldh .pad .skyjo .chips { display: flex; overflow-x: auto; padding: 8px; gap: 8px; }
+.sheet.foldh .pad .skyjo .chip { flex: 1 0 auto; }
+.sheet.foldh .pad .padwrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; }
+.sheet.foldh .numpad { flex: 1 1 auto; min-height: 0; grid-template-rows: repeat(4, minmax(44px, 1fr)); max-height: 260px; padding: 8px 16px; }
+.sheet.foldh .key { height: auto; min-height: 44px; }
+.sheet.foldh .confirm { padding: 0 16px 8px; }
+.sheet.foldh .btn-primary { min-height: 52px; }
+
+/* ---------- Win ---------- */
+.hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 52px 24px 8px; flex: 0 0 auto; background: linear-gradient(180deg, rgba(55, 48, 163, 0.07), var(--sys-grouped)); margin-bottom: 24px; }
+.hero .emoji { font-size: 64px; line-height: 1; }
+.hero .head { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: var(--brand); line-height: 1.15; }
+.hero .subt { font-size: 15px; color: var(--label-2); }
+.hero .txt { display: contents; }
+.hero.compact { flex-direction: row; justify-content: center; align-items: center; gap: 14px; padding: 16px 24px 12px; margin-bottom: 12px; text-align: left; }
+.hero.compact .emoji { font-size: 40px; }
+.hero.compact .head { font-size: 24px; }
+.hero.compact .txt { display: flex; flex-direction: column; gap: 2px; }
+.win-actions { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 10px; }
+.win-actions.paired { flex-direction: row; align-items: stretch; }
+.win-actions.paired .btn-primary { flex: 3 1 0; min-height: 52px; }
+.medal { font-size: 18px; }
+.row.winner { background: rgba(55, 48, 163, 0.18); }
+.win-list { padding: 0 16px 12px; }
+
+/* ---------- Setup ---------- */
+.setup-head { text-align: center; padding: 20px 16px 0; flex: 0 0 auto; }
+.setup-head .ttl { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; color: var(--brand); line-height: 1.1; display: inline-block; cursor: pointer; }
+.setup-head .subt { font-size: 15px; color: var(--label-2); margin-top: 6px; }
+.setup-list { padding: 28px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+.prow { min-height: 54px; padding: 0 14px; }
+.prow .avatar { width: 30px; height: 30px; font-size: 13px; }
+.prow + .prow::before { left: 56px; }
+.prow .rm { width: 24px; height: 24px; border-radius: 50%; background: var(--red); position: relative; margin: 10px; flex: 0 0 auto; }
+.prow .rm::after { content: ""; position: absolute; left: 6px; top: 11px; width: 12px; height: 2px; border-radius: 1px; background: #fff; }
+.addp { display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 14px; cursor: pointer; }
+.addp .plus { width: 30px; height: 30px; border-radius: 50%; background: var(--green); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
+.start { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 11px; align-items: center; }
+.start .ok { font-size: 13px; color: var(--green); }
+
+/* ---------- Easter egg ---------- */
+.material { position: absolute; inset: 0; z-index: 8; background: rgba(242, 242, 247, 0.55); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); }
+.egg { position: absolute; z-index: 9; background: var(--sys-bg); border-radius: 22px; padding: 28px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 24px 32px rgba(27, 26, 51, 0.25); animation: eggIn 200ms var(--ease); }
+@keyframes eggIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+.egg .flower { font-size: 52px; line-height: 1; margin-bottom: 16px; }
+.egg .msg { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 28px; }
+.egg .close { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; background: var(--brand); color: #fff; font-size: 17px; font-weight: 600; border-radius: 13px; border: 0; font-family: inherit; cursor: pointer; transition: filter var(--t-fast) var(--ease), transform 100ms var(--ease); }
+.egg .close:hover { filter: brightness(1.08); }
+.egg .close:active { transform: scale(0.985); }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01s !important; animation: none !important; }
+}
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { transition-duration: 0.01s !important; animation: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Skyjo Scorekeeper · iPhone Duo</p>
+  <h1>Two pages, one spine.</h1>
+  <p class="lede">Opened flat, iPhone Duo's inner display runs its fold straight through the middle of the 600pt column every screen uses today, so the pinned buttons sit on the crease. The proposal treats the open display as a book: the list keeps the left page, the heading and the primary action take the right page, and nothing tappable ever touches the spine. Standard iPhones and iPad have no fold region and stay exactly as they are.</p>
+</header>
+
+<div class="rules" aria-label="The three rules">
+  <div class="rule"><h4><span class="n">1</span>List left, action right</h4>When the window reports a vertical fold, today's screen splits into its three bands: the heading goes top-right, the scrolling list takes the whole left page, the primary action pins bottom-right. Same type, same colours, same cards.</div>
+  <div class="rule"><h4><span class="n">2</span>The fold is the divider</h4>Only if the system sheet straddles the crease: the score entry sheet's own column divider snaps to the fold, rows on one side, numpad, chips and Confirm on the other. Nothing is built if the system already keeps the sheet to one page.</div>
+  <div class="rule"><h4><span class="n">3</span>Lists may cross, controls may not</h4>Tabletop keeps today's tall layout: the fold crosses the scrolling middle, the buttons already sit on the lower half. Closed, the outer display is a tall window above the 575pt threshold and changes nothing.</div>
+</div>
+
+<div class="controls" role="group" aria-label="Preview controls">
+  <span class="ctl-label">Pose</span>
+  <div class="seg" id="poses">
+    <button type="button" data-pose="open" aria-pressed="true">Open</button>
+    <button type="button" data-pose="tabletop" aria-pressed="false">Tabletop</button>
+    <button type="button" data-pose="closed" aria-pressed="false">Closed</button>
+  </div>
+  <span class="ctl-label">Players</span>
+  <div class="seg" id="counts">
+    <button type="button" data-n="2" aria-pressed="false">2</button>
+    <button type="button" data-n="4" aria-pressed="true">4</button>
+    <button type="button" data-n="8" aria-pressed="false">8</button>
+  </div>
+  <label class="toggle"><input type="checkbox" id="hits"><span class="sw"></span>Outline tappable areas</label>
+  <label class="toggle"><input type="checkbox" id="rm"><span class="sw"></span>Reduce motion</label>
+</div>
+<div class="pose-note">
+  <span id="pose-desc"><strong>Open</strong> — inner display 951 × 669pt, fold down the middle. The window reads as <code>.wide</code> today.</span>
+  <span class="legend"><i class="fold-sw"></i>Fold · <code>ReservedRegion(.division)</code></span>
+  <span class="legend"><i class="cam-sw"></i>Camera · <code>.occlusion</code>, inside the top safe area</span>
+  <span class="legend"><i class="hit-sw"></i>Control caught in the fold</span>
+</div>
+
+<!-- ===================== SETUP ===================== -->
+<section class="surface" data-surface="setup">
+  <p class="eyebrow">GameSetupView</p>
+  <h2>Setup</h2>
+  <p class="sub">The roster takes the left page. The title, with its three-second long-press, and the Start button move to the right page, so the app opens like a book: names on the left, the cover and the call to action on the right.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame duo" data-mock="setup" data-variant="before"></div></div>
+      <div class="verdict"></div>
+      <p class="note">The centred 600pt column puts <b>Start Game</b> and the title's long-press target under the crease.</p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame duo" data-mock="setup" data-variant="after"></div></div>
+      <div class="verdict"></div>
+      <p class="note" data-note="setup"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCORING ===================== -->
+<section class="surface" data-surface="scoring">
+  <p class="eyebrow">ScoringView</p>
+  <h2>Scoreboard</h2>
+  <p class="sub">The system already pushes End Game and Undo to the side edges, one on each page, both keeping their word and symbol. The inline "Round 4" title would land on the spine, so on the divided layout it becomes the heading of the action page above the rule reminder, with Enter Round 4 Scores pinned beneath.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame duo" data-mock="scoring" data-variant="before"></div></div>
+      <div class="verdict"></div>
+      <p class="note"><b>Enter Round 4 Scores</b> is cut in half; the centred title sits on the crease and reads badly.</p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame duo" data-mock="scoring" data-variant="after"></div></div>
+      <div class="verdict"></div>
+      <p class="note" data-note="scoring"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ENTRY SHEET ===================== -->
+<section class="surface" data-surface="entry">
+  <p class="eyebrow">ScoreEntrySheet <span class="cond">Only if needed</span></p>
+  <h2>Score entry</h2>
+  <p class="sub">System sheets are meant to avoid the fold on their own. If the Duo simulator confirms that, nothing here is built. If the sheet is centred across the crease, this is the fallback: the sheet keeps its shipped layout and only moves its divider onto the fold.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today, if the system centres it</span>
+      <div class="stage"><div class="frame duo" data-mock="entry" data-variant="before"></div></div>
+      <div class="verdict"></div>
+      <p class="note">The fitted 720pt panel straddles the fold. The score values or the numpad's middle keys end up under the crease.</p>
+    </div>
+    <div class="col after">
+      <span class="tag">Fallback</span>
+      <div class="stage"><div class="frame duo" data-mock="entry" data-variant="after"></div></div>
+      <div class="verdict"></div>
+      <p class="note" data-note="entry"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WIN ===================== -->
+<section class="surface" data-surface="win">
+  <p class="eyebrow">WinView</p>
+  <h2>Win screen</h2>
+  <p class="sub">The hero gets its tall form back, trophy, name and rounds on the right page, with the standings filling the left page. New Game and Start Fresh stack under the hero, exactly where they sit on a tall iPhone.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame duo" data-mock="win" data-variant="before"></div></div>
+      <div class="verdict"></div>
+      <p class="note">The one-line hero and the paired actions span the crease; <b>New Game — Same Players</b> is split down the middle.</p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame duo" data-mock="win" data-variant="after"></div></div>
+      <div class="verdict"></div>
+      <p class="note" data-note="win"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EASTER EGG ===================== -->
+<section class="surface" data-surface="egg">
+  <p class="eyebrow">EasterEggOverlay</p>
+  <h2>Easter egg</h2>
+  <p class="sub">The card currently stretches to the whole window minus 24pt, ignoring the 600pt cap. It now respects the cap and appears on the page that holds the title it came from, scaling in from that title.</p>
+  <div class="pair">
+    <div class="col before">
+      <span class="tag">Today</span>
+      <div class="stage"><div class="frame duo" data-mock="egg" data-variant="before"></div></div>
+      <div class="verdict"></div>
+      <p class="note">A 903pt-wide card centred on the window: <b>Close</b> sits right on the crease.</p>
+    </div>
+    <div class="col after">
+      <span class="tag">Proposed</span>
+      <div class="stage"><div class="frame duo" data-mock="egg" data-variant="after"></div></div>
+      <div class="verdict"></div>
+      <p class="note" data-note="egg"></p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Data ----------
+  var NAMES = ['Priya', 'Marcus', 'Elena', 'Tom', 'Aisha', 'Diego', 'Yuki', 'Sam'];
+  var SCORES = { Priya: 24, Marcus: 41, Elena: 57, Tom: 88, Aisha: 33, Diego: 49, Yuki: 66, Sam: 79 }; // after 3 rounds
+  var FINAL  = { Priya: 62, Marcus: 79, Elena: 91, Tom: 104, Aisha: 71, Diego: 85, Yuki: 96, Sam: 99 }; // after 7 rounds
+
+  var POSES = {
+    open:     { w: 951, h: 669, fold: 'v', band: 24, top: 44, bottom: 34,
+                desc: '<strong>Open</strong> — inner display 951 × 669pt, fold down the middle. The window reads as <code>.wide</code> today.' },
+    tabletop: { w: 669, h: 951, fold: 'h', band: 24, top: 44, bottom: 34,
+                desc: '<strong>Tabletop</strong> — the inner display turned, fold across the middle. Reads as <code>.tall</code>: the fold crosses the scrolling middle, never the pinned actions.' },
+    closed:   { w: 466, h: 678, fold: null, band: 0, top: 54, bottom: 34,
+                desc: '<strong>Closed</strong> — outer display 466 × 678pt, about 590pt usable: still a tall window above the 575pt threshold. Nothing changes.' }
+  };
+
+  var state = { pose: 'open', n: 4 };
+
+  // ---------- Helpers ----------
+  var SYM = {
+    play: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/></svg>',
+    up: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg>',
+    x: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    undo: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
+    redo: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11A8 8 0 1 0 17.6 17"/><path d="M20 4v7h-7"/></svg>',
+    crown: '<svg class="sym crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.5-10-4.5 4-3-7-3 7-4.5-4z" fill="currentColor" stroke="none"/></svg>',
+    del: '<svg class="sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9l-6-8z"/><path d="M12 9l6 6M18 9l-6 6"/></svg>'
+  };
+  function idx(name) { return NAMES.indexOf(name); }
+  function avatar(name) { return '<span class="avatar p' + idx(name) + '" aria-hidden="true">' + name.charAt(0) + '</span>'; }
+  function roster(n) { return NAMES.slice(0, n); }
+  function standings(n) { return roster(n).slice().sort(function (a, b) { return SCORES[a] - SCORES[b]; }); }
+  function finals(n) {
+    var list = roster(n).slice().sort(function (a, b) { return FINAL[a] - FINAL[b]; });
+    var totals = {}; list.forEach(function (p) { totals[p] = FINAL[p]; });
+    if (!list.some(function (p) { return totals[p] >= 100; })) { totals[list[list.length - 1]] = 104; }
+    return { list: list, totals: totals };
+  }
+  function totalClass(v) { return v >= 100 ? ' bust' : (v >= 85 ? ' warn' : ''); }
+
+  function statusBar(P) {
+    return '<div class="status" style="height:' + P.top + 'px"><span>9:41</span><span class="r">●●●● <i></i></span></div>' +
+           '<div class="cam-occ" style="left:30px;top:' + Math.round((P.top - 20) / 2) + 'px" title="Camera region"></div>';
+  }
+  function foldBand(P) {
+    if (!P.fold) { return ''; }
+    if (P.fold === 'v') { return '<div class="fold v" style="left:' + ((P.w - P.band) / 2) + 'px;width:' + P.band + 'px"><span class="lbl">fold</span></div>'; }
+    return '<div class="fold h" style="top:' + ((P.h - P.band) / 2) + 'px;height:' + P.band + 'px"><span class="lbl">fold</span></div>';
+  }
+  function home() { return '<div class="home"></div>'; }
+  function pagesV(P, left, right) {
+    return '<div class="pages v" style="top:' + P.top + 'px;bottom:' + P.bottom + 'px;gap:' + P.band + 'px">' +
+             '<div class="page l">' + left + '</div><div class="page r">' + right + '</div></div>';
+  }
+
+  // ---------- Setup ----------
+  function setupRows(n) {
+    var rows = roster(n).map(function (p) {
+      return '<div class="row prow">' + avatar(p) + '<span class="name">' + p + '</span>' + (n > 2 ? '<span class="rm" aria-hidden="true"></span>' : '') + '</div>';
+    }).join('');
+    var add = n < 8 ? '<div class="card"><div class="addp" data-hit-scroll><span class="plus">+</span><span>Add Player</span></div></div>' : '';
+    return '<div class="sec-h">PLAYERS</div><div class="card">' + rows + '</div>' + add;
+  }
+  function setupHead() {
+    return '<div class="setup-head"><span class="ttl" data-hit="Title (long-press)">Skyjo Scorekeeper</span><div class="subt">Who’s playing today?</div></div>';
+  }
+  function startBlock(n) {
+    return '<div class="cap start"><button class="btn-primary" data-hit="Start Game">' + SYM.play + ' Start Game</button><div class="ok">' + n + ' players ready</div></div>';
+  }
+  function setupTall(P, n) {
+    return '<div class="app" style="top:' + P.top + 'px;bottom:' + P.bottom + 'px">' + setupHead() +
+      '<div class="content"><div class="cap setup-list">' + setupRows(n) + '</div></div>' + startBlock(n) + '</div>';
+  }
+  function setupPages(P, n) {
+    var left = '<div class="content"><div class="cap setup-list" style="padding-top:24px">' + setupRows(n) + '</div></div>';
+    var right = setupHead() + '<div class="fill"></div>' + startBlock(n);
+    return pagesV(P, left, right);
+  }
+
+  // ---------- Scoring ----------
+  function standingsCard(n) {
+    var list = standings(n);
+    return '<div class="sec-h">STANDINGS</div><div class="card">' + list.map(function (p, i) {
+      var v = SCORES[p];
+      return '<div class="row' + (i === 0 ? ' leader' : '') + '">' + avatar(p) + '<span class="name">' + p + '</span>' + SYM.crown + '<span class="total' + totalClass(v) + '">' + v + '</span></div>';
+    }).join('') + '</div>';
+  }
+  var CAPTION = 'Game ends when someone reaches 100. Lowest total wins.';
+  function toolbar(P, withTitle) {
+    return '<div class="toolbar" style="top:' + P.top + 'px">' +
+      '<button class="glass" data-hit="End Game">' + SYM.x + ' End Game</button>' +
+      (withTitle ? '<div class="ttl">Round 4</div>' : '') +
+      '<button class="glass" data-hit="Undo">' + SYM.undo + ' Undo</button></div>';
+  }
+  function enterBlock() {
+    return '<div class="cap enter"><button class="btn-primary" data-hit="Enter Round 4 Scores">' + SYM.up + ' Enter Round 4 Scores</button></div>';
+  }
+  function scoringTall(P, n) {
+    return toolbar(P, true) + '<div class="app" style="top:' + P.top + 'px;bottom:' + P.bottom + 'px">' +
+      '<div class="content" style="padding-top:52px"><div class="cap scoring-body">' + standingsCard(n) + '<div class="caption">' + CAPTION + '</div></div></div>' + enterBlock() + '</div>';
+  }
+  function scoringPages(P, n) {
+    var left = '<div class="content" style="padding-top:52px"><div class="cap scoring-body">' + standingsCard(n) + '</div></div>';
+    var right = '<div class="round-head" style="padding-top:72px"><div class="ttl">Round 4</div><div class="caption">' + CAPTION + '</div></div><div class="fill"></div>' + enterBlock();
+    return toolbar(P, false) + pagesV(P, left, right);
+  }
+
+  // ---------- Entry sheet ----------
+  function entryRows(n) {
+    var vals = { Priya: '4', Marcus: '7' };
+    var focused = n > 2 ? 'Elena' : 'Marcus';
+    return '<div class="scores"><div class="sec-h">ROUND 4 SCORES</div><div class="card">' + roster(n).map(function (p) {
+      var v = vals[p];
+      var dbl = (p === 'Marcus' && n > 2) ? '<span class="dbl">×2 → 14</span>' : '';
+      return '<div class="row entry' + (p === focused ? ' focused' : '') + '" data-hit="' + p + '’s score"><span class="ring"></span>' + avatar(p) + '<span class="name">' + p + '</span>' + dbl +
+        '<span class="val"><span class="num' + (v ? '' : ' empty') + '">' + (v || '—') + '</span></span></div>';
+    }).join('') + '</div></div>';
+  }
+  function chipsBlock(n) {
+    return '<div class="skyjo"><div class="sec-h">WHO ENDED THE ROUND?</div><div class="hint">The first player to turn over their last card. Their score this round doubles if it isn’t the lowest.</div><div class="card"><div class="chips">' +
+      roster(n).map(function (p) {
+        return '<button class="chip p' + idx(p) + (p === 'Marcus' && n > 2 ? ' on' : '') + '" data-hit="Chip ' + p + '"><span class="mini">' + p.charAt(0) + '</span>' + p + '</button>';
+      }).join('') + '</div></div></div>';
+  }
+  function numpad() {
+    var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(function (k) { return '<button class="key" data-hit="Key ' + k + '">' + k + '</button>'; }).join('');
+    return '<div class="padwrap"><div class="numpad">' + keys + '<button class="key sm" data-hit="Key +/−">+/−</button><button class="key" data-hit="Key 0">0</button><button class="key" data-hit="Delete">' + SYM.del + '</button></div></div>';
+  }
+  function sheetBody(n) {
+    return '<div class="body"><div class="list">' + entryRows(n) + chipsBlock(n) + '</div><div class="divider"></div><div class="pad">' + chipsBlock(n) + numpad() +
+      '<div class="confirm"><button class="btn-primary disabled" data-hit="Confirm Round 4">Confirm Round 4</button></div></div></div>';
+  }
+  function fittedHeight(n) { var r = Math.ceil(n / 2); return 344 + 42 + 44 * r + 6 * (r - 1); }
+  function entryFrame(P, n, variant) {
+    var base = (P.fold === 'v' && variant === 'after') ? scoringPages(P, n) : scoringTall(P, n);
+    var sheet;
+    if (!P.fold) {
+      // Compact width: large detent, stacked
+      sheet = '<div class="sheet" style="top:' + (P.top - 24) + 'px"><div class="grabber"></div>' + sheetBody(n) + '</div>';
+    } else if (variant === 'before') {
+      var w = Math.min(720, P.w - 32), h = Math.min(fittedHeight(n), P.h - P.top - P.bottom - 20);
+      sheet = '<div class="sheet centered" style="left:' + ((P.w - w) / 2) + 'px;right:auto;bottom:auto;width:' + w + 'px;top:' + ((P.h - h) / 2) + 'px;height:' + h + 'px">' + sheetBody(n) + '</div>';
+    } else if (P.fold === 'v') {
+      var m = 24, lp = (P.w - P.band) / 2 - m, hv = Math.min(fittedHeight(n), P.h - P.top - P.bottom - 20);
+      sheet = '<div class="sheet centered foldv" style="--band:' + P.band + 'px;--lp:' + lp + 'px;left:' + m + 'px;right:' + m + 'px;bottom:auto;top:' + ((P.h - hv) / 2) + 'px;height:' + hv + 'px">' + sheetBody(n) + '</div>';
+    } else {
+      var top = P.top + 76, lpH = (P.h - P.band) / 2 - top;
+      sheet = '<div class="sheet centered foldh" style="--band:' + P.band + 'px;--lp:' + lpH + 'px;left:16px;right:16px;top:' + top + 'px;bottom:' + P.bottom + 'px">' + sheetBody(n) + '</div>';
+    }
+    return '<div data-inert>' + base + '</div><div class="dimmer"></div>' + sheet;
+  }
+
+  // ---------- Win ----------
+  function finalCard(n) {
+    var f = finals(n), medals = ['🥇', '🥈', '🥉'];
+    return '<div class="sec-h">FINAL STANDINGS</div><div class="card">' + f.list.map(function (p, i) {
+      var v = f.totals[p];
+      return '<div class="row' + (i === 0 ? ' winner' : '') + '">' + avatar(p) + '<span class="name">' + p + '</span>' + (i < 3 ? '<span class="medal" aria-hidden="true">' + medals[i] + '</span>' : '') + '<span class="total' + (v >= 100 ? ' bust' : '') + '">' + v + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function hero(compact) {
+    return '<div class="hero' + (compact ? ' compact' : '') + '"><span class="emoji" aria-hidden="true">🏆</span><span class="txt"><span class="head">Priya Wins!</span><span class="subt">7 rounds played</span></span></div>';
+  }
+  function winActions(paired) {
+    return '<div class="win-actions' + (paired ? ' paired' : '') + '"><button class="btn-primary" data-hit="New Game — Same Players">' + SYM.redo + ' New Game — Same Players</button>' +
+      (paired ? '<button class="btn-tint" data-hit="Start Fresh">Start Fresh</button>' : '<button class="btn-text" data-hit="Start Fresh">Start Fresh</button>') + '</div>';
+  }
+  function winToday(P, n) {
+    var compact = (P.fold === 'v'); // 951×591 reads as .wide today
+    return '<div class="app" style="top:' + P.top + 'px;bottom:' + P.bottom + 'px"><div class="cap">' + hero(compact) + '</div>' +
+      '<div class="content"><div class="cap win-list">' + finalCard(n) + '</div></div><div class="cap">' + winActions(compact) + '</div></div>';
+  }
+  function winPages(P, n) {
+    var left = '<div class="content"><div class="cap win-list" style="padding-top:24px">' + finalCard(n) + '</div></div>';
+    var right = hero(false) + '<div class="fill"></div>' + winActions(false);
+    return pagesV(P, left, right);
+  }
+
+  // ---------- Easter egg ----------
+  function eggCard(left, top, width) {
+    return '<div class="material"></div><div class="egg" style="left:' + left + 'px;top:' + top + 'px;width:' + width + 'px"><span class="flower" aria-hidden="true">🌸</span><div class="msg">Happy Mother’s Day,<br>Shawn!</div><button class="close" data-hit="Close">Close</button></div>';
+  }
+  var EGG_H = 28 + 52 + 16 + 53 + 28 + 50 + 28; // card height at the shipped type sizes
+  function eggFrame(P, n, variant) {
+    var base = (P.fold === 'v' && variant === 'after') ? setupPages(P, n) : setupTall(P, n);
+    var w, left, top;
+    if (variant === 'before' || !P.fold) {
+      w = variant === 'before' ? P.w - 48 : Math.min(600, P.w - 48);
+      left = (P.w - w) / 2; top = (P.h - EGG_H) / 2;
+    } else if (P.fold === 'v') {
+      var pageX = (P.w + P.band) / 2, pageW = (P.w - P.band) / 2;
+      w = Math.min(600, pageW - 48); left = pageX + (pageW - w) / 2; top = (P.h - EGG_H) / 2;
+    } else {
+      var upper = (P.h - P.band) / 2;
+      w = Math.min(600, P.w - 48); left = (P.w - w) / 2; top = P.top + (upper - P.top - EGG_H) / 2;
+    }
+    return '<div data-inert>' + base + '</div>' + eggCard(left, top, w);
+  }
+
+  // ---------- Which surfaces change in which pose ----------
+  var UNCHANGED = {
+    setup:   { tabletop: true, closed: true },
+    scoring: { tabletop: true, closed: true },
+    entry:   { closed: true },
+    win:     { tabletop: true, closed: true },
+    egg:     { closed: true }
+  };
+  var NOTES = {
+    setup: {
+      open: 'Left page: <b>PLAYERS</b> list and Add Player, scrolling the full height. Right page: the title (long-press intact) at the top, <b>Start Game</b> and “4 players ready” pinned at the bottom. 16pt page gutters, the 600pt cap still applies (never reached at 463pt).',
+      tabletop: 'No re-layout. Today’s tall arrangement already keeps the title above the crease and Start on the lower, flat half. With eight players the name rows scroll through the fold, which the brief allows.',
+      closed: 'Unchanged. About 590pt usable height keeps the tall layout; if large text ever pushes it under 575pt, the existing short layout takes over on its own.'
+    },
+    scoring: {
+      open: 'End Game stays at the left edge, Undo at the right, both as word-and-symbol capsules. <b>Round 4</b> (34pt, heavy, brand) heads the right page with the rule reminder under it; <b>Enter Round 4 Scores</b> pins to the bottom of the same page. The navigation title is empty on the divided layout so nothing is shown twice.',
+      tabletop: 'No re-layout. Standings rows cross the fold, but they are not tappable. The toolbar sits above, the Enter button below.',
+      closed: 'Unchanged: system toolbar, standings, pinned button, exactly as on any iPhone.'
+    },
+    entry: {
+      open: 'The sheet spans both pages (24pt margins). Rows fill the left page; <b>WHO ENDED THE ROUND?</b>, the numpad and <b>Confirm</b> fill the right page. The 0.5pt divider is gone, the fold does its job. Keys stretch to the page but never below 44pt.',
+      tabletop: 'Laptop pose: rows on the upright half, the chips row, numpad and Confirm on the flat half where the thumbs are. Keys grow to fill, capped at 65pt.',
+      closed: 'Unchanged: the large-detent stacked sheet has ~620pt, above the 575pt threshold.'
+    },
+    win: {
+      open: 'Left page: <b>FINAL STANDINGS</b>, all rows, scrolling only from six players. Right page: the tall hero with its gradient (trophy 64pt, headline 28pt heavy), then <b>New Game — Same Players</b> and <b>Start Fresh</b> stacked at the bottom, as on a tall iPhone.',
+      tabletop: 'No re-layout. The hero is above the crease, both actions below it; the standings cross the fold and are not tappable.',
+      closed: 'Unchanged tall layout.'
+    },
+    egg: {
+      open: 'The card respects the 600pt cap and centres in the <b>right page</b>, where the title it came from lives (415pt wide, 24pt page margins). It scales in from that title, 0.9 → 1 with opacity, 200ms ease-out; Reduce Motion crossfades only.',
+      tabletop: 'With a horizontal fold the card centres in the <b>upper page</b>, beside the title it came from, 600pt wide. Close never meets the crease.',
+      closed: 'Unchanged in look: capping the card at 600pt makes no difference on a 466pt-wide display.'
+    }
+  };
+
+  // ---------- Render ----------
+  function mock(surface, variant, P, n) {
+    var inner;
+    if (surface === 'setup')   { inner = (P.fold === 'v' && variant === 'after') ? setupPages(P, n) : setupTall(P, n); }
+    if (surface === 'scoring') { inner = (P.fold === 'v' && variant === 'after') ? scoringPages(P, n) : scoringTall(P, n); }
+    if (surface === 'entry')   { inner = entryFrame(P, n, variant); }
+    if (surface === 'win')     { inner = (P.fold === 'v' && variant === 'after') ? winPages(P, n) : winToday(P, n); }
+    if (surface === 'egg')     { inner = eggFrame(P, n, variant); }
+    return '<div class="screen" style="width:' + P.w + 'px;height:' + P.h + 'px">' + statusBar(P) + '<div class="app-root enter" style="position:absolute;inset:0">' + inner + '</div>' + foldBand(P) + home() + '</div>';
+  }
+
+  function layoutStage(frame) {
+    var stage = frame.parentNode, P = POSES[state.pose];
+    var fw = P.w + 16, fh = P.h + 16;
+    var s = Math.min(stage.clientWidth / fw, 560 / fh, 1);
+    frame.style.width = fw + 'px'; frame.style.height = fh + 'px';
+    frame.style.transform = 'scale(' + s + ')';
+    stage.style.height = Math.round(fh * s) + 'px';
+  }
+
+  function checkFold(frame) {
+    var verdict = frame.parentNode.parentNode.querySelector('.verdict');
+    var fold = frame.querySelector('.fold'), hits = frame.querySelectorAll('[data-hit]');
+    hits.forEach(function (h) { h.classList.remove('in-fold'); });
+    if (!fold) { verdict.className = 'verdict good'; verdict.innerHTML = '<i></i>No fold on this display'; return; }
+    var f = fold.getBoundingClientRect(), caught = [];
+    hits.forEach(function (h) {
+      var r = h.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0 || h.closest('[data-inert]')) { return; } // covered by a sheet or overlay
+      var sc = h.closest('.list, .content, .skyjo'); // clip to the scrolling region: a row scrolled out of view is not tappable
+      if (sc) {
+        var c = sc.getBoundingClientRect();
+        r = { left: Math.max(r.left, c.left), right: Math.min(r.right, c.right), top: Math.max(r.top, c.top), bottom: Math.min(r.bottom, c.bottom) };
+        if (r.right - r.left < 8 || r.bottom - r.top < 8) { return; }
+      }
+      if (r.left < f.right - 0.5 && r.right > f.left + 0.5 && r.top < f.bottom - 0.5 && r.bottom > f.top + 0.5) {
+        h.classList.add('in-fold'); caught.push(h.getAttribute('data-hit'));
+      }
+    });
+    fold.classList.toggle('hot', caught.length > 0);
+    if (caught.length === 0) { verdict.className = 'verdict good'; verdict.innerHTML = '<i></i>No tappable control in the fold'; }
+    else { verdict.className = 'verdict bad'; verdict.innerHTML = '<i></i>' + caught.length + ' in the fold: ' + caught.slice(0, 4).join(', ') + (caught.length > 4 ? ' …' : ''); }
+  }
+
+  function render() {
+    var P = POSES[state.pose];
+    document.getElementById('pose-desc').innerHTML = P.desc;
+    document.querySelectorAll('.surface').forEach(function (sec) {
+      var surface = sec.getAttribute('data-surface');
+      var single = !!(UNCHANGED[surface] && UNCHANGED[surface][state.pose]);
+      sec.querySelector('.pair').classList.toggle('single', single);
+      var afterTag = sec.querySelector('.col.after .tag');
+      afterTag.textContent = single ? 'Unchanged in this pose' : (surface === 'entry' ? 'Fallback' : 'Proposed');
+      sec.querySelector('[data-note]').innerHTML = NOTES[surface][state.pose];
+    });
+    document.querySelectorAll('.frame').forEach(function (frame) {
+      frame.innerHTML = mock(frame.getAttribute('data-mock'), frame.getAttribute('data-variant'), P, state.n);
+      layoutStage(frame);
+    });
+    requestAnimationFrame(function () { document.querySelectorAll('.frame').forEach(checkFold); });
+  }
+
+  // ---------- Controls ----------
+  document.getElementById('poses').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) { return; }
+    state.pose = b.getAttribute('data-pose');
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    render();
+  });
+  document.getElementById('counts').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) { return; }
+    state.n = parseInt(b.getAttribute('data-n'), 10);
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    render();
+  });
+  document.getElementById('hits').addEventListener('change', function () { document.body.classList.toggle('show-hits', this.checked); });
+  document.getElementById('rm').addEventListener('change', function () { document.body.classList.toggle('reduce-motion', this.checked); });
+  window.addEventListener('resize', function () {
+    document.querySelectorAll('.frame').forEach(layoutStage);
+    requestAnimationFrame(function () { document.querySelectorAll('.frame').forEach(checkFold); });
+  });
+
+  // Deep links: ?pose=open|tabletop|closed&n=2|4|8
+  var q = window.location.search.slice(1).split('&').reduce(function (acc, kv) { var p = kv.split('='); if (p[0]) { acc[p[0]] = decodeURIComponent(p[1] || ''); } return acc; }, {});
+  if (POSES[q.pose]) { state.pose = q.pose; }
+  if (['2', '4', '8'].indexOf(q.n) >= 0) { state.n = parseInt(q.n, 10); }
+  document.querySelectorAll('#poses button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-pose') === state.pose ? 'true' : 'false'); });
+  document.querySelectorAll('#counts button').forEach(function (x) { x.setAttribute('aria-pressed', parseInt(x.getAttribute('data-n'), 10) === state.n ? 'true' : 'false'); });
+
+  render();
+})();
+</script>
+</body>
+</html>

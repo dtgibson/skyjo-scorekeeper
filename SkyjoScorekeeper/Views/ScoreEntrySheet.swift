@@ -10,7 +10,7 @@ struct ScoreEntrySheet: View {
     @State private var negativeInputs: [UUID: Bool] = [:]
     @State private var skyjoPlayerID: UUID? = nil
     @State private var focusedPlayer: UUID?
-    @State private var layoutMode: LayoutMode = .tall
+    @State private var arrangement = Arrangement()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -18,6 +18,33 @@ struct ScoreEntrySheet: View {
     static let fittedPanelWidth: CGFloat = 720
     /// Width of the "who ended" / numpad / Confirm column in the side-by-side layout.
     private static let controlColumnWidth: CGFloat = 284
+
+    /// What the sheet arranges itself by, read from the space it's given. The
+    /// system may present the sheet across iPhone Duo's fold; then the fold
+    /// becomes the sheet's divider and no key, chip or button sits in it.
+    private struct Arrangement: Equatable {
+        var layoutMode: LayoutMode = .tall
+        /// A fold runs top to bottom through the sheet: rows on its left,
+        /// "who ended", numpad and Confirm on its right.
+        var pages: Pages?
+        /// A fold runs side to side through the sheet (propped like a laptop):
+        /// rows above it, the controls below.
+        var upperPage: CGRect?
+        var lowerPage: CGRect?
+
+        init() {}
+
+        init(_ space: AvailableSpace) {
+            pages = space.pages
+            upperPage = space.upperPage
+            lowerPage = space.lowerPage
+            // Either side of a vertical fold the columns use the side-by-side metrics.
+            layoutMode = pages != nil ? .wide : space.layoutMode
+        }
+    }
+
+    private var layoutMode: LayoutMode { arrangement.layoutMode }
+    private var isSplitAcrossFold: Bool { arrangement.lowerPage != nil }
 
     /// Ideal height of the fitted panel: the numpad column (344pt) plus the
     /// "who ended" chips block, two chips per row. 430 / 480 / 530 / 580pt for
@@ -51,12 +78,18 @@ struct ScoreEntrySheet: View {
 
     var body: some View {
         Group {
-            switch layoutMode {
-            case .tall, .short: stackedLayout
-            case .wide: sideBySideLayout
+            if let pages = arrangement.pages {
+                pagedLayout(pages)
+            } else if let upper = arrangement.upperPage, let lower = arrangement.lowerPage {
+                splitLayout(upper: upper, lower: lower)
+            } else {
+                switch layoutMode {
+                case .tall, .short: stackedLayout
+                case .wide: sideBySideLayout
+                }
             }
         }
-        .onAvailableSize(update: $layoutMode, LayoutMode.init(size:))
+        .onAvailableSpace(update: $arrangement, Arrangement.init)
         .background(Color(.systemGroupedBackground))
         .onAppear { focusedPlayer = session.players.first?.id }
     }
@@ -115,6 +148,58 @@ struct ScoreEntrySheet: View {
                 .accessibilityElement(children: .contain)
                 .accessibilitySortPriority(1)
         }
+    }
+
+    /// Across a vertical fold: the fold is the divider. Rows fill the left page;
+    /// "who ended", numpad and Confirm fill the right.
+    private func pagedLayout(_ pages: Pages) -> some View {
+        HStack(spacing: pages.spacing) {
+            rowsColumn
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(2)
+                .page(pages.leading)
+
+            controlsColumn
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .accessibilityElement(children: .contain)
+                .accessibilitySortPriority(1)
+                .page(pages.trailing)
+        }
+    }
+
+    /// Across a horizontal fold: the rows scroll above it; "who ended" (one row
+    /// of chips), the numpad and Confirm sit below it.
+    private func splitLayout(upper: CGRect, lower: CGRect) -> some View {
+        VStack(spacing: lower.minY - upper.maxY) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    scoresSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 18)
+                        .padding(.bottom, 12)
+                        .frame(maxWidth: Theme.contentMaxWidth)
+                        .frame(maxWidth: .infinity)
+                }
+                .onAppear { scrollToFocusedRow(proxy, animated: false) }
+                .onChange(of: focusedPlayer) { _, _ in scrollToFocusedRow(proxy, animated: true) }
+            }
+            .frame(height: upper.height)
+            .padding(.top, upper.minY)
+
+            VStack(spacing: 0) {
+                skyjoSection(style: .singleRow)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                numpad
+                confirmButton
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 6)
+            }
+            .frame(maxWidth: Theme.contentMaxWidth)
+            .frame(maxWidth: .infinity)
+            .frame(height: lower.height, alignment: .bottom)
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     /// Player rows: centred when they fit, top-aligned and scrolling when they don't.
@@ -286,7 +371,8 @@ struct ScoreEntrySheet: View {
     }
 
     private var numpadInsets: EdgeInsets {
-        switch layoutMode {
+        if isSplitAcrossFold { return EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16) }
+        return switch layoutMode {
         case .tall: EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
         case .short: EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
         case .wide: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 16)
@@ -294,9 +380,10 @@ struct ScoreEntrySheet: View {
     }
 
     /// Keys are 54pt tall stacked, 44pt in the tight stack, and grow from 44pt
-    /// to fill the side-by-side column. Always at least 44pt (touch target).
-    private var keyMinHeight: CGFloat { layoutMode == .tall ? 54 : 44 }
-    private var keyMaxHeight: CGFloat? { layoutMode == .wide ? 72 : nil }
+    /// to fill the side-by-side column (or the space below a fold). Always at
+    /// least 44pt (touch target).
+    private var keyMinHeight: CGFloat { layoutMode == .tall && !isSplitAcrossFold ? 54 : 44 }
+    private var keyMaxHeight: CGFloat? { layoutMode == .wide || isSplitAcrossFold ? 72 : nil }
 
     private func numpadRow(_ keys: [NumpadKey]) -> some View {
         HStack(spacing: 4) {
@@ -388,7 +475,8 @@ struct ScoreEntrySheet: View {
     }
 
     private var confirmMinHeight: CGFloat {
-        switch layoutMode {
+        if isSplitAcrossFold { return 52 }
+        return switch layoutMode {
         case .tall: 58
         case .short: 50
         case .wide: 52

@@ -84,22 +84,145 @@ enum LayoutMode: Equatable {
     }
 }
 
+// MARK: - Folds (iPhone Duo)
+
+/// Where a fold divides the space a screen is given, in that screen's own
+/// coordinates. iPhone Duo reports its fold as a reserved `.division` region.
+enum Division: Equatable {
+    /// The fold runs top to bottom (open like a book); `band` is its span along x.
+    case vertical(band: ClosedRange<CGFloat>)
+    /// The fold runs side to side (propped like a laptop); `band` is its span along y.
+    case horizontal(band: ClosedRange<CGFloat>)
+}
+
+/// The two pages either side of a vertical fold. The band between them holds nothing.
+struct Pages: Equatable {
+    var leading: CGRect
+    var trailing: CGRect
+
+    /// The width of the fold band, for an `HStack` of the two pages.
+    var spacing: CGFloat { trailing.minX - leading.maxX }
+}
+
+/// The space a screen is offered: its size, plus any fold or camera region
+/// inside it. A screen goes to two pages when a fold runs top to bottom through it.
+struct AvailableSpace: Equatable {
+    var size: CGSize
+    var division: Division?
+    /// Camera and sensor regions, clipped to the space.
+    var occlusions: [CGRect]
+
+    /// Classifies the reserved regions read from the space (all in its own
+    /// coordinates). A fold counts only when it lies inside the space with room
+    /// on both sides; one touching an edge (a Split View window beside the fold)
+    /// leaves the space undivided.
+    init(size: CGSize, divisions: [CGRect] = [], occlusions: [CGRect] = []) {
+        self.size = size
+        let bounds = CGRect(origin: .zero, size: size)
+        self.division = divisions.lazy.compactMap { frame -> Division? in
+            let band = frame.intersection(bounds)
+            guard !band.isNull, !band.isEmpty else { return nil }
+            if band.height >= band.width {
+                guard band.minX > bounds.minX, band.maxX < bounds.maxX else { return nil }
+                return .vertical(band: band.minX...band.maxX)
+            } else {
+                guard band.minY > bounds.minY, band.maxY < bounds.maxY else { return nil }
+                return .horizontal(band: band.minY...band.maxY)
+            }
+        }.first
+        self.occlusions = occlusions
+            .map { $0.intersection(bounds) }
+            .filter { !$0.isNull && !$0.isEmpty }
+    }
+
+    var layoutMode: LayoutMode { LayoutMode(size: size) }
+
+    /// The pages either side of a vertical fold; nil when the space isn't divided that way.
+    var pages: Pages? {
+        guard case .vertical(let band) = division else { return nil }
+        return Pages(
+            leading: page(CGRect(x: 0, y: 0, width: band.lowerBound, height: size.height)),
+            trailing: page(CGRect(x: band.upperBound, y: 0, width: size.width - band.upperBound, height: size.height))
+        )
+    }
+
+    /// The part above a horizontal fold; nil when the space isn't divided that way.
+    var upperPage: CGRect? {
+        guard case .horizontal(let band) = division else { return nil }
+        return page(CGRect(x: 0, y: 0, width: size.width, height: band.lowerBound))
+    }
+
+    /// The part below a horizontal fold; nil when the space isn't divided that way.
+    var lowerPage: CGRect? {
+        guard case .horizontal(let band) = division else { return nil }
+        return page(CGRect(x: 0, y: band.upperBound, width: size.width, height: size.height - band.upperBound))
+    }
+
+    /// A page starts below any camera region in its top half. (On iPhone Duo the
+    /// camera normally sits inside the safe area, so nothing moves.)
+    private func page(_ rect: CGRect) -> CGRect {
+        let top = occlusions
+            .filter { $0.intersects(rect) && $0.minY < rect.midY }
+            .map(\.maxY)
+            .max() ?? rect.minY
+        guard top > rect.minY else { return rect }
+        return CGRect(x: rect.minX, y: top, width: rect.width, height: max(rect.maxY - top, 0))
+    }
+}
+
+extension AvailableSpace {
+    /// Reads the space a geometry proxy describes. Fold and camera regions come
+    /// from `ReservedRegion` on iOS 27.1 and later; earlier systems have none.
+    /// The fold is read even while inactive (the phone lying flat), so the pages
+    /// hold steady through the hinge's whole range instead of the controls
+    /// jumping back onto the crease.
+    init(_ proxy: GeometryProxy) {
+        var divisions: [CGRect] = []
+        var occlusions: [CGRect] = []
+        if #available(iOS 27.1, *) {
+            divisions = proxy.reservedRegions(kind: .division, options: .includeInactive).map(\.frame)
+            occlusions = proxy.reservedRegions(kind: .occlusion).filter(\.isActive).map(\.frame)
+        }
+        self.init(size: proxy.size, divisions: divisions, occlusions: occlusions)
+    }
+}
+
 extension View {
     /// Fills the space this view is offered and keeps `value` in step with a value
-    /// derived from that space. The keyboard is ignored, so typing never reflows a
-    /// screen. The first reading applies instantly; later changes (a window being
-    /// resized) animate ease-out over 240ms, or apply instantly with Reduce Motion.
+    /// derived from that space's size. See `onAvailableSpace(update:_:)`.
     func onAvailableSize<Value: Equatable>(
         update value: Binding<Value>,
         _ derive: @escaping (CGSize) -> Value
     ) -> some View {
-        modifier(AvailableSizeReader(value: value, derive: derive))
+        onAvailableSpace(update: value) { derive($0.size) }
+    }
+
+    /// Fills the space this view is offered and keeps `value` in step with a value
+    /// derived from that space: its size and any fold or camera region in it.
+    /// The keyboard is ignored, so typing never reflows a screen. The first
+    /// reading applies instantly; later changes (a window being resized, the
+    /// phone unfolding) animate ease-out over 240ms, or apply instantly with
+    /// Reduce Motion.
+    func onAvailableSpace<Value: Equatable>(
+        update value: Binding<Value>,
+        _ derive: @escaping (AvailableSpace) -> Value
+    ) -> some View {
+        modifier(AvailableSpaceReader(value: value, derive: derive))
+    }
+
+    /// Lays this view out as one page of a two-page arrangement: the page's width,
+    /// starting at its top (below any camera region).
+    func page(_ frame: CGRect) -> some View {
+        self
+            .frame(width: frame.width)
+            .frame(maxHeight: .infinity)
+            .padding(.top, frame.minY)
     }
 }
 
-private struct AvailableSizeReader<Value: Equatable>: ViewModifier {
+private struct AvailableSpaceReader<Value: Equatable>: ViewModifier {
     @Binding var value: Value
-    let derive: (CGSize) -> Value
+    let derive: (AvailableSpace) -> Value
 
     @State private var hasMeasured = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -115,11 +238,11 @@ private struct AvailableSizeReader<Value: Equatable>: ViewModifier {
                 // two modifiers matters: measuring outside it reads the size the
                 // keyboard left over).
                 Color.clear
-                    .onGeometryChange(for: CGSize.self) { proxy in
-                        proxy.size
-                    } action: { size in
-                        guard size.width > 0, size.height > 0 else { return }
-                        let newValue = derive(size)
+                    .onGeometryChange(for: AvailableSpace.self) { proxy in
+                        AvailableSpace(proxy)
+                    } action: { space in
+                        guard space.size.width > 0, space.size.height > 0 else { return }
+                        let newValue = derive(space)
                         if newValue != value {
                             withAnimation(hasMeasured && !reduceMotion ? .easeOut(duration: 0.24) : nil) {
                                 value = newValue

@@ -4,7 +4,7 @@ struct WinView: View {
     let session: GameSession
     let onNewGame: ([Player]?) -> Void
 
-    @State private var layoutMode: LayoutMode = .tall
+    @State private var arrangement = Arrangement()
 
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
@@ -15,37 +15,84 @@ struct WinView: View {
         colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
     }
 
-    /// Short or wide windows (iPhone Duo, iPad landscape, iPhone Mirroring pulled
-    /// short) get a one-line header and paired actions, so the standings keep
-    /// the middle of the screen.
-    private var isCompact: Bool { layoutMode != .tall }
+    /// What the win screen arranges itself by, read from the space it's given.
+    private struct Arrangement: Equatable {
+        var layoutMode: LayoutMode = .tall
+        /// Set when a fold runs top to bottom through the screen (iPhone Duo open):
+        /// the standings take the left page, the hero and actions the right.
+        var pages: Pages?
+    }
+
+    /// Short or wide windows (iPad landscape, iPhone Mirroring pulled short) get
+    /// a one-line header and paired actions, so the standings keep the middle
+    /// of the screen. Two pages decide before size does: each page is tall.
+    private var isCompact: Bool { arrangement.pages == nil && arrangement.layoutMode != .tall }
 
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground).ignoresSafeArea()
 
+            Group {
+                if let pages = arrangement.pages {
+                    pagedLayout(pages)
+                } else {
+                    stackedLayout
+                }
+            }
+            .onAvailableSpace(update: $arrangement) {
+                Arrangement(layoutMode: $0.layoutMode, pages: $0.pages)
+            }
+        }
+        .onAppear {
+            AccessibilityNotification.Announcement(winnerHeadline).post()
+        }
+    }
+
+    private var stackedLayout: some View {
+        VStack(spacing: 0) {
+            heroSection
+                .padding(.bottom, isCompact ? 12 : 24)
+
+            ScrollView {
+                rankingsCard
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
+            }
+
+            actionButtons
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+                .frame(maxWidth: Theme.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Open like a book: the final standings on the left page; the winner and
+    /// the next-game actions on the right. Nothing sits in the fold between them.
+    private func pagedLayout(_ pages: Pages) -> some View {
+        HStack(spacing: pages.spacing) {
+            ScrollView {
+                rankingsCard
+                    .padding(.horizontal, 16)
+                    .padding(.top, 24)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
+            }
+            .page(pages.leading)
+
             VStack(spacing: 0) {
                 heroSection
-                    .padding(.bottom, isCompact ? 12 : 24)
-
-                ScrollView {
-                    rankingsCard
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
-                        .frame(maxWidth: Theme.contentMaxWidth)
-                        .frame(maxWidth: .infinity)
-                }
-
-                actionButtons
+                Spacer(minLength: 0)
+                stackedActions
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
                     .frame(maxWidth: Theme.contentMaxWidth)
                     .frame(maxWidth: .infinity)
             }
-            .onAvailableSize(update: $layoutMode, LayoutMode.init(size:))
-        }
-        .onAppear {
-            AccessibilityNotification.Announcement(winnerHeadline).post()
+            .page(pages.trailing)
         }
     }
 

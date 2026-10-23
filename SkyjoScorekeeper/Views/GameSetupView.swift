@@ -4,9 +4,7 @@ struct GameSetupView: View {
     @StateObject private var gameState: GameState
     @State private var showEasterEgg = false
     @State private var highlightErrors = false
-    /// True in short windows (iPhone Duo, iPhone Mirroring pulled short): the
-    /// title shrinks and the ready note moves beside Start, so more names show.
-    @State private var isShortHeight = false
+    @State private var arrangement = Arrangement()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
@@ -23,39 +21,87 @@ struct GameSetupView: View {
         self.onStart = onStart
     }
 
+    /// What the setup screen arranges itself by, read from the space it's given.
+    private struct Arrangement: Equatable {
+        /// True in short windows (iPhone Mirroring pulled short): the title
+        /// shrinks and the ready note moves beside Start, so more names show.
+        var isShortHeight = false
+        /// Set when a fold runs top to bottom through the screen (iPhone Duo open):
+        /// the players take the left page, the title and Start the right.
+        var pages: Pages?
+        /// The page holding the title, where the Easter egg card centres; nil
+        /// when the screen isn't divided.
+        var titlePage: CGRect?
+
+        init() {}
+
+        init(_ space: AvailableSpace) {
+            pages = space.pages
+            titlePage = space.pages?.trailing ?? space.upperPage
+            isShortHeight = LayoutMode.isShort(height: pages?.trailing.height ?? space.size.height)
+        }
+    }
+
+    private var isShortHeight: Bool { arrangement.isShortHeight }
+
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground).ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                headerSection
-
-                ScrollView {
-                    playerSection
-                        .padding(.horizontal, 16)
-                        .padding(.top, isShortHeight ? 14 : 28)
-                        .padding(.bottom, 12)
-                        .frame(maxWidth: Theme.contentMaxWidth)
-                        .frame(maxWidth: .infinity)
+            Group {
+                if let pages = arrangement.pages {
+                    pagedLayout(pages)
+                } else {
+                    stackedLayout
                 }
+            }
+            .onAvailableSpace(update: $arrangement, Arrangement.init)
+        }
+        .overlay {
+            EasterEggOverlay(isPresented: $showEasterEgg, page: arrangement.titlePage)
+        }
+        .onChange(of: gameState.players) { _, _ in
+            highlightErrors = false
+        }
+    }
 
-                startSection
+    private var stackedLayout: some View {
+        VStack(spacing: 0) {
+            headerSection
+
+            ScrollView {
+                playerSection
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
+                    .padding(.top, isShortHeight ? 14 : 28)
+                    .padding(.bottom, 12)
                     .frame(maxWidth: Theme.contentMaxWidth)
                     .frame(maxWidth: .infinity)
             }
-            .onAvailableSize(update: $isShortHeight) { LayoutMode.isShort(height: $0.height) }
+
+            pinnedStartSection
         }
-        .overlay {
-            if showEasterEgg {
-                EasterEggOverlay { showEasterEgg = false }
-                    .transition(.opacity)
+    }
+
+    /// Open like a book: the roster gets the whole left page; the title and
+    /// Start Game share the right page. Nothing sits in the fold between them.
+    private func pagedLayout(_ pages: Pages) -> some View {
+        HStack(spacing: pages.spacing) {
+            ScrollView {
+                playerSection
+                    .padding(.horizontal, 16)
+                    .padding(.top, 24)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
             }
-        }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: showEasterEgg)
-        .onChange(of: gameState.players) { _, _ in
-            highlightErrors = false
+            .page(pages.leading)
+
+            VStack(spacing: 0) {
+                headerSection
+                Spacer(minLength: 0)
+                pinnedStartSection
+            }
+            .page(pages.trailing)
         }
     }
 
@@ -152,6 +198,14 @@ struct GameSetupView: View {
     }
 
     // MARK: - Start section
+
+    private var pinnedStartSection: some View {
+        startSection
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+            .frame(maxWidth: Theme.contentMaxWidth)
+            .frame(maxWidth: .infinity)
+    }
 
     @ViewBuilder
     private var startSection: some View {

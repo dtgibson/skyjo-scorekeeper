@@ -6,8 +6,13 @@ struct ScoringView: View {
 
     @State private var showEntrySheet = false
     @State private var showEndGameAlert = false
+    /// Set when a fold runs top to bottom through the screen (iPhone Duo open):
+    /// the standings take the left page, the round and its action the right.
+    @State private var pages: Pages?
 
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
+    @ScaledMetric(relativeTo: .largeTitle) private var roundHeadingFontSize: CGFloat = 34
 
     private var activeBrand: Color {
         colorSchemeContrast == .increased ? Theme.brandHighContrast : Theme.brand
@@ -36,31 +41,18 @@ struct ScoringView: View {
         // A local stack whose only job is to host the system toolbar. Root
         // navigation stays the Route enum in SkyjoScorekeeperApp; nothing is pushed.
         NavigationStack {
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 10) {
-                        standingsCard
-                        Text("Game ends when someone reaches 100. Lowest total wins.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 8)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 12)
-                    .frame(maxWidth: Theme.contentMaxWidth)
-                    .frame(maxWidth: .infinity)
+            Group {
+                if let pages {
+                    pagedLayout(pages)
+                } else {
+                    stackedLayout
                 }
-                enterButton
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
-                    .frame(maxWidth: Theme.contentMaxWidth)
-                    .frame(maxWidth: .infinity)
             }
+            .onAvailableSpace(update: $pages, \.pages)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Round \(session.currentRoundNumber)")
+            // The inline title is centred, which on two pages lands it on the fold;
+            // there the round heads the right page instead.
+            .navigationTitle(pages == nil ? Text("Round \(session.currentRoundNumber)") : Text(verbatim: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .tint(activeBrand)
@@ -88,6 +80,74 @@ struct ScoringView: View {
         } message: {
             Text("Your current scores will be lost.")
         }
+    }
+
+    private var stackedLayout: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 10) {
+                    standingsCard
+                    ruleCaption
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+                .frame(maxWidth: Theme.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+            }
+            pinnedEnterButton
+        }
+    }
+
+    /// Open like a book: the standings on the left page; the round, its rule and
+    /// its Enter button on the right. Nothing sits in the fold between them.
+    private func pagedLayout(_ pages: Pages) -> some View {
+        HStack(spacing: pages.spacing) {
+            ScrollView {
+                standingsCard
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: Theme.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
+            }
+            .page(pages.leading)
+
+            VStack(spacing: 0) {
+                VStack(spacing: 10) {
+                    Text("Round \(session.currentRoundNumber)")
+                        .font(.system(size: roundHeadingFontSize, weight: .heavy, design: .rounded))
+                        .foregroundStyle(activeBrand)
+                        .tracking(-0.8)
+                        .multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
+                    ruleCaption
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+                .frame(maxWidth: Theme.contentMaxWidth)
+                Spacer(minLength: 0)
+                pinnedEnterButton
+            }
+            .page(pages.trailing)
+        }
+    }
+
+    private var ruleCaption: some View {
+        Text("Game ends when someone reaches 100. Lowest total wins.")
+            .font(.system(.caption, design: .rounded))
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 8)
+    }
+
+    private var pinnedEnterButton: some View {
+        enterButton
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+            .frame(maxWidth: Theme.contentMaxWidth)
+            .frame(maxWidth: .infinity)
     }
 
     // MARK: - Toolbar

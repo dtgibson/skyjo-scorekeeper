@@ -8,10 +8,10 @@
   "backend": "none",
   "emailProvider": null,
   "smsProvider": null,
-  "deploymentTarget": null,
+  "deploymentTarget": "app-store",
   "setupComplete": true,
   "createdAt": "2026-05-09T00:00:00Z",
-  "updatedAt": "2026-05-09T12:00:00Z",
+  "updatedAt": "2026-10-23T17:10:00Z",
   "stack": {
     "componentLibrary": null,
     "designTokens": "Theme.swift",
@@ -21,7 +21,7 @@
     "environments": {
       "dev": "main",
       "staging": null,
-      "prod": null
+      "prod": "app-store"
     }
   }
 }

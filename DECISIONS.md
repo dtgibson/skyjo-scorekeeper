@@ -5,6 +5,38 @@ Maintained by The Chronicler.
 
 ---
 
+## iPhone Duo Optimization — 2026-10-23
+
+**Decision:** iPhone Duo's fold and camera regions are part of the space a screen is offered. `onAvailableSpace` / `AvailableSpace` in `Theme.swift` reads them through `ReservedRegion` (gated `#available(iOS 27.1, *)`), and `onAvailableSize` forwards to it, so there is still one reader. When a fold runs top to bottom, setup, the scoreboard and the win screen become two pages: the list on the left, the heading and primary action on the right (setup's title included), nothing in the fold. A tabletop fold keeps the tall layout. This fulfils the iOS 27 build's "revisit `ReservedRegion` once Xcode 27.1 is final" and **extends** "screens adapt by the space their window offers" and the single `contentMaxWidth` cap: the 600pt cap stays and applies per page.
+**Rationale:** On the open inner display the fold ran straight through the centred column, putting Start Game, Enter Round N Scores and the win actions on the crease. The user chose list-left / action-right (and the title beside Start Game) over keeping the title above the list.
+**Implications:** New screens that pin a control need a two-page arrangement. Adapt by space and regions only, never by hinge pose (`DeviceHinge` stays unused), orientation or idiom.
+
+---
+
+**Decision:** Where iOS 27.1 system chrome lands on the fold, the app arranges its own content around it. On two pages the scoreboard's bar title is blank and "Round N" heads the right page. The score entry sheet treats a fold crossing it as its divider (rows on one side, chips, keypad and Confirm on the other) rather than resizing its presentation.
+**Rationale:** The system centres an inline bar title on the fold, and shows the sheet as a centred ~650pt card over it, ignoring the fitted size. UIKit 27.1 has fold avoidance for neither navigation bars nor sheets.
+**Implications:** Any future centred bar title or sheet follows the same pattern. Revisit both if a later iOS adds fold avoidance for bars or sheets.
+
+---
+
+**Decision:** The fold is read even when the system marks it inactive; camera regions are read only when active.
+**Rationale:** The system can report the fold inactive across part of the hinge's range (for example lying flat). Reading only active folds would snap the open display back to one centred column, with buttons on the crease, as the hinge moves.
+**Implications:** Do not narrow fold reading to active regions.
+
+---
+
+**Decision:** CI selects Xcode 27.1 with a job-level `DEVELOPER_DIR` in `pipeline.yml`, still with no `xcode-select`. This **modifies** the iOS 27 decision that CI uses the `xcode-27` image's default Xcode.
+**Rationale:** The app ships on Xcode 27.1 (`ReservedRegion` is 27.1-only) and the image still defaulted to 27.0, which can't compile it. "Build with the Xcode the app ships with" wins over "use the image default". The first runs confirmed the image has `/Applications/Xcode_27.1.app` and that `iPhone 17` still resolves.
+**Implications:** Delete the `DEVELOPER_DIR` line once the stable image defaults to 27.1 (the pre-release image already does). Keep selecting the shipping Xcode this narrow way whenever the image lags it.
+
+---
+
+**Decision:** iPhone stays portrait-only, and 1.7 shipped before any real Duo pose was observed.
+**Rationale:** Landscape stays out to avoid accidental mid-round rotation. The Mac's screen was locked for the whole build, so Device Hub's pose controls couldn't be used; the two-page layouts were checked in simulator windows of the right size with a stand-in fold. The user chose to ship and verify on a device.
+**Implications:** The iOS 27 build assumed the inner display ignores orientation locks; the simulator doesn't bear that out. There the portrait-only app gets a 501×669pt window on the open display (pages about 238pt wide, Start Game and New Game — Same Players wrap to two lines), not the full display. If a real open Duo does the same, allowing landscape on iPhone is the likely fix. The real fold width, the inner camera against Undo, and the half-open and flipped poses also still need a look. Tracked in `ROADMAP.md`.
+
+---
+
 ## iOS 27 Platform Readiness — 2026-09-26
 
 **Decision:** CI moves from `runs-on: macos-15` to `runs-on: xcode-27` (image default Xcode 27, still no `xcode-select` pin), and the test simulator from "iPhone 16" to "iPhone 17". This **modifies** the earlier "default Xcode on macos-15, no pin" decision. `macos-26` is the documented fallback if the preview image is flaky.

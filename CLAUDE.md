@@ -29,6 +29,7 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - Use `onAvailableSize` rather than a hand-rolled `GeometryReader`: it takes exactly the offered space and measures inside `.ignoresSafeArea(.keyboard)`, so large text and the keyboard can't flip the layout. Keep view state above the mode-specific subviews so a live resize keeps what's been typed
 - iPhone Duo's fold and camera are part of the space offered: `.onAvailableSpace(update:_:)` in `Theme.swift` reads them (`ReservedRegion` `.division` / `.occlusion`, gated `#available(iOS 27.1, *)`) into `AvailableSpace`, the single home for that logic. When a fold runs top to bottom through a screen, `space.pages` gives its two pages: lay them out with `HStack(spacing: pages.spacing)` and `.page(pages.leading)` / `.page(pages.trailing)` — list on the left page, heading and primary action on the right, nothing in the fold. A side-to-side fold (tabletop) keeps the tall layout; only overlays and the entry sheet use `upperPage` / `lowerPage`
 - Lists may cross the fold; controls may not. Never use `DeviceHinge` / `onHingeChange` or branch on pose — adapt to space and regions only
+- iOS 27.1 system chrome does not avoid the fold: an inline bar title is centred on it, and a sheet is shown as a centred card across it. On two pages, blank the bar title and render it as the right page's heading (`.isHeader`, same string key). A sheet the fold crosses uses the fold as its divider — never resize the sheet's presentation to dodge it; the system overrides that
 
 ### Navigation and toolbars
 - Root navigation is the `Route` enum in `SkyjoScorekeeperApp`. A screen may wrap itself in a local `NavigationStack` only to host a system toolbar — never to push screens
@@ -74,3 +75,8 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 - Test destination: `platform=iOS Simulator,OS=latest,name=iPhone 17` — named simulator, not UDID lookup. Under Xcode 27.1 it resolves to iPhone 17 on iOS 27.0, the newest runtime with that device (the 27.1 runtime ships only iPhone Duo)
 - Code signing: disabled for simulator tests (`CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`)
 - Workflow file: `.github/workflows/pipeline.yml`
+
+### Simulator checks
+- iPhone Duo poses (open, half-open, tabletop, flipped) can only be set in Xcode's Device Hub, which needs an unlocked Mac screen and has no scripting interface. Without it, `devicectl device appResize` gives the app an exact window size (open 951×669pt, tabletop 669×951pt, closed 466×678pt) for layout checks, but no real fold
+- Capture layout evidence with the shipped Info.plist settings, orientation especially. If a check needs a build override, the PR description's Verification section must say so
+- On the Duo simulator, `simctl io screenshot` without `--display` captures the inner display, which is dark while closed — pass the outer display's id for closed-pose captures

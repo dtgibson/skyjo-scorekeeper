@@ -75,7 +75,7 @@ The active game screens. Takes players from setup through scoring rounds to a wi
 
 ### Adaptive Layout
 
-The app runs natively on iPhone and iPad and works in any window shape — resizable iPad windows, iPhone Mirroring, and iPhone Duo's wide display — with each screen reflowing into a tall, short, or wide arrangement by the space it has (content capped at a centered 600pt column), and two open windows of the app staying in sync on the same game.
+The app runs natively on iPhone and iPad and works in any window shape — resizable iPad windows, iPhone Mirroring, and iPhone Duo closed or open — with each screen reflowing into a tall, short, or wide arrangement by the space it has (content capped at a centered 600pt column), splitting into two pages around an open iPhone Duo's fold so no control sits on it, and two open windows of the app staying in sync on the same game.
 
 ---
 
@@ -178,8 +178,8 @@ Two players with names starting with the same letter get different colors becaus
 ### iOS 17.0 minimum deployment target
 Set explicitly in Xcode for both the app target and the test target. The project was originally created on a machine running macOS 26.x which auto-set deployment targets to the host OS version — this caused CI failures until corrected.
 
-### CI uses the default Xcode on the xcode-27 runner, not a pinned version
-CI builds with the Xcode and SDK the app ships with (the App Store requires the iOS 27 SDK from April 2027). The workflow uses `runs-on: xcode-27`, whose default Xcode is 27, with no `xcode-select` override; `macos-26` is the fallback if that preview image is flaky. Pinning a specific Xcode is fragile — an earlier Xcode 16.2 pin made actool fail once the project was saved by a newer local Xcode.
+### CI builds with the Xcode the app ships with, never an xcode-select pin
+CI builds with the Xcode and SDK the app ships with (the App Store requires the iOS 27 SDK from April 2027). The workflow uses `runs-on: xcode-27` with no `xcode-select` override; `macos-26` is the fallback if that preview image is flaky. The app ships on Xcode 27.1 while the image still defaults to 27.0, so the job selects 27.1 with a job-level `DEVELOPER_DIR`, to be removed once the image default moves. Pinning with `xcode-select` is fragile — an earlier Xcode 16.2 pin made actool fail once the project was saved by a newer local Xcode.
 
 ### CI test destination uses a named simulator, not UDID
 The test step uses `-destination "platform=iOS Simulator,OS=latest,name=iPhone 17"`. An earlier UDID-lookup approach (`xcrun simctl list | grep iPhone`) was unreliable — hosted runners don't pre-list simulators as "available" without a boot step. The named destination with `OS=latest` resolves to whatever iOS version the runner image has; the name must be one that image ships.
@@ -200,7 +200,7 @@ If the player who called Skyjo scores the same as the lowest other player (a tie
 ~~Skyjo question must be answered (player or "Nobody")~~ — refined 2026-06-06. The confirm button in `ScoreEntrySheet` now requires a specific player to be selected as the round-ender (`skyjoPlayerID != nil`). The "No one"/"Nobody" chip was removed: in Skyjo a round always ends when a player turns over their last card, so there is always an ender. A helper line under "Who ended the round?" explains who the ender is and the doubling rule.
 
 ### Layout adapts by available space, with a single contentMaxWidth cap
-All four screens reference `Theme.contentMaxWidth` (600pt) — no view hardcodes a width. The SwiftUI pattern for constrained+centered content is the two-frame idiom: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`. The inner frame caps width; the outer frame centers it. Each screen's arrangement (tall, short, or wide) comes from `LayoutMode`, read through `onAvailableSize` — never orientation, device idiom, or size class — because iOS 27 windows can be any shape. New views that have primary content should follow both patterns.
+All four screens reference `Theme.contentMaxWidth` (600pt) — no view hardcodes a width. The SwiftUI pattern for constrained+centered content is the two-frame idiom: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`. The inner frame caps width; the outer frame centers it. Each screen's arrangement (tall, short, or wide) comes from `LayoutMode`, read through `onAvailableSize` — never orientation, device idiom, or size class — because iOS 27 windows can be any shape. On iPhone Duo the fold and camera are part of that space, read in the same place: a fold running top to bottom splits a screen into two pages, each still capped at 600pt. New views that have primary content should follow both patterns.
 
 ### iPad is a supported device destination
 The Xcode target was updated to include iPad alongside iPhone. The app was previously "Designed for iPhone" only, which caused it to run in scaled compatibility mode on iPad. All new screens must work correctly on both device families.

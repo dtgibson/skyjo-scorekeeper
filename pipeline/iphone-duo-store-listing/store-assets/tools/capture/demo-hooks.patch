@@ -1,0 +1,117 @@
+--- a/SkyjoScorekeeper/SkyjoScorekeeperApp.swift
++++ b/SkyjoScorekeeper/SkyjoScorekeeperApp.swift
+@@ -10,6 +10,10 @@
+     }
+ 
+     init() {
++        if let demoRoute = Demo.route() {
++            _route = State(initialValue: demoRoute)
++            return
++        }
+         if let snapshot = SessionStore.load() {
+             let restored = GameSession(snapshot: snapshot)
+             // Defensive: never restore into a finished game. A completed
+@@ -39,6 +43,57 @@
+                     route = .setup(initialPlayers: initialPlayers)
+                 }
+             }
++        }
++    }
++}
++
++
++// MARK: - STORE-SCREENSHOT SCRATCH ONLY (never in the shipped source)
++// Demo state for App Store captures: the May 2026 family. Selected with the
++// DEMO_SCREEN environment variable (setup | board | entry | win); a stand-in
++// vertical fold is added when DEMO_FOLD_X (window x of the fold centre, pt) is set.
++enum Demo {
++    static let env = ProcessInfo.processInfo.environment
++    static var screen: String? { env["DEMO_SCREEN"] }
++    static var foldCenterX: CGFloat? { env["DEMO_FOLD_X"].flatMap(Double.init).map { CGFloat($0) } }
++    static let foldWidth: CGFloat = 24
++    static var suppressOcclusions: Bool { env["DEMO_NO_OCCLUSIONS"] == "1" }
++
++    static let players: [Player] = ["Shawn", "Mike", "David", "Elena", "Phoebe"].enumerated().map { i, n in
++        Player(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", i + 1))!, name: n)
++    }
++
++    /// raw scores per round in player order, plus who ended the round (index)
++    static let rounds: [([Int], Int)] = [
++        ([5, 12, 7, 8, 10], 2),     // David ended, 7 doubles to 14
++        ([15, 20, 25, 18, 16], 0),
++        ([20, 18, 20, 22, 15], 4),
++        ([10, 22, 18, 16, 20], 0),
++        ([18, 15, 22, 18, 16], 1),
++        ([12, 13, 20, 14, 13], 0),  // Mike reaches 100: Shawn 80, Phoebe 90, Elena 96, Mike 100, David 119
++    ]
++
++    static func session(rounds count: Int) -> GameSession {
++        let built: [Round] = rounds.prefix(count).enumerated().map { n, item in
++            let (raws, ender) = item
++            let minOther = raws.enumerated().filter { $0.offset != ender }.map(\.element).min()
++            let scores = players.enumerated().map { i, p -> RoundScore in
++                let raw = raws[i]
++                let doubled = i == ender && GameSession.isDoubled(raw: raw, minOther: minOther)
++                return RoundScore(playerID: p.id, raw: raw, applied: doubled ? raw * 2 : raw)
++            }
++            return Round(number: n + 1, scores: scores, skyjoPlayerID: players[ender].id)
++        }
++        return GameSession(snapshot: GameSessionSnapshot(players: players, rounds: built))
++    }
++
++    static func route() -> SkyjoScorekeeperApp.Route? {
++        switch screen {
++        case "setup": return .setup(initialPlayers: players)
++        case "board": return .game(session: session(rounds: 1))
++        case "entry": return .game(session: session(rounds: 0))
++        case "win": return .game(session: session(rounds: 6))
++        default: return nil
+         }
+     }
+ }
+--- a/SkyjoScorekeeper/Theme.swift
++++ b/SkyjoScorekeeper/Theme.swift
+@@ -183,6 +183,13 @@
+             divisions = proxy.reservedRegions(kind: .division, options: .includeInactive).map(\.frame)
+             occlusions = proxy.reservedRegions(kind: .occlusion).filter(\.isActive).map(\.frame)
+         }
++        if let foldX = Demo.foldCenterX {
++            // STORE-SCREENSHOT SCRATCH ONLY: stand-in fold at the window's centre.
++            let origin = proxy.frame(in: .global).origin
++            divisions = [CGRect(x: foldX - Demo.foldWidth / 2 - origin.x, y: -origin.y - 2000,
++                                width: Demo.foldWidth, height: proxy.size.height + 4000)]
++        }
++        if Demo.suppressOcclusions { occlusions = [] }
+         self.init(size: proxy.size, divisions: divisions, occlusions: occlusions)
+     }
+ }
+--- a/SkyjoScorekeeper/Views/ScoreEntrySheet.swift
++++ b/SkyjoScorekeeper/Views/ScoreEntrySheet.swift
+@@ -91,7 +91,15 @@
+         }
+         .onAvailableSpace(update: $arrangement, Arrangement.init)
+         .background(Color(.systemGroupedBackground))
+-        .onAppear { focusedPlayer = session.players.first?.id }
++        .onAppear {
++            focusedPlayer = session.players.first?.id
++            if Demo.screen == "entry", session.players.count == 5 {
++                let p = session.players
++                rawInputs = [p[0].id: "5", p[1].id: "12", p[2].id: "7", p[3].id: "8", p[4].id: "10"]
++                skyjoPlayerID = p[2].id
++                if ProcessInfo.processInfo.environment["DEMO_FOCUS_LAST"] == "1" { focusedPlayer = p[4].id }
++            }
++        }
+     }
+ 
+     // MARK: - Stacked (tall, and tight when short)
+--- a/SkyjoScorekeeper/Views/ScoringView.swift
++++ b/SkyjoScorekeeper/Views/ScoringView.swift
+@@ -4,7 +4,7 @@
+     @StateObject private var session: GameSession
+     let onNewGame: ([Player]?) -> Void
+ 
+-    @State private var showEntrySheet = false
++    @State private var showEntrySheet = Demo.screen == "entry"
+     @State private var showEndGameAlert = false
+     /// Set when a fold runs top to bottom through the screen (iPhone Duo open):
+     /// the standings take the left page, the round and its action the right.

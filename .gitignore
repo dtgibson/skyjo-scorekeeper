@@ -10,3 +10,6 @@ build/
 
 # macOS
 .DS_Store
+
+# Apple Design Resources bezels: licensed for use, not redistribution (public repo)
+**/mockup-assets/bezels/

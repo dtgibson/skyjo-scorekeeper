@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duo Store Listing</title>
+<meta name="description" content="App Store page refresh for Scorekeeper for Skyjo: screenshot sets for iPhone, iPad and iPhone Duo, the product page header, and the new listing text, round two.">
+<style>
+:root{
+  --brand:#3730A3; --brand-light:#5B50D6; --brand-ink:#2A2480;
+  --bg:#F4F3FB; --bg-2:#E9E7F7; --surface:#FFFFFF; --surface-2:#F7F6FD;
+  --ink:#1B1A33; --ink-2:#55546E; --ink-3:#8A89A3; --line:#DEDCF0;
+  --ok:#1E8A55; --warn:#B8690A; --danger:#C9332E;
+  --shadow:0 18px 40px -18px rgba(55,48,163,.35), 0 4px 10px -4px rgba(55,48,163,.15);
+  --radius:14px;
+  --font:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F0E24; --bg-2:#17163A; --surface:#1A1937; --surface-2:#22214A;
+    --ink:#F0EFFA; --ink-2:#B9B7D6; --ink-3:#8583AA; --line:#2E2D55;
+    --brand-light:#8C83F0; --ok:#4FC68A; --warn:#E6A24A; --danger:#F2726C;
+    --shadow:0 18px 40px -18px rgba(0,0,0,.7), 0 4px 10px -4px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F0E24; --bg-2:#17163A; --surface:#1A1937; --surface-2:#22214A;
+  --ink:#F0EFFA; --ink-2:#B9B7D6; --ink-3:#8583AA; --line:#2E2D55;
+  --brand-light:#8C83F0; --ok:#4FC68A; --warn:#E6A24A; --danger:#F2726C;
+  --shadow:0 18px 40px -18px rgba(0,0,0,.7), 0 4px 10px -4px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{transition:none!important;animation:none!important} }
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--brand-light) 14%, transparent), transparent 60%),
+                   radial-gradient(900px 500px at 100% 0%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 60%);
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--brand-light)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+.top{padding:40px 0 8px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.02;letter-spacing:-.025em;font-weight:800;margin:0 0 14px;color:var(--ink)}
+h1 em{font-style:normal;color:var(--brand-light)}
+.lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin:0 0 22px}
+nav.sec{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:color-mix(in srgb, var(--bg) 82%, transparent);border-bottom:1px solid var(--line);margin:0 -16px;padding:10px 16px}
+nav.sec ul{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.sec ul::-webkit-scrollbar{display:none}
+nav.sec a{white-space:nowrap;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:14px;padding:7px 12px;border-radius:999px;transition:background .15s ease-out,color .15s ease-out}
+nav.sec a:hover,nav.sec a:focus-visible{background:color-mix(in srgb, var(--brand-light) 14%, transparent);color:var(--brand-light);outline:none}
+section{padding:48px 0 8px}
+h2{font-size:clamp(24px,3.2vw,34px);letter-spacing:-.02em;line-height:1.1;font-weight:800;margin:0 0 6px}
+h2 .meta{font-size:13px;font-weight:600;letter-spacing:.02em;margin-left:8px}
+.sub{color:var(--ink-2);margin:0 0 20px;max-width:72ch;font-size:16px}
+.meta{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;background:color-mix(in srgb, var(--brand-light) 14%, transparent);color:var(--brand-light);vertical-align:middle}
+.pill.warn{background:color-mix(in srgb, var(--warn) 16%, transparent);color:var(--warn)}
+.pill.ok{background:color-mix(in srgb, var(--ok) 16%, transparent);color:var(--ok)}
+.pill.new{background:color-mix(in srgb, var(--warn) 16%, transparent);color:var(--warn)}
+.note{font-size:14px;color:var(--ink-2);margin:14px 0 0;max-width:80ch}
+.toolbar{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin:0 0 16px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.toolbar .grp{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg label{padding:5px 12px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink-2);transition:background .15s ease-out,color .15s ease-out}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg input:checked + label{background:var(--brand);color:#fff}
+.seg input:focus-visible + label{outline:2px solid var(--brand-light);outline-offset:2px}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer;user-select:none}
+.toggle input{appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;margin:0;cursor:pointer;transition:background .18s ease-out}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s ease-out}
+.toggle input:checked{background:var(--brand-light)}
+.toggle input:checked::after{transform:translateX(16px)}
+.toggle input:focus-visible{outline:2px solid var(--brand-light);outline-offset:2px}
+
+/* strips */
+.strip{display:flex;gap:22px;overflow-x:auto;padding:8px 4px 26px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.shot{scroll-snap-align:start;flex:0 0 auto;display:flex;flex-direction:column;gap:10px}
+.shot .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;color:var(--ink-2)}
+.shot .lbl b{color:var(--ink);font-weight:700}
+.placeholder{display:grid;place-items:center;text-align:center;padding:24px;border:2px dashed var(--warn);border-radius:16px;color:var(--ink-2);font-size:14px;background:color-mix(in srgb, var(--warn) 6%, transparent)}
+.placeholder b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+
+/* a store screenshot canvas in real pixels scaled by --s */
+.canvas{position:relative;overflow:hidden;border-radius:calc(18px * var(--s) * 4);box-shadow:var(--shadow);
+  width:calc(var(--W) * var(--s));height:calc(var(--H) * var(--s));
+  background:linear-gradient(180deg,#EEF0FF 0%,#E3E2F8 55%,#D9D7F4 100%);font-family:var(--font)}
+.canvas::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(60% 32% at 50% 24%, rgba(91,80,214,.22), transparent 70%),radial-gradient(70% 40% at 50% 110%, rgba(55,48,163,.18), transparent 70%)}
+.canvas.dark{background:linear-gradient(180deg,#1B1946 0%,#131238 55%,#0B0A24 100%)}
+.canvas.dark::before{background:radial-gradient(60% 32% at 50% 24%, rgba(140,131,240,.28), transparent 70%),radial-gradient(70% 40% at 50% 110%, rgba(91,80,214,.25), transparent 70%)}
+.cap{position:absolute;left:calc(var(--m) * var(--s));right:calc(var(--m) * var(--s));top:calc(var(--capTop) * var(--s));text-align:center;color:var(--brand);
+  font-weight:800;font-size:calc(var(--capSize) * var(--s));line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.canvas.dark .cap{color:#EDEBFF}
+.cap small{display:block;margin-top:calc(22px * var(--s));font-weight:600;letter-spacing:0;font-size:calc(var(--subSize) * var(--s));color:#5B50D6;opacity:.92}
+.canvas.dark .cap small{color:#B3ACF5}
+.card{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--cardTop) * var(--s));width:calc(var(--cardW) * var(--s))}
+.clip{position:absolute;inset:0;overflow:hidden;border-radius:calc(var(--r) * var(--s));
+  box-shadow:0 calc(40px*var(--s)) calc(90px*var(--s)) calc(-20px*var(--s)) rgba(30,24,110,.45), 0 calc(6px*var(--s)) calc(14px*var(--s)) rgba(30,24,110,.12)}
+.clip .scrwrap{transform-origin:top left}
+.bezel{position:absolute;display:none;pointer-events:none;max-width:none}
+.framed .clip{box-shadow:none;border-radius:calc(var(--rb) * var(--s))}
+.framed .bezel{display:block}
+.guides{position:absolute;inset:0;pointer-events:none;display:none}
+.guides.on{display:block}
+.guides::before{content:"";position:absolute;left:calc(var(--m) * var(--s));right:calc(var(--m) * var(--s));top:calc(var(--mTop) * var(--s));bottom:calc(var(--mTop) * var(--s));border:1px dashed rgba(201,51,46,.9)}
+.guides::after{content:"safe zone";position:absolute;left:calc(var(--m) * var(--s) + 6px);top:calc(var(--mTop) * var(--s) + 4px);font:700 10px var(--mono);color:#C9332E;letter-spacing:.04em}
+
+/* ---------- the app's screens, 1 CSS px = 1 pt, then scaled ---------- */
+.scr{position:relative;overflow:hidden;background:#F2F1F8;color:#111120;font-family:var(--font);font-size:17px;line-height:1.25;letter-spacing:0;text-align:left}
+.scr.dark{background:#000;color:#fff}
+.scr *{box-sizing:border-box}
+.sb{position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:14px 38px 0 46px;font-weight:600;font-size:16px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.sb svg{display:block}
+.scr.ipad .sb{height:24px;padding:3px 18px 0 18px;font-size:12px}
+.scr.ipad .sb .l{display:flex;gap:10px}
+.scr.ipad .sb .l b{font-weight:700}
+.scr.duoc .sb{left:auto;right:0;top:80px;width:100px;height:auto;flex-direction:column;gap:10px;padding:0;justify-content:flex-start}
+.scr.duoc .sb .ring{width:40px;height:40px;border-radius:50%;border:3px solid #34C759;display:grid;place-items:center}
+.scr.duoc .content{padding-right:100px}
+.nav{position:absolute;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;height:44px}
+.scr.iph .nav{top:60px}.scr.ipad .nav{top:30px}.scr.duoc .nav{top:28px;right:116px}.scr.duoi .nav{top:60px}
+.cap-btn{display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 14px;border-radius:999px;background:#fff;border:1px solid #DAD7EE;color:#3730A3;font-size:17px;font-weight:500;box-shadow:0 1px 2px rgba(55,48,163,.06)}
+.scr.dark .cap-btn{background:#1C1C1E;border-color:#2C2C2E;color:#8C83F0}
+.nav .ttl{font-weight:700;font-size:17px}
+.content{position:absolute;left:0;right:0;padding:0 16px}
+.scr.iph .content{top:120px}.scr.ipad .content{top:84px}.scr.duoc .content{top:88px}.scr.duoi .content{top:120px}
+.scr.setup .content{top:0!important}
+.inner{max-width:600px;margin:0 auto}
+.sec-lbl{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#6E6E80;margin:0 0 8px 2px;font-weight:500}
+.scr.dark .sec-lbl{color:#98989F}
+.acard{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(55,48,163,.07);overflow:hidden}
+.scr.dark .acard{background:#1C1C1E;box-shadow:none}
+.row{display:flex;align-items:center;gap:12px;min-height:62px;padding:0 16px;position:relative}
+.row + .row::before{content:"";position:absolute;left:64px;right:16px;top:0;height:1px;background:#E6E4F2}
+.scr.dark .row + .row::before{background:#38383A}
+.row.lead{background:#ECF8F0}.scr.dark .row.lead{background:#0F2A1A}
+.row.lead + .row::before{left:0}
+.row.winner{background:#E5E2F8}.scr.dark .row.winner{background:#27235A}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;flex:0 0 36px}
+.name{flex:1;font-size:17px}
+.score{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.score.danger{color:#F0870C}.score.bust{color:#E5383B}
+.crown{color:#34C759;font-size:16px;margin-right:4px}
+.hint{font-size:13px;color:#6E6E80;text-align:center;margin:8px 0 0}
+.scr.dark .hint{color:#98989F}
+.pbtn{position:absolute;left:16px;right:16px;height:58px;border-radius:16px;background:#3730A3;color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;max-width:600px;margin:0 auto}
+.pbtn.ghost{background:transparent;color:#3730A3;height:44px}
+.scr.dark .pbtn.ghost{color:#8C83F0}
+.scr.iph .pbtn,.scr.duoi .pbtn{bottom:34px}.scr.ipad .pbtn{bottom:38px}.scr.duoc .pbtn{bottom:40px;right:116px}
+.home{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;width:134px;height:5px;border-radius:3px;background:#1C1C1E;opacity:.9}
+.scr.dark .home{background:#E5E5EA}
+.scr.duoc .home{left:calc(50% - 50px)}
+.minus{width:26px;height:26px;border-radius:50%;background:#FF3B30;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;line-height:1}
+.title{font-weight:800;font-size:40px;letter-spacing:-1.5px;color:#3730A3;text-align:center;line-height:1.05}
+.scr.dark .title{color:#A7A0FA}
+.title + .q{font-size:17px;color:#6E6E80;text-align:center;margin:8px 0 26px}
+.scr.dark .q{color:#98989F}
+.ready{font-size:15px;color:#34C759;text-align:center;font-weight:500}
+.addrow{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;color:#3730A3;font-size:17px;font-weight:500;position:relative}
+.scr.dark .addrow{color:#8C83F0}
+.addrow::before{content:"";position:absolute;left:16px;right:16px;top:0;height:1px;background:#E6E4F2}
+.scr.dark .addrow::before{background:#38383A}
+.plus{width:26px;height:26px;border-radius:50%;background:#34C759;color:#fff;display:grid;place-items:center;font-size:18px;font-weight:700;margin-left:5px;line-height:1}
+.hero{text-align:center;padding-top:44px}
+.hero .trophy{font-size:64px;line-height:1}
+.hero h3{margin:10px 0 2px;font-size:28px;font-weight:800;color:#3730A3;letter-spacing:-.5px}
+.scr.dark .hero h3{color:#A7A0FA}
+.hero p{margin:0 0 26px;color:#6E6E80;font-size:17px}
+.scr.dark .hero p{color:#98989F}
+.medal{font-size:17px;margin-right:4px}
+.scr.win{background:linear-gradient(180deg,#E6E4F6 0%,#F2F1F8 40%)}
+.scr.win.dark{background:linear-gradient(180deg,#1C1A3D 0%,#000 40%)}
+.scr.duoc .hero{padding-top:14px}.scr.duoc .hero .trophy{font-size:48px}.scr.duoc .hero p{margin-bottom:10px}
+.scr.duoc.win .pbtn{bottom:68px!important}.scr.duoc.win .pbtn.ghost{bottom:22px!important}
+/* entry sheet: rows scroll above a pinned numpad, as in the app */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.18)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#F2F1F8;border-radius:22px 22px 0 0;overflow:hidden}
+.scr.dark .sheet{background:#1C1C1E}
+.scr.iph .sheet,.scr.duoi .sheet{top:56px}.scr.duoc .sheet{top:10px;border-radius:22px;right:0}
+.sheet .scroll{position:absolute;left:16px;right:16px;top:0;bottom:352px;overflow:hidden;padding-top:10px}
+.scr.duoc .sheet .scroll{right:116px}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:#C7C5D6;margin:0 auto 10px}
+.sheet .pin{position:absolute;left:16px;right:16px;bottom:0;height:352px;padding-top:12px}
+.scr.duoc .sheet .pin{right:116px}
+.sheet .pin::before{content:"";position:absolute;left:-16px;right:-16px;top:0;height:1px;background:#DAD7EE}
+.scr.dark .sheet .pin::before{background:#38383A}
+.sheet .acard{box-shadow:0 2px 10px rgba(55,48,163,.08)}
+.scr.dark .sheet .acard{background:#2C2C2E}
+.erow{min-height:64px}
+.erow.focus::after{content:"";position:absolute;inset:4px 6px;border:2px solid #3730A3;border-radius:10px;pointer-events:none}
+.scr.dark .erow.focus::after{border-color:#8C83F0}
+.dbl{font-size:13px;font-weight:500;color:#F0870C;margin-right:6px}
+.eval{font-size:22px;font-weight:700;width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.whohint{font-size:13px;color:#6E6E80;margin:-2px 0 8px 2px;line-height:1.35}
+.scr.dark .whohint{color:#98989F}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px}
+.chips.two{grid-template-columns:repeat(2,1fr)}
+.chip{height:44px;border-radius:10px;background:#E9E8F1;display:flex;align-items:center;justify-content:center;gap:7px;font-size:15px;font-weight:500}
+.scr.dark .chip{background:#3A3A3C}
+.chip .ci{width:18px;height:18px;border-radius:50%;background:#D5D3E2;color:#6E6E80;font-size:10px;font-weight:700;display:grid;place-items:center}
+.chip.sel{background:#fff;border:2px solid var(--cc);color:var(--cc)}
+.scr.dark .chip.sel{background:#1C1C1E}
+.chip.sel .ci{background:var(--cc);color:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 10px}
+.key{height:58px;border-radius:10px;background:#E2E0EE;display:grid;place-items:center;font-size:22px;font-weight:600}
+.scr.dark .key{background:#3A3A3C}
+.sheet .pbtn{position:static;margin:0}
+.sheet.wide{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:592px;border-radius:22px;display:grid;grid-template-columns:1fr 1px 230px;gap:14px;padding:16px 14px 14px;overflow:visible}
+.sheet.wide .vdiv{background:#DAD7EE;align-self:stretch}
+.sheet.wide .lcol{display:flex;flex-direction:column;justify-content:center}
+.sheet.wide .pad{margin-top:10px}
+.sheet.wide .key{height:50px}
+.sheet.wide .pbtn{height:48px;margin:0}
+/* two-page layout on the open inner display: list left, heading and action right, the 24pt band empty */
+.scr.open .pages{position:absolute;inset:0;display:grid;grid-template-columns:1fr 24px 1fr}
+.scr.open .page{position:relative;padding:0 16px}
+.scr.open .pnav{position:absolute;left:16px;right:16px;top:16px;height:44px;display:flex;align-items:center}
+.scr.open .pbody{padding-top:76px}
+.scr.open .phead{padding-top:84px;text-align:center}
+.scr.open .pfoot{position:absolute;left:16px;right:16px;bottom:24px}
+.scr.open .home{left:50%}
+.scr.open .hero h3{font-size:28px}
+.scr.open .sheet.span{left:24px;right:24px;top:40px;bottom:0;border-radius:22px 22px 0 0;display:grid;grid-template-columns:1fr 24px 1fr;padding:0 16px;overflow:hidden}
+.scr.open .sheet.span .spage{position:relative;padding-top:8px;display:flex;flex-direction:column}
+.scr.open .sheet.span .spage .pbtn{position:static;margin-top:auto;margin-bottom:14px}
+.scr.open .sheet.span .grab{margin-bottom:8px}
+/* a standard iPhone turned sideways (preview only, not a store shot) */
+.scr.land{width:956px;height:440px}
+.scr.land .island{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:37px;height:126px;border-radius:20px;background:#000}
+.scr.land .nav{top:8px;left:75px;right:75px}
+.scr.land .content{top:62px;left:59px;right:59px;bottom:92px;overflow:hidden}
+.scr.land .pbtn{bottom:29px;left:75px;right:75px}
+.scr.land .home{bottom:8px}
+.scr.land .actions{position:absolute;left:75px;right:75px;bottom:29px;display:flex;gap:12px;align-items:center;max-width:600px;margin:0 auto}
+.scr.land .pbtn.sec{background:rgba(55,48,163,.10);color:#3730A3;padding:0 18px}
+.scr.land .hero-row{display:flex;align-items:center;gap:14px;padding:4px 24px 10px;text-align:left}
+.scr.land .hero-row .trophy{font-size:40px;line-height:1}
+.scr.land .hero-row h3{margin:0;font-size:24px;font-weight:800;color:#3730A3;letter-spacing:-.5px}
+.scr.land .hero-row p{margin:0;color:#6E6E80;font-size:15px}
+.scr.land.win{background:linear-gradient(180deg,#E6E4F6 0%,#F2F1F8 30%)}
+.scr.land .sheet.wide{transform:translate(-50%,-50%)}
+/* compare pairs */
+.strip[data-set="duoi"]{display:block;overflow:visible}
+.pair{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);margin:0 0 18px}
+.pair .shot{flex:0 0 auto}
+.pair .pick{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:14px;color:var(--ink-2)}
+.pair .pick b{color:var(--ink)}
+.pair .shot{opacity:.55;transition:opacity .15s ease-out}
+.pair .shot.chosen{opacity:1}
+.prevs{display:flex;gap:22px;overflow-x:auto;padding:8px 4px 26px}
+.prev{flex:0 0 auto}
+.prev .frame{position:relative;width:498px;height:240px;border-radius:38px;background:#111;padding:10px;box-shadow:var(--shadow)}
+.prev .frame .clip{position:relative;inset:auto;width:478px;height:220px;border-radius:30px;overflow:hidden}
+.prev .frame .scrwrap{transform:scale(.5);transform-origin:top left}
+.prev .lbl{font-size:13px;color:var(--ink-2);margin:8px 0 0}
+.prev .lbl b{color:var(--ink)}
+
+/* before/after, references */
+.before,.refs{display:flex;gap:12px;overflow-x:auto;padding:4px 4px 18px}
+.before img{height:300px;width:auto;border-radius:10px;box-shadow:var(--shadow);display:block}
+.refs img{height:210px;width:auto;border-radius:8px;box-shadow:var(--shadow);display:block}
+.before figure,.refs figure{margin:0;flex:0 0 auto}
+.before figcaption,.refs figcaption{font-size:12px;color:var(--ink-3);margin-top:6px}
+.refs figcaption{font-family:var(--mono);font-size:11px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:10px}
+@media (max-width:760px){.vs{grid-template-columns:1fr}}
+.vs h3{margin:0 0 8px;font-size:17px}
+.vs ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:15px}
+.vs li{margin:4px 0}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0 0}
+@media (max-width:760px){.paths{grid-template-columns:1fr}}
+.paths article{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.paths h3{margin:0 0 6px;font-size:16px}
+.paths p,.paths li{font-size:14px;color:var(--ink-2);margin:0}
+.paths ul{margin:8px 0 0;padding-left:18px}
+.explain{background:color-mix(in srgb, var(--brand-light) 8%, var(--surface));border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:0 0 18px;font-size:15px;color:var(--ink-2);max-width:none}
+.explain b{color:var(--ink)}
+
+/* header (21:9) */
+.hdr-wrap{container-type:inline-size}
+.hdr{position:relative;width:100%;aspect-ratio:3840/1646;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:linear-gradient(100deg,#EEF0FF 0%,#E2E0F8 50%,#D4D1F2 100%)}
+.hdr::before{content:"";position:absolute;inset:0;background:radial-gradient(45% 80% at 70% 50%, rgba(91,80,214,.22), transparent 70%)}
+.hdr .h-text{position:absolute;left:7%;top:50%;transform:translateY(-50%);width:28%;color:var(--brand);font-weight:800;letter-spacing:-.025em;line-height:1.02;font-size:clamp(14px,4.6cqw,74px)}
+.hdr .h-text small{display:block;margin-top:.5em;font-size:.42em;font-weight:600;letter-spacing:0;color:#5B50D6}
+.hdr .trio{position:absolute;left:40%;right:3%;top:0;bottom:0}
+.hdr .tcard{position:absolute;bottom:5%}
+.hdr .tcard .clip{border-radius:1.4cqw;box-shadow:0 1.2cqw 2.6cqw -.6cqw rgba(30,24,110,.5)}
+.hdr.framed .tcard .clip{box-shadow:none;border-radius:.6cqw}
+
+/* guidance */
+.guid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:860px){.guid{grid-template-columns:1fr}}
+.guid article{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.guid h3{margin:0 0 8px;font-size:16px}
+.guid ul{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.guid li{margin:5px 0}
+.guid li b{color:var(--ink)}
+.guid .src{font-size:12px;color:var(--ink-3);margin-top:8px}
+.bezel-demo{display:flex;gap:14px;align-items:flex-end;margin-top:12px}
+.bezel-demo img{height:150px;width:auto;display:block}
+.bezel-demo figure{margin:0;text-align:center;font-size:11px;color:var(--ink-3);font-family:var(--mono)}
+
+/* copy */
+.copy{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:860px){.copy{grid-template-columns:1fr}}
+.field{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:0 1px 2px rgba(55,48,163,.04)}
+.field.full{grid-column:1/-1}
+.field header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.field h3{margin:0;font-size:15px;font-weight:700}
+.field .cnt{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.field .cnt.over{color:var(--danger);font-weight:700}
+.field pre{white-space:pre-wrap;font:inherit;font-size:15px;line-height:1.5;background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:0;color:var(--ink-2)}
+.field .why{font-size:13px;color:var(--ink-2);margin:8px 0 0}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;transition:border-color .15s ease-out,background .15s ease-out}
+.opt:hover{border-color:var(--brand-light)}
+.opt input{margin:4px 0 0}
+.opt input:focus-visible{outline:2px solid var(--brand-light);outline-offset:2px}
+.opt:has(input:checked){border-color:var(--brand-light);background:color-mix(in srgb, var(--brand-light) 10%, var(--surface-2))}
+.opt .t{font-size:15px;line-height:1.45}
+.opt .c{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;padding-top:3px}
+.opt .c.over{color:var(--danger);font-weight:700}
+table.caps{width:100%;border-collapse:collapse;font-size:14px}
+table.caps th{text-align:left;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.caps td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+table.caps td:first-child{color:var(--ink);font-weight:700;white-space:nowrap}
+table.caps td i{font-style:normal;color:var(--ink-3);display:block;font-size:13px}
+.dec{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:10px}
+.dec article{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.dec h3{margin:0 0 6px;font-size:15px}
+.dec p{margin:0;font-size:14px;color:var(--ink-2)}
+footer{padding:40px 0 60px;color:var(--ink-3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Scorekeeper for Skyjo &#xB7; App Store page &#xB7; 1.7.1 &#xB7; round eight, approved</p>
+    <h1>The store page, <em>brought up to date</em></h1>
+    <p class="lede">Four screenshot sets in Apple's bezels, one product page header, and the text that doesn't exist yet, written for someone deciding whether to download. The players are the same people as the May screenshots, with the same scores and finishing order. Existing copy is untouched.</p>
+    <nav class="sec" aria-label="Sections">
+      <ul>
+        <li><a href="#today">Today vs new</a></li>
+        <li><a href="#iphone">iPhone</a></li>
+        <li><a href="#ipad">iPad</a></li>
+        <li><a href="#duo-outer">Duo outer</a></li>
+        <li><a href="#duo-inner">Duo inner</a></li>
+        <li><a href="#sideways">iPhone sideways</a></li>
+        <li><a href="#header">Header</a></li>
+        <li><a href="#apple">What Apple says</a></li>
+        <li><a href="#preview">Preview video</a></li>
+        <li><a href="#copy">Text</a></li>
+        <li><a href="#decisions">Decisions</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="today">
+    <h2>What's on the page today</h2>
+    <p class="sub">Eight raw simulator captures from 13 and 16 May: Shawn, Mike, David, Elena and Phoebe, Round 1 scores, the Round 2 standings, and Shawn winning after 6 rounds. The new sets keep every one of those facts. What changes is the app around them (the numpad, no "Skip" chip, the iOS 27 toolbar) and the presentation.</p>
+    <div class="before">
+      <figure><img src="mockup-assets/before/iphone-may-1.jpg" alt="Current iPhone screenshot 1: setup with Shawn, Mike, David, Elena, Phoebe"><figcaption>iPhone 1 &#xB7; setup</figcaption></figure>
+      <figure><img src="mockup-assets/before/iphone-may-2.jpg" alt="Current iPhone screenshot 2: Round 1 entry sheet"><figcaption>iPhone 2 &#xB7; Round 1 entry</figcaption></figure>
+      <figure><img src="mockup-assets/before/iphone-may-3.jpg" alt="Current iPhone screenshot 3: Round 2 standings"><figcaption>iPhone 3 &#xB7; Round 2 standings</figcaption></figure>
+      <figure><img src="mockup-assets/before/iphone-may-4.jpg" alt="Current iPhone screenshot 4: Shawn wins after 6 rounds"><figcaption>iPhone 4 &#xB7; Shawn wins</figcaption></figure>
+      <figure><img src="mockup-assets/before/ipad-may-1.jpg" alt="Current iPad screenshot 1: setup"><figcaption>iPad 1 &#xB7; setup</figcaption></figure>
+      <figure><img src="mockup-assets/before/ipad-may-2.jpg" alt="Current iPad screenshot 2: Round 1 entry"><figcaption>iPad 2 &#xB7; Round 1 entry</figcaption></figure>
+      <figure><img src="mockup-assets/before/ipad-may-3.jpg" alt="Current iPad screenshot 3: Round 2 standings"><figcaption>iPad 3 &#xB7; Round 2 standings</figcaption></figure>
+      <figure><img src="mockup-assets/before/ipad-may-4.jpg" alt="Current iPad screenshot 4: Shawn wins"><figcaption>iPad 4 &#xB7; Shawn wins</figcaption></figure>
+    </div>
+    <div class="vs">
+      <div><h3>What stays</h3><ul>
+        <li>The five players, in order: Shawn, Mike, David, Elena, Phoebe</li>
+        <li>Round 1 scores: Shawn 5, Mike 12, David 7 (David ended the round, so &#xD7;2 &#x2192; 14), Elena 8, Phoebe 10</li>
+        <li>Round 2 standings: Shawn 5, Elena 8, Phoebe 10, Mike 12, David 14</li>
+        <li>The finish, 6 rounds played: Shawn 80, Phoebe 90, Elena 96, Mike 100, David 119</li>
+        <li>App name, subtitle, description, keywords, icon, categories, age rating: all unchanged</li>
+      </ul></div>
+      <div><h3>What changes</h3><ul>
+        <li>Every shot recaptured from today's app with a 9:41 status bar</li>
+        <li>One short caption per shot in brand indigo, written for a shopper; the screen on a soft indigo gradient inside Apple's own product bezel</li>
+        <li>The standings lead every set, because that is the app in use</li>
+        <li>A new iPhone Duo set, outer display and inner display (sideways and upright), which is what earns the Made for iPhone Duo badge</li>
+        <li>New text only where there is none today: promotional text, What's New for 1.7.1, captions, the header line. All of it in plain words about what the app does, none of it about the hardware</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <div class="toolbar" id="controls">
+    <span class="grp">Frames <span class="pill ok">Apple bezels, locked</span></span>
+    <label class="toggle"><input type="checkbox" data-guides> Safe-zone guides</label>
+    <label class="toggle"><input type="checkbox" data-darkall> Every shot in dark mode</label>
+    <span class="meta">applies to all four sets and the header &#xB7; add ?frames=none to the address to compare the frameless look</span>
+  </div>
+
+  <section id="iphone" style="padding-top:12px">
+    <h2>iPhone 6.9" <span class="meta">1320 &#xD7; 2868 &#xB7; 5 shots</span></h2>
+    <p class="sub">The story in five: who's winning, how scores go in, how a game ends, how one starts, and that it's free. Apple scales this set down to the 6.3" class.</p>
+    <div class="strip" data-set="iphone"></div>
+  </section>
+
+  <section id="ipad">
+    <h2>iPad 13" <span class="meta">2064 &#xD7; 2752 &#xB7; 4 shots</span></h2>
+    <p class="sub">Same four beats. The entry sheet shows the side-by-side layout a wide window gets: scores on the left, who ended and the numpad on the right.</p>
+    <div class="strip" data-set="ipad"></div>
+  </section>
+
+  <section id="duo-outer">
+    <h2>iPhone Duo, outer display <span class="meta">1398 &#xD7; 2034 &#xB7; 4 shots</span></h2>
+    <p class="sub">The closed phone, same captions as the iPhone set. The bezel does the talking about which device this is.</p>
+    <div class="strip" data-set="duoc"></div>
+  </section>
+
+  <section id="duo-inner">
+    <h2>iPhone Duo, inner display <span class="meta">4 shots &#xB7; upright, sideways, upright, sideways &#xB7; approved</span></h2>
+    <div class="explain" hidden>
+      <b>Why every shot is tall.</b> The app is portrait-only on iPhone (a recorded decision, kept). Open the Duo and hold it sideways, and the shipped app does not get the two-page layout: in the simulator it gets a 501pt-wide window with empty space around it. The honest inner-display shot today is the open phone turned so the fold runs side to side: 2007 &#xD7; 2853, the tall layout, with the list crossing the fold and every button clear of it. No crease is drawn in any shot: a screenshot is the display's pixels, and Apple's own Duo bezel art shows the open inner display as one clean rectangle.
+    </div>
+    <div class="explain"><b>Decided 27 October: iPhone rotates to landscape from 1.7.1.</b> Every inner-display shot is shown both ways below, upright (2007 &#xD7; 2853) and sideways (2853 &#xD7; 2007), so you can pick per shot. Sideways, the app splits into two pages with nothing in between: standings or players on the left, the heading and the main button on the right; the entry sheet spans both pages with the players on the left and the who-ended chips and numpad on the right; the finish puts the table on the left and the trophy and buttons on the right. Approved 29 October, one orientation per shot: standings upright, entry sheet sideways, final standings upright, setup sideways. The approved one is pre-selected below; the switch only compares. The Engineer captures the sideways shots from the 1.7.1 build with landscape enabled.</div>
+    <div class="strip" data-set="duoi"></div>
+    <div hidden>
+    <h3 style="margin:8px 0 0;font-size:18px">The landscape two-page shot (2853 &#xD7; 2007): two ways it becomes honest</h3>
+    <p class="sub" style="margin-bottom:0">Either one is your decision, not ours. Until one is taken, the slot stays empty and the set is four shots. Nothing in the app or its Info.plist changes in this pass.</p>
+    <div class="paths">
+      <article><h3>Path A: confirm it on a real iPhone Duo (or Device Hub)</h3><p>If the shipped portrait-only app actually gets the full inner display in the open landscape pose, the two-page layout you approved on 22 October is real and can be captured as is.</p><ul><li>Lets the set show: the list on the left page, Round N and the button on the right, in Apple's "Inner Open Landscape" bezel</li><li>Cost: a device or an unlocked Mac with Device Hub; no code change</li><li>Risk: the simulator says the window is 501pt wide, so this may simply not be the case</li></ul></article>
+      <article><h3>Path B: allow landscape on iPhone</h3><p>Switch landscape on in Info.plist for iPhone. The two-page layout then shows for certain, in the simulator and on the device.</p><ul><li>Lets the set show: the same two-page shot, plus landscape on every iPhone</li><li>Cost: reverses the portrait-lock decision of 26 September; every standard iPhone gets a landscape layout that needs its own testing</li><li>This is a product decision with its own pass, not a screenshot tweak</li></ul></article>
+    </div>
+    </div>
+  </section>
+
+  <section id="sideways">
+    <h2>iPhone turned sideways <span class="pill warn">preview, not a store shot</span></h2>
+    <p class="sub">What a standard iPhone will do once landscape is on in 1.7.1, drawn from the wide and short layouts the app already has (iPhone 17 Pro Max: 956 &#xD7; 440pt, 59pt safe areas at the sides, status bar hidden, home indicator at the bottom). The Engineer and Tester confirm the real thing; these are here so nothing surprises you.</p>
+    <div class="prevs" id="prevs"></div>
+    <p class="note"><b>Plainly: three of the four screens are tight sideways.</b> The window is only 440pt tall, so with five players the standings, the setup list and the final table each show about four rows and scroll for the rest, with the main button pinned below. The entry sheet is the best fit, since it was already designed for a wide panel. None of this is wrong, it is what the current layouts do in a short window, and it is worth a look on a real phone before 1.7.1 ships; if the standings feel cramped, the quickest relief would be a smaller row height in the short layout, which is the Engineer&#x2019;s call.</p>
+  </section>
+
+  <section id="header">
+    <h2>Product page header <span class="meta">3840 &#xD7; 1646 &#xB7; 21:9 &#xB7; iOS 27 and later</span></h2>
+    <p class="sub">One line of text on the left (locked), two real screens on the right: the open iPhone Duo, sideways, with the standings on one page and the round on the other, and the iPhone. The iPad has its own screenshot set; three bezels side by side made every one of them small. No card art, no logo, no badge, no price.</p>
+    <div class="hdr-wrap"><div class="hdr" id="hdr">
+      <div class="h-text"><span id="hline">Keep score.<br>See who's winning.</span><small>On iPhone, iPad and iPhone Duo</small></div>
+      <div class="trio" id="trio"></div>
+    </div></div>
+    <p class="note">Exported without alpha, sRGB, from Apple's header template so the safe area is Apple's. The headline sits inside the left 35%, the two devices inside the right 57%.</p>
+  </section>
+
+  <section id="apple">
+    <h2>What Apple says about Duo screenshots</h2>
+    <p class="sub">Checked today against Apple's asset best practices, the iPhone Duo "Prepare" page, the screenshot specifications, Design Resources and the App Store Marketing Guidelines. Plainly: Apple does not prescribe one way to show iPhone Duo. Here is what it does say, what it leaves open, and where this design follows or departs.</p>
+    <div class="guid">
+      <article><h3>What Apple recommends</h3><ul>
+        <li><b>Show the app in use.</b> "Use screenshots to depict your app or game in use", lead with the strongest features, in a sequence that tells a story. Captions should be "a short phrase that enhances your visual rather than describes it", kept legible, inside a safe area, focal point centred. <span class="src">Asset best practices</span></li>
+        <li><b>Duo sizes and the badge.</b> Outer 1398 &#xD7; 2034, inner 2007 &#xD7; 2853 (either orientation), PNG or JPEG, no alpha. Submitting Duo screenshots is what shows the badge. Required from April 2027 for apps on the 27.1 SDK. <span class="src">Screenshot specifications</span></li>
+        <li><b>Across orientations.</b> "Share app previews and screenshots that highlight your app across orientations." That is the one Duo-specific creative note Apple makes. <span class="src">iPhone Duo: Prepare</span></li>
+        <li><b>Apple does publish iPhone Duo bezels.</b> Design Resources, Product Bezels: Inner Open Portrait, Inner Open Landscape, Outer Closed Portrait and Landscape, Outer Open, in Night Sky and Star White. The display cut-out in each is exactly the screenshot size. The marketing guidelines say to use Apple's bezels "as is": no added shadows, reflections, tilting or cropping. <span class="src">Design Resources; App Store Marketing Guidelines</span></li>
+        <li><b>No crease.</b> Apple's inner-display bezel shows the open screen as one clean rectangle. Nothing anywhere asks for the fold to be drawn. <span class="src">Design Resources (bezel art)</span></li>
+      </ul></article>
+      <article><h3>What Apple is silent on, and where this design stands</h3><ul>
+        <li><b>Silent:</b> whether screenshots must use a bezel at all (its screenshot templates are for the header and search assets, not screenshots), open versus closed, which pose to lead with, captions versus none, background treatment, and whether a portrait-only app qualifies for the badge.</li>
+        <li><b>Follows:</b> real UI only, standings first, short captions in the app's own type, everything inside a safe zone, the ASC preview tool as the last check, both Duo displays shown, no fold drawn.</li>
+        <li><b>Departed, now corrected:</b> round one said no Duo frame art existed. That was wrong. Apple ships Duo bezels, so the default here is now <b>Apple's bezels, as is</b>, for all four sets and the header. They make a Duo shot read as a Duo shot (an inner-portrait screen on its own looks like a slightly wide iPhone). "None" stays available on the toggle.</li>
+        <li><b>Follows, since 27 October:</b> "across orientations". With landscape allowed on iPhone from 1.7.1, the inner-display set shows the Duo both sideways and upright, in Apple's matching bezels.</li>
+      </ul>
+      <div class="bezel-demo">
+        <figure><img src="mockup-assets/bezels/duo-outer-closed.png" alt="Apple's iPhone Duo outer closed bezel"><br>Outer Closed</figure>
+        <figure><img src="mockup-assets/bezels/duo-inner-portrait.png" alt="Apple's iPhone Duo inner open portrait bezel: no crease"><br>Inner Open Portrait</figure>
+        <figure><img src="mockup-assets/bezels/duo-inner-landscape.png" alt="Apple's iPhone Duo inner open landscape bezel"><br>Inner Open Landscape</figure>
+      </div>
+      </article>
+    </div>
+    <p class="note">Sources, all read 27 October 2026: developer.apple.com/app-store/asset-best-practices/ &#xB7; developer.apple.com/iphone-duo/prepare/ &#xB7; App Store Connect Help, Screenshot specifications &#xB7; developer.apple.com/design/resources/ (Product Bezels, "iPhone Duo", Bezel-iPhone-Duo.dmg) &#xB7; developer.apple.com/app-store/marketing/guidelines/ (Apple Product Images).</p>
+  </section>
+
+  <section id="preview">
+    <h2>App preview video <span class="pill">Recommendation: no, not this pass</span></h2>
+    <p class="sub">One reason: the first slot in search results is worth more as a still of the standings than as a 15-second clip of someone tapping numbers. The app's pitch is that you understand it from one screen. If reviews ever ask how scores go in, a 20-second iPhone preview (setup, three taps on the numpad, confirm, the standings move) is the storyboard, captured with simctl recordVideo. Logged as a follow-up.</p>
+  </section>
+
+  <section id="copy">
+    <h2>Text</h2>
+    <p class="sub">Existing copy stays exactly as it is. Promo text, What's New and the header line are locked. Counts are Apple's limits.</p>
+    <div class="copy">
+      <div class="field"><header><h3>Subtitle <span class="pill ok">unchanged</span></h3><span class="cnt">29 / 30 chars</span></header><pre>A simple Skyjo score tracker</pre></div>
+      <div class="field"><header><h3>Keywords <span class="pill ok">unchanged</span></h3><span class="cnt">68 / 100 bytes</span></header><pre>skyjo,score,keeper,tracker,card game,score pad,tally,round tracker</pre></div>
+      <div class="field full"><header><h3>Description <span class="pill ok">unchanged</span></h3><span class="cnt">current text</span></header><pre>A simple scorekeeping app for Skyjo that just works. Truly free, with no annoying ads or in-app purchases.
+
+Set up a game with 2 to 8 players, enter each round's scores, and let the app do the rest. Running totals update instantly after every round, the current standings are always visible, and the doubling rule is applied automatically based on who ended the round.
+
+Features:
+
+- Supports 2-8 players
+- Live standings updated after every round
+- Automatic doubling rule: only triggers when the round-ender has a positive score that isn't the lowest
+- Undo the last round if a score was entered wrong
+- Game ends automatically when any player reaches 100 points
+- Tiebreakers resolved by last-round score
+- Simple, fast, and out of the way
+- Free forever. No ads. No account. No tracking. No data collected. No internet connection required. Enjoy!
+
+This app is not affiliated with Skyjo or its creator in any way. I just really like the game of Skyjo.</pre></div>
+
+      <div class="field"><header><h3>Promotional text <span class="pill ok">locked</span></h3><span class="cnt">145 / 170 chars &#xB7; empty today</span></header>
+        <pre>Keep score for Skyjo without the paper. Tap in each round, see who's winning, and the doubling rule is handled for you. Free, no ads, no account.</pre>
+        <p class="why">Can go live on 1.7 today, before 1.7.1 is approved. Sits above the description.</p>
+        <details><summary class="why" style="cursor:pointer">Alternatives considered</summary><ul class="why"><li>Looks great on iPhone Duo, iPad and every iPhone. Tap in scores, see who's winning, and let the app do the math. Free, no ads, no account.</li><li>Game night, no paper. Add 2 to 8 players, tap in each round's scores, and the standings keep themselves. Free, with no ads and nothing to sign up for.</li></ul></details>
+      </div>
+      <div class="field"><header><h3>What's New, 1.7.1 <span class="pill ok">locked</span></h3><span class="cnt">113 / 4000 chars</span></header>
+        <pre>Turn your iPhone sideways and the scoreboard turns with it. New App Store screenshots too, including iPhone Duo.</pre>
+        <details><summary class="why" style="cursor:pointer">Alternatives considered</summary><ul class="why"><li>Your iPhone can now turn sideways. Plus a fresh set of App Store screenshots, including iPhone Duo.</li><li>Now works sideways on iPhone. New pictures on the App Store page, including iPhone Duo.</li></ul></details>
+        <p class="why">Today's 1.7 note: "Ready for iPhone Duo. When your phone is open, every button stays clear of the fold. On other iPhones and iPad, everything works just as before."</p>
+      </div>
+      <div class="field"><header><h3>Header line <span class="pill ok">locked</span></h3><span class="cnt">shown in the header above</span></header>
+        <pre>Keep score. See who's winning.
+On iPhone, iPad and iPhone Duo</pre>
+        <details><summary class="why" style="cursor:pointer">Alternatives considered</summary><ul class="why"><li>Tap in scores. We do the math.</li><li>Game night, no paper.</li></ul></details>
+      </div>
+      <div class="field"><header><h3>Captions <span class="pill ok">locked</span></h3><span class="cnt">headline + optional subline</span></header>
+        <table class="caps"><thead><tr><th>Shot</th><th>iPhone</th><th>iPad</th><th>Duo outer</th><th>Duo inner</th></tr></thead><tbody id="captab"></tbody></table>
+        <p class="why">Every caption says what the app does for the person reading, in their words: no device talk. The Duo sets use the same captions as the iPhone set; the bezel already shows it's a Duo. Sublines are optional and the first thing to drop.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="decisions">
+    <h2>Decisions in this direction</h2>
+    <div class="dec">
+      <article><h3>Apple's bezels, as is (locked)</h3><p>Apple publishes iPhone Duo, iPhone 18 Pro Max and iPad Pro bezels and asks that product images be used unmodified: no added shadow, tilt or crop, and in the header the three devices don't overlap. Frameless is kept only as a hidden compare (?frames=none).</p></article>
+      <article><h3>Standings first, everywhere</h3><p>Search results show the first three shots. The standings are the app in use, the entry sheet shows the doubling rule, the win screen shows the payoff. Setup comes fourth.</p></article>
+      <article><h3>May's people, May's scores</h3><p>Shawn, Mike, David, Elena, Phoebe. Round 1 entry with David's &#xD7;2 &#x2192; 14; Round 2 standings; Shawn wins after 6 rounds, 80 to 119. Shots with no May counterpart (Duo sets, dark mode) use the same Round 2 standings.</p></article>
+      <article><h3>Captions: plain words, one line, brand indigo</h3><p>What the app does for the person reading, nothing about the device or how it was built. SF Rounded heavy, the face the app uses. Two lines at most, an optional subline in brandLight.</p></article>
+      <article><h3>Light on an indigo gradient; one dark shot</h3><p>Light screens read best on the store's white page. The last iPhone shot flips to dark mode to show the app supports it.</p></article>
+      <article><h3>Duo inner set: upright, sideways, upright, sideways (approved)</h3><p>The standings and the finish are shown upright, the tall column a shopper already knows. The entry sheet and setup are shown sideways, the two-page picture no other iPhone can give. The header keeps the open Duo sideways with the standings on one page and the round on the other, the iPhone beside it.</p></article>
+      <article><h3>No crease, no drawn fold</h3><p>A screenshot is the display's pixels; the fold is hardware over them. Apple's own bezel art for the open inner display has no crease either.</p></article>
+    </div>
+    <h2 style="margin-top:40px;font-size:22px">Reference: real 1.7 captures the screens above are drawn from</h2>
+    <p class="sub">So the Engineer and I describe the same app. These use placeholder names; the final captures use Shawn, Mike, David, Elena and Phoebe. The red band in the open-pose captures is the simulator's stand-in fold, not something that appears in a screenshot.</p>
+    <div class="refs">
+      <figure><img src="mockup-assets/iphone17-2-scoreboard.png" alt="Real capture: iPhone 17 scoreboard"><figcaption>iphone17-2-scoreboard</figcaption></figure>
+      <figure><img src="mockup-assets/iphone17-3-entry-sheet.png" alt="Real capture: iPhone 17 entry sheet"><figcaption>iphone17-3-entry-sheet</figcaption></figure>
+      <figure><img src="mockup-assets/iphone17-4-win.png" alt="Real capture: iPhone 17 win screen"><figcaption>iphone17-4-win</figcaption></figure>
+      <figure><img src="mockup-assets/ipad-pro-11-landscape-3-entry-sheet.png" alt="Real capture: iPad entry sheet, side by side"><figcaption>ipad-landscape-3-entry-sheet</figcaption></figure>
+      <figure><img src="mockup-assets/duo-closed-2-scoreboard.png" alt="Real capture: iPhone Duo closed scoreboard"><figcaption>duo-closed-2-scoreboard</figcaption></figure>
+      <figure><img src="mockup-assets/duo-closed-3-entry-sheet.png" alt="Real capture: iPhone Duo closed entry sheet"><figcaption>duo-closed-3-entry-sheet</figcaption></figure>
+      <figure><img src="mockup-assets/duo-tabletop-simfold-2-scoreboard.png" alt="Real capture: iPhone Duo open, fold side to side, scoreboard"><figcaption>duo-open-portrait-2-scoreboard</figcaption></figure>
+      <figure><img src="mockup-assets/duo-tabletop-simfold-3-entry-sheet.png" alt="Real capture: iPhone Duo open, fold side to side, entry sheet"><figcaption>duo-open-portrait-3-entry-sheet</figcaption></figure>
+    </div>
+  </section>
+
+  <footer>Weft &#xB7; The Designer &#xB7; Scorekeeper for Skyjo &#xB7; iPhone Duo store listing &#xB7; round eight, approved</footer>
+</div>
+
+<script>
+(() => {
+  // ---------- demo data: the May screenshots' people and numbers ----------
+  const PL = [
+    {n:'Shawn', c:'#3730A3', t:'#fff'}, {n:'Mike', c:'#E69F00', t:'#fff'},
+    {n:'David', c:'#009E73', t:'#fff'}, {n:'Elena', c:'#D55E00', t:'#fff'}, {n:'Phoebe', c:'#0072B2', t:'#fff'}
+  ];
+  const av = i => `<span class="av" style="background:${PL[i].c};color:${PL[i].t}">${PL[i].n[0]}</span>`;
+  const standings = [[0,5,'lead'],[3,8,''],[4,10,''],[1,12,''],[2,14,'']];          // Round 2
+  const finals = [[0,80,'winner','&#x1F947;'],[4,90,'','&#x1F948;'],[3,96,'','&#x1F949;'],[1,100,'bust',''],[2,119,'bust','']]; // 6 rounds
+  const entry = [[0,'5',false],[1,'12',false],[2,'7',true],[3,'8',false],[4,'10',false]]; // Round 1, David ended
+  const ICONS = {
+    x:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>',
+    undo:'<svg width="18" height="16" viewBox="0 0 18 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3L2 7l4 4"/><path d="M2 7h9a5 5 0 010 10H9" transform="translate(0,-4)"/></svg>',
+    up:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l5-5 5 5"/></svg>',
+    play:'<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><path d="M1 1l10 6-10 6z"/></svg>',
+    redo:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v4H9"/><path d="M13 7A5.5 5.5 0 103.5 10.5"/></svg>',
+    del:'<svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 1h13v14H7L1 8z"/><path d="M11 5l6 6M17 5l-6 6" stroke-linecap="round"/></svg>',
+    crown:'<svg width="16" height="14" viewBox="0 0 16 14" fill="currentColor"><path d="M1 4l4 3 3-6 3 6 4-3-1.5 9h-11z"/></svg>',
+    wifi:'<svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 11.5L5.9 8.9a3.7 3.7 0 015.2 0zM3.4 6.4a7.2 7.2 0 0110.2 0l-1.3 1.3a5.4 5.4 0 00-7.6 0zM.5 3.5a11.3 11.3 0 0116 0l-1.3 1.3a9.5 9.5 0 00-13.4 0z"/></svg>',
+    batt:'<svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2" fill="#34C759"/><path d="M25.5 4.5v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>',
+    sig:'<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" opacity=".35"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>'
+  };
+  const statusBar = dev => {
+    if (dev === 'ipad') return `<div class="sb"><span class="l"><span>9:41</span><span>Mon Oct 27</span><b>Score for Skyjo</b></span><span class="ic">${ICONS.wifi}${ICONS.batt}</span></div>`;
+    if (dev === 'duoc') return `<div class="sb"><span>9:41</span><span class="ring">${ICONS.wifi}</span></div>`;
+    return `<div class="sb"><span>9:41</span><span class="ic">${ICONS.sig}${ICONS.wifi}${ICONS.batt}</span></div>`;
+  };
+  const nav = round => `<div class="nav"><span class="cap-btn">${ICONS.x} End Game</span><span class="ttl">Round ${round}</span><span class="cap-btn">${ICONS.undo} Undo</span></div>`;
+  const standingsCard = (rows) => `<p class="sec-lbl">Standings</p><div class="acard">${rows.map(([i,s,k]) =>
+      `<div class="row ${k==='lead'?'lead':''}">${av(i)}<span class="name">${PL[i].n}</span>${k==='lead'?`<span class="crown">${ICONS.crown}</span>`:''}<span class="score ${k==='danger'?'danger':''}">${s}</span></div>`).join('')}</div>
+      <p class="hint">Game ends when someone reaches 100. Lowest total wins.</p>`;
+  const zeroRows = [0,1,2,3,4].map(i => [i,0,'']);
+
+  function board(dev, dark){
+    return `<div class="scr ${dev} ${dark?'dark':''}">${statusBar(dev)}${nav(2)}
+      <div class="content"><div class="inner">${standingsCard(standings)}</div></div>
+      <div class="pbtn">${ICONS.up} Enter Round 2 Scores</div><div class="home"></div></div>`;
+  }
+  function setup(dev, dark){
+    const rows = [0,1,2,3,4].map(i => `<div class="row">${av(i)}<span class="name">${PL[i].n}</span><span class="minus">&#x2212;</span></div>`).join('');
+    const top = dev==='ipad' ? 70 : (dev==='duoc' ? 50 : 96);
+    return `<div class="scr ${dev} setup ${dark?'dark':''}">${statusBar(dev)}
+      <div class="content" style="padding-top:${top}px"><div class="inner">
+        <div class="title">Skyjo Scorekeeper</div><p class="q">Who's playing today?</p>
+        <p class="sec-lbl">Players</p><div class="acard">${rows}<div class="addrow"><span class="plus">+</span>Add Player</div></div>
+      </div></div>
+      <div class="pbtn" style="bottom:${dev==='ipad'?80:76}px">${ICONS.play} Start Game</div>
+      <p class="ready" style="position:absolute;left:0;right:0;bottom:${dev==='ipad'?48:44}px;margin:0;${dev==='duoc'?'right:100px':''}">5 players ready</p>
+      <div class="home"></div></div>`;
+  }
+  function win(dev, dark){
+    const rows = finals.map(([i,s,k,m]) => `<div class="row ${k==='winner'?'winner':''}">${av(i)}<span class="name">${PL[i].n}</span>${m?`<span class="medal">${m}</span>`:''}<span class="score ${k==='bust'?'bust':''}">${s}</span></div>`).join('');
+    return `<div class="scr ${dev} win ${dark?'dark':''}">${statusBar(dev)}
+      <div class="content" style="padding-top:${dev==='ipad'?40:0}px"><div class="inner">
+        <div class="hero"><div class="trophy">&#x1F3C6;</div><h3>Shawn Wins!</h3><p>6 rounds played</p></div>
+        <p class="sec-lbl">Final standings</p><div class="acard">${rows}</div>
+      </div></div>
+      <div class="pbtn" style="bottom:${dev==='ipad'?96:90}px">${ICONS.redo} New Game &#x2014; Same Players</div>
+      <div class="pbtn ghost" style="bottom:${dev==='ipad'?44:40}px">Start Fresh</div>
+      <div class="home"></div></div>`;
+  }
+  const entryRows = () => entry.map(([i,v,dbl],idx) => `<div class="row erow ${idx===4?'focus':''}">${av(i)}<span class="name">${PL[i].n}</span>${dbl?'<span class="dbl">&#xD7;2 &#x2192; 14</span>':''}<span class="eval">${v}</span></div>`).join('');
+  const chips = (cls='') => `<div class="chips ${cls}">${[0,1,2,3,4].map(i => `<span class="chip ${i===2?'sel':''}" style="--cc:${PL[i].c}"><span class="ci">${PL[i].n[0]}</span>${PL[i].n}</span>`).join('')}</div>`;
+  const pad = () => `<div class="pad">${['7','8','9','4','5','6','1','2','3','+/&#x2212;','0',ICONS.del].map(k=>`<span class="key">${k}</span>`).join('')}</div>`;
+  function entryScreen(dev, dark, wide){
+    if (wide) {
+      return `<div class="scr ${dev} ${dark?'dark':''}">${statusBar(dev)}${nav(1)}
+        <div class="content"><div class="inner">${standingsCard(zeroRows)}</div></div>
+        <div class="pbtn">${ICONS.up} Enter Round 1 Scores</div>
+        <div class="dim"></div>
+        <div class="sheet wide"><div class="lcol"><p class="sec-lbl">Round 1 scores</p><div class="acard">${entryRows()}</div></div><div class="vdiv"></div>
+          <div><p class="sec-lbl">Who ended the round?</p><div class="acard">${chips('two')}</div>${pad()}<div class="pbtn">Confirm Round 1</div></div></div>
+        <div class="home"></div></div>`;
+    }
+    const who = dev==='duoc' ? '' : `<p class="sec-lbl" style="margin-top:18px">Who ended the round?</p>
+        <p class="whohint">The first player to turn over their last card. Their score this round doubles if it isn't the lowest.</p>
+        <div class="acard">${chips()}</div>`;
+    return `<div class="scr ${dev} ${dark?'dark':''}">${statusBar(dev)}${nav(1)}
+      <div class="content"><div class="inner">${standingsCard(zeroRows)}</div></div>
+      <div class="dim"></div>
+      <div class="sheet"><div class="scroll"><div class="grab"></div><p class="sec-lbl">Round 1 scores</p><div class="acard">${entryRows()}</div>${who}</div>
+        <div class="pin">${pad()}<div class="pbtn">Confirm Round 1</div></div></div>
+      <div class="home"></div></div>`;
+  }
+  function openBoard(dark){
+    return `<div class="scr duoi open ${dark?'dark':''}"><div class="pages">
+      <div class="page"><div class="pnav"><span class="cap-btn">${ICONS.x} End Game</span></div><div class="pbody">${standingsCard(standings).replace('<p class="hint">','<p class="hint" style="display:none">')}</div></div>
+      <div class="band"></div>
+      <div class="page r"><div class="pnav" style="justify-content:flex-end"><span class="cap-btn">${ICONS.undo} Undo</span></div>
+        <div class="phead"><div class="title" style="font-size:34px;letter-spacing:-.8px">Round 2</div><p class="hint" style="margin-top:10px">Game ends when someone reaches 100. Lowest total wins.</p></div>
+        <div class="pbtn pfoot">${ICONS.up} Enter Round 2 Scores</div></div>
+    </div><div class="home"></div></div>`;
+  }
+  function openSetup(dark){
+    const rows = [0,1,2,3,4].map(i => `<div class="row">${av(i)}<span class="name">${PL[i].n}</span><span class="minus">&#x2212;</span></div>`).join('');
+    return `<div class="scr duoi open ${dark?'dark':''}"><div class="pages">
+      <div class="page"><div class="pbody" style="padding-top:24px"><p class="sec-lbl">Players</p><div class="acard">${rows}<div class="addrow"><span class="plus">+</span>Add Player</div></div></div></div>
+      <div class="band"></div>
+      <div class="page r"><div class="phead" style="padding-top:20px"><div class="title">Skyjo Scorekeeper</div><p class="q" style="margin-bottom:0">Who's playing today?</p></div>
+        <div class="pbtn pfoot" style="bottom:40px">${ICONS.play} Start Game</div><p class="ready" style="position:absolute;left:0;right:0;bottom:14px;margin:0">5 players ready</p></div>
+    </div><div class="home"></div></div>`;
+  }
+  function openEntry(dark){
+    // the system sheet spans the open display; the fold is its divider: rows on the left page, who-ended + numpad on the right
+    return `<div class="scr duoi open ${dark?'dark':''}">${openBoard(dark).replace(/^<div class="scr[^>]*>|<\/div>$/g,'')}
+      <div class="dim"></div>
+      <div class="sheet span"><div class="spage"><div class="grab"></div><p class="sec-lbl">Round 1 scores</p><div class="acard">${entryRows()}</div></div><div class="band"></div>
+        <div class="spage"><p class="sec-lbl" style="margin-top:15px">Who ended the round?</p><div class="acard">${chips('two')}</div><div class="pad" style="margin-top:12px">${['7','8','9','4','5','6','1','2','3','+/&#x2212;','0',ICONS.del].map(k=>`<span class="key" style="height:50px">${k}</span>`).join('')}</div><div class="pbtn" style="height:52px">Confirm Round 1</div></div></div>
+      </div>`;
+  }
+  function openWin(dark){
+    const rows = finals.map(([i,s,k,m]) => `<div class="row ${k==='winner'?'winner':''}">${av(i)}<span class="name">${PL[i].n}</span>${m?`<span class="medal">${m}</span>`:''}<span class="score ${k==='bust'?'bust':''}">${s}</span></div>`).join('');
+    return `<div class="scr duoi open win ${dark?'dark':''}"><div class="pages">
+      <div class="page"><div class="pbody" style="padding-top:24px"><p class="sec-lbl">Final standings</p><div class="acard">${rows}</div></div></div>
+      <div class="band"></div>
+      <div class="page r"><div class="hero" style="padding-top:52px"><div class="trophy">&#x1F3C6;</div><h3>Shawn Wins!</h3><p>6 rounds played</p></div>
+        <div class="pbtn pfoot" style="bottom:68px">${ICONS.redo} New Game &#x2014; Same Players</div><div class="pbtn ghost pfoot" style="bottom:16px">Start Fresh</div></div>
+    </div><div class="home"></div></div>`;
+  }
+  // a standard iPhone turned sideways: 956 x 440pt, safe areas 59pt each side and 21pt at the bottom, status bar hidden
+  function landBoard(dark){
+    return `<div class="scr land ${dark?'dark':''}"><div class="island"></div>${nav(2)}
+      <div class="content"><div class="inner">${standingsCard(standings)}</div></div>
+      <div class="pbtn">${ICONS.up} Enter Round 2 Scores</div><div class="home"></div></div>`;
+  }
+  function landEntry(dark){
+    return `<div class="scr land ${dark?'dark':''}"><div class="island"></div>${nav(1)}
+      <div class="content"><div class="inner">${standingsCard(zeroRows)}</div></div>
+      <div class="pbtn">${ICONS.up} Enter Round 1 Scores</div>
+      <div class="dim"></div>
+      <div class="sheet wide" style="width:720px;height:420px;grid-template-columns:1fr 1px 284px"><div class="lcol" style="justify-content:flex-start;overflow:hidden"><p class="sec-lbl">Round 1 scores</p><div class="acard">${entryRows()}</div></div><div class="vdiv"></div>
+        <div style="display:flex;flex-direction:column"><p class="sec-lbl">Who ended the round?</p><div class="acard" style="max-height:96px;overflow:hidden;flex:0 0 auto">${chips('two')}</div><div class="pad" style="margin:10px 0 8px">${['7','8','9','4','5','6','1','2','3','+/&#x2212;','0',ICONS.del].map(k=>`<span class="key" style="height:44px">${k}</span>`).join('')}</div><div class="pbtn" style="height:52px;margin-top:auto">Confirm Round 1</div></div></div>
+      <div class="home"></div></div>`;
+  }
+  function landWin(dark){
+    const rows = finals.map(([i,s,k,m]) => `<div class="row ${k==='winner'?'winner':''}">${av(i)}<span class="name">${PL[i].n}</span>${m?`<span class="medal">${m}</span>`:''}<span class="score ${k==='bust'?'bust':''}">${s}</span></div>`).join('');
+    return `<div class="scr land win ${dark?'dark':''}"><div class="island"></div>
+      <div class="content" style="top:16px;bottom:88px"><div class="inner">
+        <div class="hero-row"><span class="trophy">&#x1F3C6;</span><div><h3>Shawn Wins!</h3><p>6 rounds played</p></div></div>
+        <p class="sec-lbl">Final standings</p><div class="acard">${rows}</div></div></div>
+      <div class="actions"><div class="pbtn" style="position:static;flex:3;height:52px">${ICONS.redo} New Game &#x2014; Same Players</div><div class="pbtn sec" style="position:static;height:52px">Start Fresh</div></div>
+      <div class="home"></div></div>`;
+  }
+  function landSetup(dark){
+    const rows = [0,1,2,3,4].map(i => `<div class="row">${av(i)}<span class="name">${PL[i].n}</span><span class="minus">&#x2212;</span></div>`).join('');
+    return `<div class="scr land setup ${dark?'dark':''}"><div class="island"></div>
+      <div class="content" style="top:12px;bottom:88px"><div class="inner">
+        <div class="title" style="font-size:26px;letter-spacing:-.8px">Skyjo Scorekeeper</div>
+        <p class="sec-lbl" style="margin-top:14px">Players</p><div class="acard">${rows}<div class="addrow"><span class="plus">+</span>Add Player</div></div></div></div>
+      <div class="actions"><div class="pbtn" style="position:static;flex:1;height:52px">${ICONS.play} Start Game</div><span class="ready" style="white-space:nowrap">5 players ready</span></div>
+      <div class="home"></div></div>`;
+  }
+  function screenHTML(k, dev, dark, wide){
+    if (k==='openBoard') return openBoard(dark);
+    if (k==='openSetup') return openSetup(dark);
+    if (k==='openEntry') return openEntry(dark);
+    if (k==='openWin') return openWin(dark);
+    return k==='board' ? board(dev,dark) : k==='entry' ? entryScreen(dev,dark,wide) : k==='win' ? win(dev,dark) : setup(dev,dark);
+  }
+
+  // ---------- Apple bezel geometry: display cut-out as fractions of the bezel image ----------
+  const BEZ = {
+    iph:{src:'mockup-assets/bezels/iphone-18-pro-max-portrait.png', l:.0510, t:.0220, w:.8980, h:.9560, rb:150},
+    ipad:{src:'mockup-assets/bezels/ipad-pro-13-portrait.png', l:.0513, t:.0413, w:.8974, h:.9173, rb:60},
+    duoc:{src:'mockup-assets/bezels/duo-outer-closed.png', l:.0559, t:.0369, w:.8882, h:.9262, rb:20},
+    duoi:{src:'mockup-assets/bezels/duo-inner-portrait.png', l:.0534, t:.0388, w:.8932, h:.9224, rb:0},
+    duol:{src:'mockup-assets/bezels/duo-inner-landscape.png', l:.0388, t:.0534, w:.9224, h:.8932, rb:0}
+  };
+
+  // ---------- sets, real pixel geometry scaled by --s ----------
+  const SETS = {
+    iphone:{W:1320,H:2868,s:.215,ptW:440,ptH:956,dev:'iph',cardW:1003,cardWb:980,cardTop:560,capTop:170,capSize:92,subSize:44,r:70,m:80,mTop:115,
+      shots:[
+        {cap:'Keep score.<br>See who&#x2019;s winning.', sub:'Standings update after every round', k:'board'},
+        {cap:'Tap in scores.<br>We do the math.', sub:'Ended the round without the lowest score? Doubled, automatically', k:'entry'},
+        {cap:'The game ends at 100.<br>Lowest score wins.', sub:'', k:'win'},
+        {cap:'2 to 8 players. Ready in seconds.', sub:'', k:'setup'},
+        {cap:'Free. No ads. No account.', sub:'Dark mode too', k:'board', dark:true}
+      ]},
+    ipad:{W:2064,H:2752,s:.19,ptW:1032,ptH:1376,dev:'ipad',cardW:1600,cardWb:1480,cardTop:560,capTop:150,capSize:104,subSize:48,r:60,m:124,mTop:110,
+      shots:[
+        {cap:'Keep score.<br>See who&#x2019;s winning.', sub:'Big enough for the whole table', k:'board'},
+        {cap:'Tap in scores.<br>We do the math.', sub:'Ended the round without the lowest score? Doubled, automatically', k:'entry', wide:true},
+        {cap:'The game ends at 100.<br>Lowest score wins.', sub:'', k:'win'},
+        {cap:'2 to 8 players. Ready in seconds.', sub:'', k:'setup'}
+      ]},
+    duoc:{W:1398,H:2034,s:.235,ptW:466,ptH:678,dev:'duoc',cardW:1034,cardWb:990,cardTop:430,capTop:120,capSize:84,subSize:40,r:64,m:84,mTop:82,
+      shots:[
+        {cap:'Keep score.<br>See who&#x2019;s winning.', sub:'', k:'board'},
+        {cap:'Tap in scores.<br>We do the math.', sub:'', k:'entry'},
+        {cap:'The game ends at 100.<br>Lowest score wins.', sub:'', k:'win'},
+        {cap:'2 to 8 players. Ready in seconds.', sub:'', k:'setup'}
+      ]},
+    duoi:{W:2007,H:2853,s:.19,ptW:669,ptH:951,dev:'duoi',cardW:1500,cardWb:1460,cardTop:580,capTop:170,capSize:104,subSize:48,r:80,m:120,mTop:115,
+      shots:[
+        {cap:'Keep score. See who&#x2019;s winning.', capU:'Keep score.<br>See who&#x2019;s winning.', sub:'Room for the whole table', k:'board', kL:'openBoard', pick:'U', why:'the whole table in one tall column, the first thing a shopper sees in search results'},
+        {cap:'Tap in scores. We do the math.', capU:'Tap in scores.<br>We do the math.', sub:'', k:'entry', kL:'openEntry', pick:'L', why:'the one picture a normal iPhone can&#x2019;t give: scores on the left page, who ended and the numpad on the right'},
+        {cap:'The game ends at 100. Lowest score wins.', capU:'The game ends at 100.<br>Lowest score wins.', sub:'', k:'win', kL:'openWin', pick:'U', why:'the trophy and the final table read as one moment'},
+        {cap:'2 to 8 players. Ready in seconds.', capU:'2 to 8 players. Ready in seconds.', sub:'', k:'setup', kL:'openSetup', pick:'L', why:'the players on one page, the title and Start Game on the other: the app&#x2019;s cover closes the set'}
+      ]}
+  };
+  const state = { frames: new URLSearchParams(location.search).get('frames')==='none' ? 'none' : 'bezel', dark:false, guides:false };
+
+  function buildShot(set, shot, idx){
+    const el = document.createElement('div'); el.className = 'shot';
+    if (shot.placeholder){
+      el.innerHTML = `<div class="lbl"><b>Pending</b><span>${shot.W} &#xD7; ${shot.H}</span></div>
+        <div class="placeholder" style="width:${shot.W*set.s}px;height:${shot.H*set.s}px"><div><b>Slot reserved</b>${shot.text}</div></div>`;
+      return el;
+    }
+    const land = !!shot.land, framed = state.frames==='bezel';
+    if (land && shot.kL) shot = {...shot, k: shot.kL}; else if (!land && shot.capU) shot = {...shot, cap: shot.capU};
+    const W = land ? set.H : set.W, H = land ? set.W : set.H, ptW = land ? set.ptH : set.ptW, ptH = land ? set.ptW : set.ptH;
+    const cardW = land ? 2000 : (framed ? set.cardWb : set.cardW);
+    const k = cardW/ptW, bz = BEZ[land ? 'duol' : set.dev];
+    const capTop = land ? 110 : set.capTop, cardTop = land ? 390 : set.cardTop, capSize = land ? 92 : set.capSize, subSize = land ? 44 : set.subSize, m = land ? 160 : set.m, mTop = land ? 80 : set.mTop;
+    const dark = state.dark || !!shot.dark;
+    el.innerHTML = `<div class="lbl"><b>${idx+1}</b><span>${W} &#xD7; ${H}${land?' &#xB7; open, sideways':''}${shot.dark?' &#xB7; dark':''}</span></div>
+      <div class="canvas ${dark?'dark':''} ${framed?'framed':''}" style="--W:${W}px;--H:${H}px;--s:${set.s};--m:${m}px;--mTop:${mTop}px;--capTop:${capTop}px;--capSize:${capSize}px;--subSize:${subSize}px;--cardTop:${cardTop}px;--cardW:${cardW}px;--r:${set.r}px;--rb:${bz.rb}px">
+        <div class="cap">${shot.cap}${shot.sub?`<small>${shot.sub}</small>`:''}</div>
+        <div class="card" style="height:calc(${ptH*k}px * var(--s))">
+          <div class="clip"><div class="scrwrap" style="width:${ptW}px;height:${ptH}px;transform:scale(${k*set.s})">${screenHTML(shot.k, set.dev, dark, !!shot.wide)}</div></div>
+          <img class="bezel" alt="" src="${bz.src}" style="left:${-bz.l/bz.w*100}%;top:${-bz.t/bz.h*100}%;width:${100/bz.w}%">
+        </div>
+        <div class="guides ${state.guides?'on':''}"></div>
+      </div>`;
+    const scr = el.querySelector('.scrwrap > .scr'); scr.style.width = ptW+'px'; scr.style.height = ptH+'px';
+    return el;
+  }
+  const picks = {};
+  function renderAll(){
+    for (const [name, set] of Object.entries(SETS)) {
+      const strip = document.querySelector(`[data-set="${name}"]`); strip.innerHTML = '';
+      if (name === 'duoi') {
+        set.shots.forEach((shot, i) => {
+          const choice = picks[i] || shot.pick;
+          const pair = document.createElement('div'); pair.className = 'pair';
+          const u = buildShot(set, {...shot, land:false}, i), l = buildShot(set, {...shot, land:true}, i);
+          u.classList.toggle('chosen', choice==='U'); l.classList.toggle('chosen', choice==='L');
+          pair.append(u, l);
+          pair.insertAdjacentHTML('beforeend', `<div class="pick"><span class="seg"><input type="radio" name="pick${i}" id="p${i}u" value="U" ${choice==='U'?'checked':''}><label for="p${i}u">Upright</label><input type="radio" name="pick${i}" id="p${i}l" value="L" ${choice==='L'?'checked':''}><label for="p${i}l">Sideways</label></span><span><b>Approved: ${shot.pick==='L'?'sideways':'upright'}.</b> ${shot.why}. The switch is for comparing only.</span></div>`);
+          pair.querySelectorAll(`input[name="pick${i}"]`).forEach(r => r.addEventListener('change', e => { picks[i] = e.target.value; u.classList.toggle('chosen', picks[i]==='U'); l.classList.toggle('chosen', picks[i]==='L'); }));
+          strip.appendChild(pair);
+        });
+        continue;
+      }
+      set.shots.forEach((shot, i) => strip.appendChild(buildShot(set, shot, i)));
+    }
+    renderHeader();
+    renderPreviews();
+  }
+  function renderPreviews(){
+    const host = document.getElementById('prevs'); if (!host) return; host.innerHTML = '';
+    [['Standings', landBoard, 'Standings card scrolls under the button: about four rows visible, the fifth needs a scroll'],
+     ['Entry sheet', landEntry, 'Centred panel nearly the full height, players left, who-ended and numpad right; the chips card scrolls and keys sit at their 44pt minimum'],
+     ['Final standings', landWin, 'Hero as one row, actions as one row; the table scrolls from the fourth row'],
+     ['Setup', landSetup, 'Small title, no subtitle, status beside Start; the list scrolls from the fourth row']].forEach(([n, fn, note]) => {
+      const d = document.createElement('div'); d.className = 'prev';
+      d.innerHTML = `<div class="frame"><div class="clip"><div class="scrwrap" style="width:956px;height:440px">${fn(state.dark)}</div></div></div><p class="lbl"><b>${n}</b> &#xB7; 956 &#xD7; 440pt &#xB7; ${note}</p>`;
+      host.appendChild(d);
+    });
+  }
+
+  // ---------- header trio ----------
+  function renderHeader(){
+    const trio = document.getElementById('trio'); trio.innerHTML = '';
+    const hdr = document.getElementById('hdr'); hdr.classList.toggle('framed', state.frames==='bezel');
+    const TRIO_W = 3840*0.57, framed = state.frames==='bezel';
+    const place = (html, dev, ptW, ptH, leftPct, heightPx, z) => {
+      const bz = BEZ[dev];
+      const hScreen = framed ? heightPx*bz.h : heightPx;   // keep the overall silhouette height when framed
+      const k = hScreen/ptH, wReal = ptW*k;
+      const d = document.createElement('div'); d.className='tcard';
+      d.style.left = leftPct+'%'; d.style.width = (wReal/TRIO_W*100)+'%'; d.style.zIndex = z; d.style.aspectRatio = `${ptW}/${ptH}`;
+      d.innerHTML = `<div class="clip"><div class="scrwrap" style="width:${ptW}px;height:${ptH}px">${html}</div></div>
+        <img class="bezel" alt="" src="${bz.src}" style="left:${-bz.l/bz.w*100}%;top:${-bz.t/bz.h*100}%;width:${100/bz.w}%">`;
+      const inner = d.querySelector('.scr'); inner.style.width=ptW+'px'; inner.style.height=ptH+'px';
+      trio.appendChild(d);
+      const fit = () => { const w = d.clientWidth; d.querySelector('.scrwrap').style.transform = `scale(${w/ptW})`; };
+      new ResizeObserver(fit).observe(d); fit();
+    };
+    // two devices side by side, none overlapping: Apple's bezels may not be obstructed
+    place(openBoard(state.dark), 'duol', 951, 669, 0, 1080, 1);
+    place(board('iph', state.dark), 'iph', 440, 956, 71, 1300, 2);
+    hdr.querySelectorAll('.tcard').forEach(c => { c.style.bottom = '8%'; });
+  }
+
+  // ---------- controls ----------
+  document.querySelector('[data-darkall]').addEventListener('change', e => { state.dark = e.target.checked; renderAll(); });
+  document.querySelector('[data-guides]').addEventListener('change', e => { state.guides = e.target.checked; document.querySelectorAll('.guides').forEach(g => g.classList.toggle('on', state.guides)); });
+  renderAll();
+
+  // ---------- caption table ----------
+  const tb = document.getElementById('captab');
+  for (let i=0;i<5;i++){
+    const cell = (set) => { const s = SETS[set].shots[i]; if (!s || s.placeholder) return '<td></td>'; return `<td>${s.cap}${s.sub?`<i>${s.sub}</i>`:''}</td>`; };
+    tb.insertAdjacentHTML('beforeend', `<tr><td>${i+1}</td>${cell('iphone')}${cell('ipad')}${cell('duoc')}${cell('duoi')}</tr>`);
+  }
+
+  // ---------- option counts and the live header line ----------
+  const bytes = s => new TextEncoder().encode(s).length;
+  document.querySelectorAll('.opts').forEach(g => {
+    const max = +g.dataset.max, kind = g.dataset.kind;
+    g.querySelectorAll('.opt').forEach(o => {
+      const t = o.querySelector('.t').textContent.trim(), n = kind==='bytes' ? bytes(t) : [...t].length;
+      const c = o.querySelector('.c'); c.textContent = max>=4000 ? `${n} chars` : `${n} / ${max}`; c.classList.toggle('over', n>max);
+    });
+  });
+  document.querySelectorAll('input[name="hl"]').forEach(r => r.addEventListener('change', e => { document.getElementById('hline').innerHTML = e.target.value; }));
+})();
+</script>
+</body>
+</html>

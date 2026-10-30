@@ -75,7 +75,7 @@ The active game screens. Takes players from setup through scoring rounds to a wi
 
 ### Adaptive Layout
 
-The app runs natively on iPhone and iPad and works in any window shape — resizable iPad windows, iPhone Mirroring, and iPhone Duo closed or open — with each screen reflowing into a tall, short, or wide arrangement by the space it has (content capped at a centered 600pt column), splitting into two pages around an open iPhone Duo's fold so no control sits on it, and two open windows of the app staying in sync on the same game.
+The app runs natively on iPhone (portrait or landscape) and iPad and works in any window shape — resizable iPad windows, iPhone Mirroring, and iPhone Duo closed or open — with each screen reflowing into a tall, short, or wide arrangement by the space it has (content capped at a centered 600pt column), splitting into two pages around an open iPhone Duo's fold so no control sits on it, and two open windows of the app staying in sync on the same game.
 
 ---
 

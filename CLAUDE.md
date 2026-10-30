@@ -24,7 +24,7 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 ### Layout (iPhone, iPad, any window size)
 - `Theme.contentMaxWidth` (600pt) is the single width ceiling — never hardcode a max width per-view
 - Use the two-frame idiom for primary content regions: `.frame(maxWidth: Theme.contentMaxWidth).frame(maxWidth: .infinity)`
-- The app supports both iPhone and iPad — new views must apply this pattern
+- The app supports both iPhone and iPad — new views must apply this pattern. iPhone runs in portrait and both landscapes (never upside-down), so check new screens sideways on a standard iPhone too
 - Screens adapt only by the space they are offered: derive a `LayoutMode` (`.tall` / `.short` / `.wide`) with `.onAvailableSize(update:_:)` in `Theme.swift`. It is the single home for the thresholds (575pt short, 560pt wide, 1.2 ratio) — never hardcode them, and never branch on orientation, device idiom, `UIScreen`, or size class
 - Use `onAvailableSize` rather than a hand-rolled `GeometryReader`: it takes exactly the offered space and measures inside `.ignoresSafeArea(.keyboard)`, so large text and the keyboard can't flip the layout. Keep view state above the mode-specific subviews so a live resize keeps what's been typed
 - iPhone Duo's fold and camera are part of the space offered: `.onAvailableSpace(update:_:)` in `Theme.swift` reads them (`ReservedRegion` `.division` / `.occlusion`, gated `#available(iOS 27.1, *)`) into `AvailableSpace`, the single home for that logic. When a fold runs top to bottom through a screen, `space.pages` gives its two pages: lay them out with `HStack(spacing: pages.spacing)` and `.page(pages.leading)` / `.page(pages.trailing)` — list on the left page, heading and primary action on the right, nothing in the fold. A side-to-side fold (tabletop) keeps the tall layout; only overlays and the entry sheet use `upperPage` / `lowerPage`
@@ -79,4 +79,17 @@ Swift source files live in iCloud Drive (this directory) and are copied into the
 ### Simulator checks
 - iPhone Duo poses (open, half-open, tabletop, flipped) can only be set in Xcode's Device Hub, which needs an unlocked Mac screen and has no scripting interface. Without it, `devicectl device appResize` gives the app an exact window size (open 951×669pt, tabletop 669×951pt, closed 466×678pt) for layout checks, but no real fold
 - Capture layout evidence with the shipped Info.plist settings, orientation especially. If a check needs a build override, the PR description's Verification section must say so
-- On the Duo simulator, `simctl io screenshot` without `--display` captures the inner display, which is dark while closed — pass the outer display's id for closed-pose captures
+- On the Duo simulator, `simctl io screenshot` without `--display` captures the inner display, which is dark while closed — pass `--display=1` (the outer display) for closed-pose captures; an `appResize` window is `--display=5`
+- `xcrun devicectl device orientation set --device <udid> portrait|landscapeLeft|landscapeRight|portraitUpsideDown` rotates a simulator from the command line
+
+### Public repo
+- The repo is public. Licensed third-party artwork (Apple Design Resources bezels and templates, `.psd` files) never goes in it: `**/mockup-assets/bezels/` is gitignored and `store-assets/tools/fetch-bezels.sh` downloads bezels outside the repo. Stage explicit paths near such files — never `git add -A` or `git add pipeline/` — and check `git diff --cached --name-only` for bezel or design-resource files before committing. Finished composites (the app inside a bezel) are fine to commit
+- No machine-specific addresses in committed docs: no Tailscale hostnames or live preview links with local ports. Write a placeholder (`https://<your-tailnet-host>/path`); real links belong in gitignored run notes
+
+### App Store listing
+- Store assets live in `pipeline/iphone-duo-store-listing/store-assets/`. `tools/compose.swift` rebuilds every screenshot and the product page header from the raw captures in `tools/captures/` (steps in `tools/README.md`). Retake captures with the scripts in `tools/capture/`, applying the demo-data patch to a scratch copy only, never the real source
+- Clean status bar: `tools/capture/statusbar.sh` runs `xcrun simctl status_bar <id> override --batteryState discharging --batteryLevel 100 --wifiBars 3 …`, then the 9:41 `--time` last (a later override breaks the weekday). `--batteryState charged` draws a charging bolt. `prep-sim.sh` also forces the 12-hour clock; simulators default to 24-hour ("09:41")
+- Screenshots, subtitle, description and keywords change only with a new version. Promotional text and the product page header (Asset Library) change on the live version
+- iPhone Duo screenshots go through the Asset Library as `APP_IPHONE_DUO`; the published API has no Duo display type. Outer and inner sizes, upright and sideways, mix in one set
+- Keep key content inside each Apple template's safe area — the product page header's art safe area is only x 1097–2742, y 493–1153 of 3840×1646 — and check every set in App Store Connect's preview tool before submitting
+- App Store Connect writes (profiles, versions, metadata, screenshots, submission) use API key `QJA25M7XHM` with manual signing; the environment's default key is read and upload only

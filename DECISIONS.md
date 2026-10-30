@@ -5,6 +5,20 @@ Maintained by The Chronicler.
 
 ---
 
+## iPhone Duo Store Listing — 2026-10-29
+
+**Decision:** iPhone allows landscape: portrait plus landscape left and right, never upside-down (iPad unchanged). This **reverses** "iPhone stays portrait-only" (2026-10-23) and "Standard iPhones keep the portrait lock" (2026-09-26). The user decided it on 2026-10-27; it ships in 1.7.1 as a single build setting, with no code change.
+**Rationale:** The portrait lock kept an open iPhone Duo held sideways in a ~501pt window in the simulator, so the two-page layout couldn't fill the inner display and an honest sideways store screenshot was impossible. The layouts already adapt to any space, so landscape needed no code. The one cost the old decisions named, accidental rotation mid-round, the user accepted; Control Center's rotation lock is the fallback.
+**Implications:** New and changed screens must work sideways on a standard iPhone. With five or more players a sideways iPhone shows about four rows and scrolls (accepted at design review). Whether a real open Duo needed this is still unconfirmed, since no real pose has been seen.
+
+---
+
+**Decision:** The App Store page is one family of captioned screenshots of the real app in Apple's own bezels on brand indigo, for iPhone 6.9", iPad 13" and iPhone Duo (outer and inner display), all showing the May 2026 demo game (Shawn wins on 80) with no drawn fold. The product page header is the version fitted to Apple's art safe area. Subtitle, description and keywords stayed as they were; new copy went only where none existed (promotional text, What's New, captions, header line).
+**Rationale:** Submitting iPhone Duo screenshots earns the Made for iPhone Duo badge, and they become required in April 2027 for apps on the iOS 27.1 SDK. The user chose the bezels, names and copy at design review, and swapped to the fitted header after App Store Connect's preview tool showed the original's headline cut off at the sides on iPhone.
+**Implications:** Later listing updates rebuild from `store-assets/tools/` and keep the same family. The two sideways iPhone Duo inner shots use a simulator stand-in fold, not a real pose; retake all four inner shots once a real device or Device Hub is available. The listing is English (US) only, though the app ships 36 languages.
+
+---
+
 ## iPhone Duo Optimization — 2026-10-23
 
 **Decision:** iPhone Duo's fold and camera regions are part of the space a screen is offered. `onAvailableSpace` / `AvailableSpace` in `Theme.swift` reads them through `ReservedRegion` (gated `#available(iOS 27.1, *)`), and `onAvailableSize` forwards to it, so there is still one reader. When a fold runs top to bottom, setup, the scoreboard and the win screen become two pages: the list on the left, the heading and primary action on the right (setup's title included), nothing in the fold. A tabletop fold keeps the tall layout. This fulfils the iOS 27 build's "revisit `ReservedRegion` once Xcode 27.1 is final" and **extends** "screens adapt by the space their window offers" and the single `contentMaxWidth` cap: the 600pt cap stays and applies per page.
@@ -31,7 +45,7 @@ Maintained by The Chronicler.
 
 ---
 
-**Decision:** iPhone stays portrait-only, and 1.7 shipped before any real Duo pose was observed.
+**Decision:** iPhone stays portrait-only, and 1.7 shipped before any real Duo pose was observed. *(Portrait-only reversed 2026-10-27; see iPhone Duo Store Listing.)*
 **Rationale:** Landscape stays out to avoid accidental mid-round rotation. The Mac's screen was locked for the whole build, so Device Hub's pose controls couldn't be used; the two-page layouts were checked in simulator windows of the right size with a stand-in fold. The user chose to ship and verify on a device.
 **Implications:** The iOS 27 build assumed the inner display ignores orientation locks; the simulator doesn't bear that out. There the portrait-only app gets a 501×669pt window on the open display (pages about 238pt wide, Start Game and New Game — Same Players wrap to two lines), not the full display. If a real open Duo does the same, allowing landscape on iPhone is the likely fix. The real fold width, the inner camera against Undo, and the half-open and flipped poses also still need a look. Tracked in `ROADMAP.md`.
 
@@ -47,7 +61,7 @@ Maintained by The Chronicler.
 
 **Decision:** Screens adapt by the space their window offers — tall, short, or wide — through `LayoutMode` and `onAvailableSize` in `Theme.swift`, never by orientation, device idiom, or size class. This extends the iPad `contentMaxWidth` two-frame idiom (kept) from width to height and shape.
 **Rationale:** iOS 27 makes iPhone apps resizable and ignores the portrait lock in resizable settings, iPhone Duo's inner display ignores orientation locks, and iPhone Mirroring can be dragged short. Orientation no longer predicts the space available.
-**Implications:** New or changed screens must stay usable from tall-narrow to short-wide. The thresholds (575pt, 560pt, 1.2) have one home. Standard iPhones keep the portrait lock: landscape iPhone was considered and left out to avoid accidental mid-round rotation, and can be revisited now the layouts support it.
+**Implications:** New or changed screens must stay usable from tall-narrow to short-wide. The thresholds (575pt, 560pt, 1.2) have one home. Standard iPhones keep the portrait lock: landscape iPhone was considered and left out to avoid accidental mid-round rotation, and can be revisited now the layouts support it. *(Portrait lock reversed 2026-10-27; see iPhone Duo Store Listing.)*
 
 ---
 
